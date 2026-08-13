@@ -1,0 +1,25 @@
+spring.application.name=
+
+# 1. JWT Settings
+jwt.expiration.time=
+jwt.issuer=
+jwt.refresh-expiration=
+
+# 2. Database Connection Settings
+spring.datasource.url=jdbc:mysql://localhost:3306/<database_name>?useSSL=false&serverTimezone=UTC
+spring.datasource.username=
+spring.datasource.password=
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# 3. JPA / Hibernate Configurations
+spring.jpa.hibernate.ddl-auto=
+spring.jpa.show-sql=
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+# 4. Mail Configurations
+spring.mail.host=
+spring.mail.port=
+spring.mail.username=
+spring.mail.password=
+spring.mail.properties.mail.smtp.auth=
+spring.mail.properties.mail.smtp.starttls.enable=
