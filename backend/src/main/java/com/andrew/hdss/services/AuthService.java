@@ -54,9 +54,9 @@ public class AuthService {
         }
         else{
 
-            String username = String.valueOf(registerRequest.getFirstName().charAt(0)) +
-                    registerRequest.getLastName().charAt(0) +
-                    Util.generateRandomString(4).toUpperCase();
+            String username = String.valueOf(Character.toUpperCase(registerRequest.getFirstName().charAt(0))) +
+                    Character.toUpperCase(registerRequest.getLastName().charAt(0)) +
+                    Util.generateRandomString(4);
 
             UserRole userRole = UserRole.valueOf(registerRequest.getRole());
 
