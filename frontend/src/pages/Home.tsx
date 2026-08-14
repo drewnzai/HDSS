@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { useAppSelector } from "../store/hooks";
-import { selectUsername } from "../store/AuthSlice";
+import { selectFirstName} from "../store/AuthSlice";
 import { useLogout } from "../store/useLogout";
 import ThemeToggle from "../components/ThemeToggle";
 
 function Home() {
-    const username = useAppSelector(selectUsername);
+    const firstName = useAppSelector(selectFirstName);
     const handleLogout = useLogout();
 
     const today = new Date().toLocaleDateString(undefined, {
@@ -25,7 +25,7 @@ function Home() {
             <main className="page__content">
                 <div className="card">
                     <span className="ledger-section__eyebrow">§ 00 — Session</span>
-                    <h1>Welcome back{username ? `, ${username}` : ""}</h1>
+                    <h1>Welcome back{firstName ? `, ${firstName}` : ""}</h1>
                     <p>{today}</p>
 
                     <div className="ledger-section">
