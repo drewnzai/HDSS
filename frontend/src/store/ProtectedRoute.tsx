@@ -1,10 +1,24 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAppSelector } from "./hooks";
-import { selectIsAuthenticated } from "./AuthSlice";
+import { selectIsAuthenticated, selectRole } from "./AuthSlice";
 
-function ProtectedRoute() {
+interface ProtectedRouteProps {
+    requiredRole?: "ADMIN" | "USER";
+}
+
+function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
-    return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+    const role = useAppSelector(selectRole);
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (requiredRole && role !== requiredRole) {
+        return <Navigate to="/" replace />; // logged in, but not permitted
+    }
+
+    return <Outlet />;
 }
 
 export default ProtectedRoute;

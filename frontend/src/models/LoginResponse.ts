@@ -3,4 +3,5 @@ export interface LoginResponse{
     refreshToken: string;
     expiresAt: string;
     firstName: string;
+    role: "ADMIN" | "USER";
 }

@@ -13,6 +13,9 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<Home />} />
       </Route>
+      
+      <Route element={<ProtectedRoute requiredRole='ADMIN'/>}>
+      </Route>
     </Routes>
 
   )

@@ -8,6 +8,7 @@ interface AuthState {
     authenticationToken: string | null;
     refreshToken: string | null;
     expiresAt: string | null;
+    role: string | null;
 }
 
 const initialState: AuthState = {
@@ -15,7 +16,8 @@ const initialState: AuthState = {
     firstName: localStorage.getItem("firstName"),
     authenticationToken: localStorage.getItem("authenticationToken"),
     refreshToken: localStorage.getItem("refreshToken"),
-    expiresAt: localStorage.getItem("expiresAt")
+    expiresAt: localStorage.getItem("expiresAt"),
+    role: localStorage.getItem("role")
 };
 
 const AuthSlice = createSlice({
@@ -26,18 +28,20 @@ const AuthSlice = createSlice({
             state,
             action: PayloadAction<LoginResponse & { username: string }>
         ) => {
-            const { authenticationToken, refreshToken, expiresAt, firstName, username } = action.payload;
+            const { authenticationToken, refreshToken, expiresAt, firstName, username, role} = action.payload;
             state.authenticationToken = authenticationToken;
             state.firstName = firstName;
             state.refreshToken = refreshToken;
             state.expiresAt = expiresAt;
             state.username = username;
+            state.role = role;
 
             localStorage.setItem("authenticationToken", authenticationToken);
             localStorage.setItem("refreshToken", refreshToken);
             localStorage.setItem("expiresAt", expiresAt);
             localStorage.setItem("firstName", firstName);
             localStorage.setItem("username", username);
+            localStorage.setItem("role", role);
         },
         logout: (state) => {
             state.authenticationToken = null;
@@ -45,12 +49,14 @@ const AuthSlice = createSlice({
             state.expiresAt = null;
             state.firstName = null;
             state.username = null;
+            state.role = null;
 
             localStorage.removeItem("authenticationToken");
             localStorage.removeItem("refreshToken");
             localStorage.removeItem("expiresAt");
             localStorage.removeItem("firstName");
             localStorage.removeItem("username");
+            localStorage.removeItem("role");
         }
     }
 });
@@ -63,4 +69,5 @@ export const selectIsAuthenticated = (state: { auth: AuthState }) =>
     Boolean(state.auth.authenticationToken);
 export const selectUsername = (state: { auth: AuthState }) => state.auth.username;
 export const selectFirstName = (state: { auth: AuthState }) => state.auth.firstName;
+export const selectRole = (state: { auth: AuthState }) => state.auth.role;
 export const selectTokenExpiry = (state: { auth: AuthState }) => state.auth.expiresAt;
