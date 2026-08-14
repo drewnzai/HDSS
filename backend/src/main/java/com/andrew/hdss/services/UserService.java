@@ -69,6 +69,16 @@ public class UserService {
         }
     }
 
+    @Transactional
+    public void deleteUser(UserDto userDto) throws Exception {
+        User user = userRepository.findByUsername(userDto.getEmail())
+                .orElseThrow(
+                        () -> new Exception("User does not exist")
+                );
+
+        userRepository.delete(user);
+    }
+
     private String generateVerificationToken(User user) {
         String token = UUID.randomUUID().toString();
         VerificationToken verificationToken = new VerificationToken();
