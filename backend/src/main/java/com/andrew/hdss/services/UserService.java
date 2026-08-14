@@ -1,6 +1,6 @@
 package com.andrew.hdss.services;
 
-import com.andrew.hdss.dtos.UserDto;
+import com.andrew.hdss.dtos.UserCreationRequest;
 import com.andrew.hdss.exceptions.ResourceAlreadyExistsException;
 import com.andrew.hdss.models.User;
 import com.andrew.hdss.models.VerificationToken;
@@ -27,23 +27,23 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public void createUser(UserDto userDto) throws Exception {
-        if(userRepository.existsByEmail(userDto.getEmail())){
+    public void createUser(UserCreationRequest userCreationRequest) throws Exception {
+        if(userRepository.existsByEmail(userCreationRequest.getEmail())){
             throw new ResourceAlreadyExistsException("Email is already in use");
         }
         else{
-            String username = String.valueOf(Character.toUpperCase(userDto.getFirstName().charAt(0))) +
-                    Character.toUpperCase(userDto.getLastName().charAt(0)) +
+            String username = String.valueOf(Character.toUpperCase(userCreationRequest.getFirstName().charAt(0))) +
+                    Character.toUpperCase(userCreationRequest.getLastName().charAt(0)) +
                     Util.generateRandomString(4);
 
-            UserRole userRole = UserRole.valueOf(userDto.getRole());
+            UserRole userRole = UserRole.valueOf(userCreationRequest.getRole());
 
             User user = new User();
             user.setUsername(username);
-            user.setFirstName(userDto.getFirstName());
-            user.setLastName(userDto.getLastName());
-            user.setEmail(userDto.getEmail());
-            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            user.setFirstName(userCreationRequest.getFirstName());
+            user.setLastName(userCreationRequest.getLastName());
+            user.setEmail(userCreationRequest.getEmail());
+            user.setPassword(passwordEncoder.encode(userCreationRequest.getPassword()));
             user.setDeleted(false);
             user.setRole(userRole);
 
@@ -56,7 +56,7 @@ public class UserService {
                         .subject("Account Verification")
                         .recipient(user.getEmail())
                         .title("HDSS Account Verification")
-                        .body("Thank you for signing up to HDSS, " + userDto.getFirstName() +
+                        .body("Thank you for signing up to HDSS, " + userCreationRequest.getFirstName() +
                                 " please click on the below url to activate your account: " +
                                 "http://localhost:8080/api/auth/accountVerification/" + token)
                         .build();
@@ -71,8 +71,8 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUser(UserDto userDto) throws Exception {
-        User user = userRepository.findByUsername(userDto.getEmail())
+    public void deleteUser(UserCreationRequest userCreationRequest) throws Exception {
+        User user = userRepository.findByUsername(userCreationRequest.getEmail())
                 .orElseThrow(
                         () -> new Exception("User does not exist")
                 );
