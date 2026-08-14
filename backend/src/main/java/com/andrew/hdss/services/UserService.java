@@ -44,6 +44,7 @@ public class UserService {
             user.setLastName(userDto.getLastName());
             user.setEmail(userDto.getEmail());
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            user.setDeleted(false);
             user.setRole(userRole);
 
             if(userRole == UserRole.ADMIN){
@@ -76,7 +77,10 @@ public class UserService {
                         () -> new Exception("User does not exist")
                 );
 
-        userRepository.delete(user);
+        user.setEnabled(false);
+        user.setDeleted(true);
+
+        userRepository.save(user);
     }
 
     private String generateVerificationToken(User user) {
