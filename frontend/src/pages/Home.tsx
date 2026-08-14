@@ -2,19 +2,45 @@ import { Link } from "react-router-dom";
 import { useAppSelector } from "../store/hooks";
 import { selectUsername } from "../store/AuthSlice";
 import { useLogout } from "../store/useLogout";
+import ThemeToggle from "../components/ThemeToggle";
 
 function Home() {
     const username = useAppSelector(selectUsername);
     const handleLogout = useLogout();
 
+    const today = new Date().toLocaleDateString(undefined, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
+
     return (
-        <div style={{ maxWidth: 480, margin: "4rem auto" }}>
-            <h2>Home</h2>
-            <p>Logged in as: {username}</p>
-            <nav>
-                <Link to="/dashboard">Go to Dashboard</Link>
-            </nav>
-            <button onClick={handleLogout}>Logout</button>
+        <div className="page">
+            <header className="page__header">
+                <span className="record-id">HDSS · Field Portal</span>
+                <ThemeToggle />
+            </header>
+
+            <main className="page__content">
+                <div className="card">
+                    <span className="ledger-section__eyebrow">§ 00 — Session</span>
+                    <h1>Welcome back{username ? `, ${username}` : ""}</h1>
+                    <p>{today}</p>
+
+                    <div className="ledger-section">
+                        <span className="ledger-section__eyebrow">§ 01 — Navigate</span>
+                        <div className="field-group">
+                            <Link to="/dashboard" className="btn btn--primary btn--full">
+                                Go to dashboard
+                            </Link>
+                            <button className="btn btn--ghost btn--full" onClick={handleLogout}>
+                                Sign out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
     );
 }
