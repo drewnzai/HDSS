@@ -26,6 +26,7 @@ public class UserService {
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public void createUser(UserDto userDto) throws Exception {
         if(userRepository.existsByEmail(userDto.getEmail())){
             throw new ResourceAlreadyExistsException("Email is already in use");
