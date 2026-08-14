@@ -25,7 +25,7 @@ function Home() {
             <main className="page__content">
                 <div className="card">
                     <span className="ledger-section__eyebrow">§ 00 — Session</span>
-                    <h1>Welcome back{firstName ? `, ${firstName}` : ""}</h1>
+                    <h1>Welcome back{firstName ? `, ${firstName.toUpperCase()}` : ""}</h1>
                     <p>{today}</p>
 
                     <div className="ledger-section">
