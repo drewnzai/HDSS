@@ -18,15 +18,6 @@ public class AuthController implements AuthApi {
 
     private final AuthService authService;
 
-    @PostMapping("register")
-    @Override
-    public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) throws  Exception {
-        authService.register(registerRequest);
-        return new ResponseEntity<>("Account created successfully," +
-                " check email for verification details",
-                HttpStatus.CREATED);
-    }
-
     @GetMapping("accountVerification/{token}")
     @Override
     public ResponseEntity<String> verifyAccount(@PathVariable("token") String token) {

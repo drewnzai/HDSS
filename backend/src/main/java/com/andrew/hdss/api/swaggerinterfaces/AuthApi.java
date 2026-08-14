@@ -14,16 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface AuthApi {
 
     @Operation(
-            summary = "Sign up a new user",
-            description = "Signs up a user after performing necessary checks"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "successful account creation")
-    })
-    ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) throws Exception;
-
-
-    @Operation(
             summary = "Verify a new account",
             description = "Verifies a user's verification token to enable their account"
     )

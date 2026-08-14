@@ -42,49 +42,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-
-    private final MailService mailService;
-    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-
-    public void register(RegisterRequest registerRequest) throws Exception {
-        if(userRepository.existsByEmail(registerRequest.getEmail())){
-            throw new ResourceAlreadyExistsException("Email is already in use");
-        }
-        else{
-
-            String username = String.valueOf(Character.toUpperCase(registerRequest.getFirstName().charAt(0))) +
-                    Character.toUpperCase(registerRequest.getLastName().charAt(0)) +
-                    Util.generateRandomString(4);
-
-            UserRole userRole = UserRole.valueOf(registerRequest.getRole());
-
-            User user = new User();
-            user.setUsername(username);
-            user.setFirstName(registerRequest.getFirstName());
-            user.setLastName(registerRequest.getLastName());
-            user.setEmail(registerRequest.getEmail());
-            user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-            user.setRole(userRole);
-            user.setEnabled(false);
-
-            String token = generateVerificationToken(user);
-
-            NotificationEmail email = NotificationEmail.builder()
-                            .subject("Account Verification")
-                            .recipient(user.getEmail())
-                            .title("HDSS Account Verification")
-                            .body("Thank you for signing up to HDSS, " + registerRequest.getFirstName() +
-                                    " please click on the below url to activate your account: " +
-                                    "http://localhost:8080/api/auth/accountVerification/" + token)
-                            .build();
-
-            mailService.sendMail(email);
-
-            userRepository.save(user);
-        }
-    }
 
     private void fetchUserAndEnable(VerificationToken verificationToken)  {
         String username = verificationToken.getUser().getUsername();
@@ -99,19 +58,9 @@ public class AuthService {
             verificationTokenRepository.delete(verificationToken);
             userRepository.save(user);
         }else{
+            verificationTokenRepository.delete(verificationToken);
             throw new ExpiredTokenException("Token has expired");
         }
-    }
-
-    private String generateVerificationToken(User user) {
-        String token = UUID.randomUUID().toString();
-        VerificationToken verificationToken = new VerificationToken();
-        verificationToken.setToken(token);
-        verificationToken.setExpiryDate(Instant.now().plusSeconds(864000L));
-        verificationToken.setUser(user);
-
-        verificationTokenRepository.save(verificationToken);
-        return token;
     }
 
     public void verifyAccount(String token) {
