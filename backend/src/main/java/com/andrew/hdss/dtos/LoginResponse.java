@@ -14,5 +14,6 @@ import java.time.Instant;
 public class LoginResponse {
     private String authenticationToken;
     private String refreshToken;
+    private String firstName;
     private Instant expiresAt;
 }
