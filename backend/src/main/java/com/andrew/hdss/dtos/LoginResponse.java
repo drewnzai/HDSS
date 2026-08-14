@@ -15,5 +15,6 @@ public class LoginResponse {
     private String authenticationToken;
     private String refreshToken;
     private String firstName;
+    private String role;
     private Instant expiresAt;
 }

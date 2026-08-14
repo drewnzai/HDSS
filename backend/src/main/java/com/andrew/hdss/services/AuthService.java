@@ -155,7 +155,7 @@ public class AuthService {
         refreshTokenRepository.save(refreshToken);
 
         return build(jwtUtil.generateJwtToken(authentication)
-                , refreshToken.getToken(), user.getFirstName());
+                , refreshToken.getToken(), user);
     }
 
     public LoginResponse refresh(RefreshTokenRequest refreshTokenRequest) {
@@ -173,7 +173,7 @@ public class AuthService {
 
         if(isNotExpired){
             return build(jwtUtil.generateJwtTokenFromUsername(refreshTokenRequest.getUsername())
-                    , refreshTokenRequest.getToken(), user.getFirstName());
+                    , refreshTokenRequest.getToken(), user);
         }
         else {
             refreshTokenRepository.delete(refreshToken);
@@ -182,10 +182,11 @@ public class AuthService {
         }
     }
 
-    private LoginResponse build(String token, String refreshToken, String firstName){
+    private LoginResponse build(String token, String refreshToken, User user){
         return LoginResponse.builder()
                 .authenticationToken(token)
-                .firstName(firstName)
+                .firstName(user.getFirstName())
+                .role(user.getRole().name())
                 .refreshToken(refreshToken)
                 .expiresAt(Instant.now().plusSeconds(jwtUtil.getJwtExpiration()))
                 .build();
