@@ -23,7 +23,7 @@ public class Util {
 
     public static Pageable getPageable(PaginationRequest paginationRequest) {
         return PageRequest.of(
-                paginationRequest.getPage(),
+                Math.max(paginationRequest.getPage() - 1, 0),
                 paginationRequest.getSize(),
                 paginationRequest.getDirection(),
                 paginationRequest.getSortField()
