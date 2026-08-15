@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -41,6 +42,23 @@ public class GlobalExceptionHandler {
                 "Resource already exists",
                 400,
                 exception.getMessage(),
+                request.getRequestURI(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleEmptyRequiredFields(MethodArgumentNotValidException exception, HttpServletRequest request){
+        String message = exception.getBindingResult().getFieldErrors().stream()
+                .map(f -> f.getField() + ": " + f.getDefaultMessage())
+                .findFirst()
+                .orElse("Missing Required Parameters");
+
+        return new ApiError(
+                "Validation Error",
+                400,
+                message,
                 request.getRequestURI(),
                 Instant.now()
         );
