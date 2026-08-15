@@ -1,5 +1,9 @@
 package com.andrew.hdss.utils;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import java.security.SecureRandom;
 
 public class Util {
@@ -15,5 +19,14 @@ public class Util {
         }
 
         return sb.toString();
+    }
+
+    public static Pageable getPageable(PaginationRequest paginationRequest) {
+        return PageRequest.of(
+                paginationRequest.getPage(),
+                paginationRequest.getSize(),
+                paginationRequest.getDirection(),
+                paginationRequest.getSortField()
+        );
     }
 }

@@ -1,6 +1,9 @@
 package com.andrew.hdss.services;
 
+import com.andrew.hdss.dtos.BatchResponse;
+import com.andrew.hdss.dtos.ResourceRequest;
 import com.andrew.hdss.dtos.UserCreationRequest;
+import com.andrew.hdss.dtos.UserDto;
 import com.andrew.hdss.exceptions.ResourceAlreadyExistsException;
 import com.andrew.hdss.models.User;
 import com.andrew.hdss.models.VerificationToken;
@@ -8,13 +11,17 @@ import com.andrew.hdss.models.enums.UserRole;
 import com.andrew.hdss.repositories.UserRepository;
 import com.andrew.hdss.repositories.VerificationTokenRepository;
 import com.andrew.hdss.utils.NotificationEmail;
+import com.andrew.hdss.utils.PaginationRequest;
 import com.andrew.hdss.utils.Util;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -83,6 +90,30 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional(readOnly = true)
+    public BatchResponse<UserDto> getUsers(ResourceRequest resourceRequest){
+        PaginationRequest paginationRequest = PaginationRequest.builder()
+                .page(resourceRequest.getPage())
+                .size(resourceRequest.getSize())
+                .build();
+
+        Pageable pageable = Util.getPageable(paginationRequest);
+
+        Page<User> usersPage = userRepository.findAll(pageable);
+        List<UserDto> users = usersPage.stream()
+                .map(this::convertToDto)
+                .toList();
+
+        BatchResponse<UserDto> response = new BatchResponse<>();
+        response.setPage(usersPage.getNumber());
+        response.setSize(usersPage.getSize());
+        response.setTotalPages(usersPage.getTotalPages());
+        response.setTotalElements(usersPage.getTotalElements());
+        response.setData(users);
+
+        return response;
+    }
+
     private String generateVerificationToken(User user) {
         String token = UUID.randomUUID().toString();
         VerificationToken verificationToken = new VerificationToken();
@@ -92,5 +123,15 @@ public class UserService {
 
         verificationTokenRepository.save(verificationToken);
         return token;
+    }
+
+    private UserDto convertToDto(User user){
+        return UserDto.builder()
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .enabled(user.isEnabled())
+                .deleted(user.isDeleted())
+                .build();
     }
 }

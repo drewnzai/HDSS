@@ -1,15 +1,19 @@
 package com.andrew.hdss.dtos;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
-public record BatchResponse<T>(
-        Integer count,
-
-        Long totalCount,
-
-        String nextAfterId,
-
-        List<T> data
-) {
-
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class BatchResponse<T> {
+    private Integer size;
+    private Integer page;
+    private Long totalElements;
+    private Integer totalPages;
+    private List<T> data;
 }
