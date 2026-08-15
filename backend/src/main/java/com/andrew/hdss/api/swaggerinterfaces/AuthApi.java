@@ -3,7 +3,6 @@ package com.andrew.hdss.api.swaggerinterfaces;
 import com.andrew.hdss.dtos.LoginRequest;
 import com.andrew.hdss.dtos.LoginResponse;
 import com.andrew.hdss.dtos.RefreshTokenRequest;
-import com.andrew.hdss.dtos.RegisterRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

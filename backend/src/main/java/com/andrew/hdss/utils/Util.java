@@ -1,7 +1,6 @@
 package com.andrew.hdss.utils;
 
 import java.security.SecureRandom;
-import java.util.Random;
 
 public class Util {
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

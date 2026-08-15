@@ -4,7 +4,6 @@ import com.andrew.hdss.api.swaggerinterfaces.AuthApi;
 import com.andrew.hdss.dtos.LoginRequest;
 import com.andrew.hdss.dtos.LoginResponse;
 import com.andrew.hdss.dtos.RefreshTokenRequest;
-import com.andrew.hdss.dtos.RegisterRequest;
 import com.andrew.hdss.services.AuthService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

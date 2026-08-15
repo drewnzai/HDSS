@@ -4,20 +4,15 @@ import com.andrew.hdss.auth.UserDetailsImpl;
 import com.andrew.hdss.dtos.LoginRequest;
 import com.andrew.hdss.dtos.LoginResponse;
 import com.andrew.hdss.dtos.RefreshTokenRequest;
-import com.andrew.hdss.dtos.RegisterRequest;
 import com.andrew.hdss.exceptions.ExpiredTokenException;
-import com.andrew.hdss.exceptions.ResourceAlreadyExistsException;
 import com.andrew.hdss.exceptions.UserNotVerifiedException;
 import com.andrew.hdss.models.RefreshToken;
 import com.andrew.hdss.models.User;
 import com.andrew.hdss.models.VerificationToken;
-import com.andrew.hdss.models.enums.UserRole;
 import com.andrew.hdss.repositories.RefreshTokenRepository;
 import com.andrew.hdss.repositories.UserRepository;
 import com.andrew.hdss.repositories.VerificationTokenRepository;
 import com.andrew.hdss.utils.JwtUtil;
-import com.andrew.hdss.utils.NotificationEmail;
-import com.andrew.hdss.utils.Util;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -26,13 +21,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
-import java.time.temporal.TemporalUnit;
 import java.util.UUID;
 
 @Service
