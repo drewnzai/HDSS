@@ -4,6 +4,7 @@ import com.andrew.hdss.auth.UserDetailsImpl;
 import com.andrew.hdss.dtos.LoginRequest;
 import com.andrew.hdss.dtos.LoginResponse;
 import com.andrew.hdss.dtos.RefreshTokenRequest;
+import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.exceptions.ExpiredTokenException;
 import com.andrew.hdss.exceptions.UserNotVerifiedException;
 import com.andrew.hdss.models.RefreshToken;
@@ -13,7 +14,7 @@ import com.andrew.hdss.repositories.RefreshTokenRepository;
 import com.andrew.hdss.repositories.UserRepository;
 import com.andrew.hdss.repositories.VerificationTokenRepository;
 import com.andrew.hdss.utils.JwtUtil;
-import jakarta.persistence.EntityNotFoundException;
+
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;

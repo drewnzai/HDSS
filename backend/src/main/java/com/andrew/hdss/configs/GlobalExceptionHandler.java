@@ -1,5 +1,6 @@
 package com.andrew.hdss.configs;
 
+import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.exceptions.ResourceAlreadyExistsException;
 import com.andrew.hdss.exceptions.UserNotVerifiedException;
 import com.andrew.hdss.utils.ApiError;
@@ -39,6 +40,18 @@ public class GlobalExceptionHandler {
         return new ApiError(
                 "Resource already exists",
                 400,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleEntityNotFound(EntityNotFoundException exception, HttpServletRequest request){
+        return new ApiError(
+                "Entity not found",
+                404,
                 exception.getMessage(),
                 request.getRequestURI(),
                 Instant.now()
