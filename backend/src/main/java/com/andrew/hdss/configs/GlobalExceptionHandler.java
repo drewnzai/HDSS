@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
             UsernameNotFoundException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleWrongPassword(BadCredentialsException exception, HttpServletRequest request){
+    public ApiError handleWrongPassword(Exception exception, HttpServletRequest request){
         return new ApiError(
                 "Bad Credentials",
                 400,
