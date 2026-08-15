@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -44,11 +45,14 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
+    @ExceptionHandler({
+            BadCredentialsException.class,
+            UsernameNotFoundException.class
+    })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleWrongPassword(BadCredentialsException exception, HttpServletRequest request){
         return new ApiError(
-                "Wrong username or password",
+                "Bad Credentials",
                 400,
                 "Wrong username or password",
                 request.getRequestURI(),
