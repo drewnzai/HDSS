@@ -4,10 +4,13 @@ import com.andrew.hdss.dtos.BatchResponse;
 import com.andrew.hdss.dtos.ResourceRequest;
 import com.andrew.hdss.dtos.UserCreationRequest;
 import com.andrew.hdss.dtos.UserDto;
+import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.exceptions.ResourceAlreadyExistsException;
+import com.andrew.hdss.models.RefreshToken;
 import com.andrew.hdss.models.User;
 import com.andrew.hdss.models.VerificationToken;
 import com.andrew.hdss.models.enums.UserRole;
+import com.andrew.hdss.repositories.RefreshTokenRepository;
 import com.andrew.hdss.repositories.UserRepository;
 import com.andrew.hdss.repositories.VerificationTokenRepository;
 import com.andrew.hdss.utils.NotificationEmail;
@@ -30,6 +33,7 @@ import java.util.UUID;
 public class UserService {
     private final UserRepository userRepository;
     private final VerificationTokenRepository verificationTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
 
@@ -79,13 +83,18 @@ public class UserService {
 
     @Transactional
     public void deleteUser(UserCreationRequest userCreationRequest) throws Exception {
-        User user = userRepository.findByUsername(userCreationRequest.getEmail())
+        User user = userRepository.findByEmail(userCreationRequest.getEmail())
                 .orElseThrow(
-                        () -> new Exception("User does not exist")
+                        () -> new EntityNotFoundException("User does not exist")
                 );
 
         user.setEnabled(false);
         user.setDeleted(true);
+
+        List<RefreshToken> refreshTokens = refreshTokenRepository.findByUser(user);
+        if(!refreshTokens.isEmpty()){
+            refreshTokenRepository.deleteAll(refreshTokens);
+        }
 
         userRepository.save(user);
     }
