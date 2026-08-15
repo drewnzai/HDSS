@@ -2,16 +2,15 @@ package com.andrew.hdss.api;
 
 import com.andrew.hdss.dtos.BatchResponse;
 import com.andrew.hdss.dtos.ResourceRequest;
+import com.andrew.hdss.dtos.UserCreationRequest;
 import com.andrew.hdss.dtos.UserDto;
 import com.andrew.hdss.services.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
@@ -35,5 +34,13 @@ public class UserController {
         }
 
         return new ResponseEntity<>(userService.getUsers(resourceRequest), HttpStatus.OK);
+    }
+
+    @PostMapping("/add")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> createUser(@Valid @RequestBody UserCreationRequest request) throws Exception {
+        userService.createUser(request);
+        return new ResponseEntity<>("User created successfully",
+                HttpStatus.OK);
     }
 }
