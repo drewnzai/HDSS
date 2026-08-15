@@ -33,7 +33,8 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/user").hasRole("ADMIN")
-                        .requestMatchers("/api/user/add").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/user/add").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/user/delete").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider).addFilterBefore(

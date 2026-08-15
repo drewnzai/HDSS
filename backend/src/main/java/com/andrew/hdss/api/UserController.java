@@ -43,4 +43,12 @@ public class UserController {
         return new ResponseEntity<>("User created successfully",
                 HttpStatus.OK);
     }
+
+    @DeleteMapping("/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> deleteUser(@Valid @RequestBody UserCreationRequest request) throws Exception {
+        userService.deleteUser(request);
+        return new ResponseEntity<>("User deleted successfully",
+                HttpStatus.OK);
+    }
 }
