@@ -36,6 +36,7 @@ function UserManagement() {
                                     <th>Username</th>
                                     <th>First name</th>
                                     <th>Last name</th>
+                                    <th>Email</th>
                                     <th>Status</th>
                                     <th className="data-table__actions-col">Actions</th>
                                 </tr>
@@ -46,6 +47,7 @@ function UserManagement() {
                                         <td className="record-id">{user.username}</td>
                                         <td>{user.firstName}</td>
                                         <td>{user.lastName}</td>
+                                        <td>{user.email}</td>
                                         <td>
                                             {user.deleted ? (
                                                 <span className="badge badge--danger">Deleted</span>
