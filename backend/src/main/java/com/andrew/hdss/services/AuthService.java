@@ -6,6 +6,7 @@ import com.andrew.hdss.dtos.LoginResponse;
 import com.andrew.hdss.dtos.RefreshTokenRequest;
 import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.exceptions.ExpiredTokenException;
+import com.andrew.hdss.exceptions.UserDeletedException;
 import com.andrew.hdss.exceptions.UserNotVerifiedException;
 import com.andrew.hdss.models.RefreshToken;
 import com.andrew.hdss.models.User;
@@ -84,6 +85,10 @@ public class AuthService {
             throw new UserNotVerifiedException("User is not verified. Please check email and verify");
         }
 
+        if(user.isDeleted()){
+            throw new UserDeletedException("The user is deleted");
+        }
+
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
                         loginRequest.getPassword()));
@@ -107,7 +112,7 @@ public class AuthService {
         );
 
         if(user.isDeleted()){
-         throw new UserDeletedException("The user is deleted");
+            throw new UserDeletedException("The user is deleted");
         }
 
         RefreshToken refreshToken = refreshTokenRepository.
