@@ -16,31 +16,17 @@ function Home() {
     });
 
     return (
-        <div className="page">
-            <header className="page__header">
-                <span className="record-id">HDSS · Field Portal</span>
-                <ThemeToggle />
-            </header>
+        <div className="card">
+            <span className="ledger-section__eyebrow">§ 00 — Session</span>
+            <h1>Welcome back{firstName ? `, ${firstName}` : ""}</h1>
+            <p>{today}</p>
 
-            <main className="page__content">
-                <div className="card">
-                    <span className="ledger-section__eyebrow">§ 00 — Session</span>
-                    <h1>Welcome back{firstName ? `, ${firstName.toUpperCase()}` : ""}</h1>
-                    <p>{today}</p>
-
-                    <div className="ledger-section">
-                        <span className="ledger-section__eyebrow">§ 01 — Navigate</span>
-                        <div className="field-group">
-                            <Link to="/dashboard" className="btn btn--primary btn--full">
-                                Go to dashboard
-                            </Link>
-                            <button className="btn btn--ghost btn--full" onClick={handleLogout}>
-                                Sign out
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </main>
+            <div className="ledger-section">
+                <span className="ledger-section__eyebrow">§ 01 — Navigate</span>
+                <Link to="/dashboard" className="btn btn--primary">
+                    Go to dashboard
+                </Link>
+            </div>
         </div>
     );
 }
