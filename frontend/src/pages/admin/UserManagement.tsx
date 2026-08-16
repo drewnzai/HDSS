@@ -85,7 +85,7 @@ function UserManagement() {
                                         <td className="data-table__actions">
                                             <button
                                                 className="btn btn--ghost btn--sm"
-                                                onClick={() => navigate(`/admin/users/${user.username}`)}
+                                                onClick={() => navigate(`/admin/users/${user.username}`, { state: { user } })}
                                             >
                                                 Display
                                             </button>
