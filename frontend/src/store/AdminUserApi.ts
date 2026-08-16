@@ -24,11 +24,12 @@ export const adminUserApi = createApi({
                     : [{ type: "User" as const, id: "LIST" }]
         }),
 
-        deleteUser: builder.mutation<void, UserSummary>({
+        deleteUser: builder.mutation<string, UserSummary>({
             query: (user) => ({
                 url: "user/delete",
                 method: "DELETE",
-                body: user
+                body: user,
+                responseHandler: "text"
             }),
             invalidatesTags: (_result, _error, user) => [
                 { type: "User", id: user.username },

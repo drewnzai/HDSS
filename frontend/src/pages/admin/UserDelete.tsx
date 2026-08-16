@@ -28,11 +28,9 @@ function UserDelete() {
 
     const handleDelete = async () => {
         try {
-            await deleteUser(user).unwrap();
-            navigate("/admin/users", { replace: true });
-        } catch {
-            // error state below reflects the failure
-        }
+            const message = await deleteUser(user).unwrap();
+            navigate("/admin/users", { replace: true, state: { flash: message } });
+        } catch {}
     };
 
     return (

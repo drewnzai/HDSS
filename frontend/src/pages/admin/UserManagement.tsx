@@ -1,15 +1,33 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect} from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useGetUsersQuery } from "../../store/AdminUserApi";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
+
+interface LocationState {
+    flash?: string;
+}
 
 function UserManagement() {
     const [page, setPage] = useState(0); // backend is 0-indexed
     const [size, setSize] = useState(10);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const [flash, setFlash] = useState<string | null>(
+        (location.state as LocationState | null)?.flash ?? null
+    );
+
 
     const { data, isLoading, isFetching, error } = useGetUsersQuery({ page, size });
+
+    useEffect(() => {
+        if (!flash) return;
+        const timer = setTimeout(() => setFlash(null), 4000);
+        navigate(location.pathname, { replace: true, state: {} });
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash]);
 
     const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSize(Number(e.target.value));
@@ -21,8 +39,15 @@ function UserManagement() {
 
     return (
         <div className="card card--wide">
+            {flash && (
+                <div className="flash flash--success" role="status">
+                    {flash}
+                </div>
+            )}
             <span className="ledger-section__eyebrow">§ Admin — User Management</span>
             <h1>Users</h1>
+
+
 
             {isLoading && <p>Loading users…</p>}
             {error && <p className="field__error">Couldn't load users. Try refreshing.</p>}
