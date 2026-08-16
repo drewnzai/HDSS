@@ -66,7 +66,9 @@ function UserManagement() {
                                             </button>
                                             <button
                                                 className="btn btn--danger-ghost btn--sm"
-                                                onClick={() => navigate(`/admin/users/${user.username}/delete`)}
+                                                onClick={() =>
+                                                    navigate(`/admin/users/${user.username}/delete`, { state: { user } })
+                                                }
                                             >
                                                 Delete
                                             </button>

@@ -24,13 +24,16 @@ export const adminUserApi = createApi({
                     : [{ type: "User" as const, id: "LIST" }]
         }),
 
-        // Used by the delete confirmation page, not the table itself.
-        deleteUser: builder.mutation<void, string>({
-            query: (username) => ({
-                url: `user/${username}`,
-                method: "DELETE"
+        deleteUser: builder.mutation<void, UserSummary>({
+            query: (user) => ({
+                url: "user/delete",
+                method: "DELETE",
+                body: user
             }),
-            invalidatesTags: [{ type: "User", id: "LIST" }]
+            invalidatesTags: (_result, _error, user) => [
+                { type: "User", id: user.username },
+                { type: "User", id: "LIST" }
+            ]
         })
     })
 });
