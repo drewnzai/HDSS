@@ -6,6 +6,7 @@ import com.andrew.hdss.dtos.ResourceRequest;
 import com.andrew.hdss.dtos.UserCreationRequest;
 import com.andrew.hdss.dtos.UserDto;
 import com.andrew.hdss.services.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/user")
 @AllArgsConstructor
+@Tag(name = "User Management")
 public class UserController implements UserApi {
 
     private final UserService userService;

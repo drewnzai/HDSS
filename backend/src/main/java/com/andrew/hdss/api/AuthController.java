@@ -5,6 +5,7 @@ import com.andrew.hdss.dtos.LoginRequest;
 import com.andrew.hdss.dtos.LoginResponse;
 import com.andrew.hdss.dtos.RefreshTokenRequest;
 import com.andrew.hdss.services.AuthService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth/")
 @AllArgsConstructor
+@Tag(name = "Authentication Handler")
 public class AuthController implements AuthApi {
 
     private final AuthService authService;
