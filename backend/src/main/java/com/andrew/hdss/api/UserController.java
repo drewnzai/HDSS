@@ -1,5 +1,6 @@
 package com.andrew.hdss.api;
 
+import com.andrew.hdss.api.swaggerinterfaces.UserApi;
 import com.andrew.hdss.dtos.BatchResponse;
 import com.andrew.hdss.dtos.ResourceRequest;
 import com.andrew.hdss.dtos.UserCreationRequest;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/user")
 @AllArgsConstructor
-public class UserController {
+public class UserController implements UserApi {
 
     private final UserService userService;
 
