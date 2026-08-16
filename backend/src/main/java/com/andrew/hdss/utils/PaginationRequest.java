@@ -14,7 +14,7 @@ import org.springframework.data.domain.Sort;
 public class PaginationRequest {
 
     @Builder.Default
-    private Integer page = 1;
+    private Integer page = 0;
 
     @Builder.Default
     private Integer size = 10;
