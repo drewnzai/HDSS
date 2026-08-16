@@ -2,6 +2,7 @@ package com.andrew.hdss.configs;
 
 import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.exceptions.ResourceAlreadyExistsException;
+import com.andrew.hdss.exceptions.UserDeletedException;
 import com.andrew.hdss.exceptions.UserNotVerifiedException;
 import com.andrew.hdss.utils.ApiError;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -27,7 +28,19 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleUserNotVerified(UserNotVerifiedException exception, HttpServletRequest request){
         return new ApiError(
-                "User is not verified",
+                "Unverified User",
+                400,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(UserDeletedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleUserDeleted(UserDeletedException exception, HttpServletRequest request){
+        return new ApiError(
+                "Deleted User",
                 400,
                 exception.getMessage(),
                 request.getRequestURI(),
@@ -39,7 +52,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleResourceAlreadyExists(ResourceAlreadyExistsException exception, HttpServletRequest request){
         return new ApiError(
-                "Resource already exists",
+                "Duplicate Resource",
                 400,
                 exception.getMessage(),
                 request.getRequestURI(),

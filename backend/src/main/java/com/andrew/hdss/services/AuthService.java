@@ -105,6 +105,11 @@ public class AuthService {
         User user = userRepository.findByUsername(refreshTokenRequest.getUsername()).orElseThrow(
                 () -> new EntityNotFoundException("Could not find user")
         );
+
+        if(user.isDeleted()){
+         throw new UserDeletedException("The user is deleted");
+        }
+
         RefreshToken refreshToken = refreshTokenRepository.
                 findByTokenAndUser(refreshTokenRequest.getToken(), user)
                 .orElseThrow(
