@@ -20,7 +20,7 @@ function UserManagement() {
     const canGoNext = data ? page < data.totalPages - 1 : false;
 
     return (
-        <div className="card">
+        <div className="card card--wide">
             <span className="ledger-section__eyebrow">§ Admin — User Management</span>
             <h1>Users</h1>
 

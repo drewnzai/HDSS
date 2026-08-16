@@ -11,6 +11,7 @@ function Layout() {
     );
     const [mobileOpen, setMobileOpen] = useState(false);
     const location = useLocation();
+    const isWide = location.pathname.startsWith("/admin/users");
     const handleLogout = useLogout();
 
     // close the mobile drawer whenever the route changes
@@ -53,7 +54,7 @@ function Layout() {
                     </div>
                 </header>
 
-                <main className="page__content">
+                <main className={`page__content ${isWide ? "page__content--wide" : ""}`}>
                     <Outlet />
                 </main>
             </div>
