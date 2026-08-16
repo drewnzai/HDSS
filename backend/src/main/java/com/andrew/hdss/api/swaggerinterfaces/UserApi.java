@@ -48,5 +48,5 @@ public interface UserApi {
                             description = "User deleted successfully")
             }
     )
-    ResponseEntity<String> deleteUser(@Valid @RequestBody UserCreationRequest request) throws Exception;
+    ResponseEntity<String> deleteUser(@Valid @RequestBody UserDto userDto) throws Exception;
 }

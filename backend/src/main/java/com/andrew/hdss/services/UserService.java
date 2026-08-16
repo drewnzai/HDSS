@@ -82,8 +82,8 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUser(UserCreationRequest userCreationRequest) throws Exception {
-        User user = userRepository.findByEmail(userCreationRequest.getEmail())
+    public void deleteUser(UserDto userDto) throws Exception {
+        User user = userRepository.findByEmail(userDto.getEmail())
                 .orElseThrow(
                         () -> new EntityNotFoundException("User does not exist")
                 );
@@ -139,6 +139,7 @@ public class UserService {
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .email(user.getEmail())
                 .enabled(user.isEnabled())
                 .deleted(user.isDeleted())
                 .build();

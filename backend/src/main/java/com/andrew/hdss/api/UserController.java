@@ -49,8 +49,8 @@ public class UserController implements UserApi {
 
     @DeleteMapping("/delete")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteUser(@Valid @RequestBody UserCreationRequest request) throws Exception {
-        userService.deleteUser(request);
+    public ResponseEntity<String> deleteUser(@RequestBody UserDto userDto) throws Exception {
+        userService.deleteUser(userDto);
         return new ResponseEntity<>("User deleted successfully",
                 HttpStatus.OK);
     }
