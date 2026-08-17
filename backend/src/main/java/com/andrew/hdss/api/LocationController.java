@@ -2,14 +2,16 @@ package com.andrew.hdss.api;
 
 import com.andrew.hdss.dtos.CreateLocationRequest;
 import com.andrew.hdss.dtos.LocationDto;
+import com.andrew.hdss.dtos.LocationImportResult;
 import com.andrew.hdss.services.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/locations")
@@ -18,7 +20,7 @@ public class LocationController {
     private final LocationService locationService;
 
     @GetMapping
-    public List<LocationDto> getChildren(@RequestParam(required = false) Long parentId) {
+    public List<LocationDto> getChildren(@RequestParam(name = "id", required = false) Long parentId) {
         return locationService.getChildren(parentId);
     }
 
@@ -38,5 +40,13 @@ public class LocationController {
                 request.getName(), request.getType(), request.getParentId()
         );
         return new ResponseEntity<>("Location Created Successfully", HttpStatus.OK);
+    }
+
+    @PostMapping("/import")
+    public LocationImportResult importLocations(@RequestParam("file") MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Uploaded file is empty.");
+        }
+        return locationService.importFromSpreadsheet(file);
     }
 }
