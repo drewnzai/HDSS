@@ -60,6 +60,18 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleIllegalArguments(IllegalArgumentException exception, HttpServletRequest request){
+        return new ApiError(
+                "Malformed Parameters",
+                400,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Instant.now()
+        );
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleEmptyRequiredFields(MethodArgumentNotValidException exception, HttpServletRequest request){
