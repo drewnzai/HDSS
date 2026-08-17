@@ -24,6 +24,11 @@ export const adminUserApi = createApi({
                     : [{ type: "User" as const, id: "LIST" }]
         }),
 
+        getUserByUsername: builder.query<UserSummary, string>({
+            query: (username) => `user/${username}`,
+            providesTags: (_result, _error, username) => [{ type: "User", id: username }]
+        }),
+
         deleteUser: builder.mutation<string, UserSummary>({
             query: (user) => ({
                 url: "user/delete",
@@ -39,4 +44,4 @@ export const adminUserApi = createApi({
     })
 });
 
-export const { useGetUsersQuery, useDeleteUserMutation } = adminUserApi;
+export const { useGetUsersQuery, useGetUserByUsernameQuery, useDeleteUserMutation } = adminUserApi;
