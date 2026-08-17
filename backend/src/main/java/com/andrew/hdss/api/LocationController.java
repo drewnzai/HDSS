@@ -5,6 +5,7 @@ import com.andrew.hdss.dtos.CreateLocationRequest;
 import com.andrew.hdss.dtos.LocationDto;
 import com.andrew.hdss.dtos.LocationImportResult;
 import com.andrew.hdss.services.LocationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/locations")
 @RequiredArgsConstructor
+@Tag(name= "Location Management")
 public class LocationController implements LocationApi {
     private final LocationService locationService;
 
