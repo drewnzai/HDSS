@@ -39,6 +39,12 @@ public class UserController implements UserApi {
         return new ResponseEntity<>(userService.getUsers(resourceRequest), HttpStatus.OK);
     }
 
+    @GetMapping("/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDto> getUser(@PathVariable(name = "username") String username){
+        return new ResponseEntity<>(userService.getUser(username), HttpStatus.OK);
+    }
+
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> createUser(@Valid @RequestBody UserCreationRequest request) throws Exception {

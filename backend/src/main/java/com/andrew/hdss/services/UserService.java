@@ -132,6 +132,16 @@ public class UserService {
         return response;
     }
 
+    @Transactional(readOnly = true)
+    public UserDto getUser(String username){
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(
+                        () -> new EntityNotFoundException("User does not exist with username: " + username)
+                );
+
+        return convertToDto(user);
+    }
+
     private String generateVerificationToken(User user) {
         String token = UUID.randomUUID().toString();
         VerificationToken verificationToken = new VerificationToken();
