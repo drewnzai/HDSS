@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useGetUserByUsernameQuery } from "../../store/AdminUserApi";
 import type { UserSummary } from "../../models/UserSummary";
 
 interface LocationState {
@@ -7,21 +7,41 @@ interface LocationState {
 }
 
 function UserDetail() {
+    const { username } = useParams<{ username: string }>();
     const location = useLocation();
     const navigate = useNavigate();
 
-    const user = (location.state as LocationState | null)?.user;
+    const stateUser = (location.state as LocationState | null)?.user;
 
-    // Guard against direct navigation or a refresh, where state is lost
-    // and there's no endpoint to look a single user up by username yet.
-    useEffect(() => {
-        if (!user) {
-            navigate("/admin/users", { replace: true });
-        }
-    }, [user, navigate]);
+    // Only hit the network if we didn't already get the user via navigation state
+    // (e.g. a refresh, a bookmarked link, or someone pasting the URL directly).
+    const {
+        data: fetchedUser,
+        isLoading,
+        error
+    } = useGetUserByUsernameQuery(username!, {
+        skip: !username || Boolean(stateUser)
+    });
 
-    if (!user) {
-        return null;
+    const user = stateUser ?? fetchedUser;
+
+    if (!stateUser && isLoading) {
+        return (
+            <div className="card">
+                <p>Loading user…</p>
+            </div>
+        );
+    }
+
+    if (!user || error) {
+        return (
+            <div className="card">
+                <p className="field__error">Couldn't find that user.</p>
+                <button className="btn btn--ghost" onClick={() => navigate("/admin/users")}>
+                    Back to users
+                </button>
+            </div>
+        );
     }
 
     return (

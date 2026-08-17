@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useDeleteUserMutation } from "../../store/AdminUserApi";
+import { useDeleteUserMutation, useGetUserByUsernameQuery } from "../../store/AdminUserApi";
 import type { UserSummary } from "../../models/UserSummary";
 
 interface LocationState {
@@ -8,29 +8,44 @@ interface LocationState {
 }
 
 function UserDelete() {
+    const { username } = useParams<{ username: string }>();
     const location = useLocation();
     const navigate = useNavigate();
-    const [deleteUser, { isLoading, error }] = useDeleteUserMutation();
+    const [deleteUser, { isLoading: isDeleting, error: deleteError }] = useDeleteUserMutation();
 
-    const user = (location.state as LocationState | null)?.user;
+    const stateUser = (location.state as LocationState | null)?.user;
 
-    // Guard against direct navigation or a page refresh, where state is lost
-    // and there's no endpoint to look a single user up by username.
+    const {
+        data: fetchedUser,
+        isLoading: isLoadingUser,
+        error: fetchError
+    } = useGetUserByUsernameQuery(username!, {
+        skip: !username || Boolean(stateUser)
+    });
+
+    const user = stateUser ?? fetchedUser;
+
     useEffect(() => {
-        if (!user) {
+        if (!stateUser && !isLoadingUser && (fetchError || !fetchedUser)) {
             navigate("/admin/users", { replace: true });
         }
-    }, [user, navigate]);
+    }, [stateUser, isLoadingUser, fetchError, fetchedUser, navigate]);
 
     if (!user) {
-        return null;
+        return isLoadingUser ? (
+            <div className="card">
+                <p>Loading user…</p>
+            </div>
+        ) : null;
     }
 
     const handleDelete = async () => {
         try {
             const message = await deleteUser(user).unwrap();
             navigate("/admin/users", { replace: true, state: { flash: message } });
-        } catch {}
+        } catch {
+            // error state below reflects the failure
+        }
     };
 
     return (
@@ -43,11 +58,11 @@ function UserDelete() {
                 be undone from here.
             </p>
 
-            {error && <p className="field__error">Couldn't delete this user. Try again.</p>}
+            {deleteError && <p className="field__error">Couldn't delete this user. Try again.</p>}
 
             <div className="field-group" style={{ flexDirection: "row", gap: "var(--space-3)" }}>
-                <button className="btn btn--danger" onClick={handleDelete} disabled={isLoading}>
-                    {isLoading ? "Deleting…" : "Confirm delete"}
+                <button className="btn btn--danger" onClick={handleDelete} disabled={isDeleting}>
+                    {isDeleting ? "Deleting…" : "Confirm delete"}
                 </button>
                 <button className="btn btn--ghost" onClick={() => navigate("/admin/users")}>
                     Cancel
