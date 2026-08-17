@@ -4,6 +4,8 @@ import com.andrew.hdss.dtos.CreateLocationRequest;
 import com.andrew.hdss.dtos.LocationDto;
 import com.andrew.hdss.services.LocationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,9 +33,10 @@ public class LocationController {
     }
 
     @PostMapping
-    public void createLocation(@RequestBody CreateLocationRequest request) {
+    public ResponseEntity<String> createLocation(@RequestBody CreateLocationRequest request) {
         locationService.createLocation(
                 request.getName(), request.getType(), request.getParentId()
         );
+        return new ResponseEntity<>("Location Created Successfully", HttpStatus.OK);
     }
 }
