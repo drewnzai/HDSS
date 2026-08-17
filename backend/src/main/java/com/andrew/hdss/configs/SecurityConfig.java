@@ -36,6 +36,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/user/{username}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/user/add").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/user/delete").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/location").hasRole("ADMIN")
+                        .requestMatchers("/api/location/import").hasRole("ADMIN")
+                        .requestMatchers("/api/location/**").hasAnyRole("ADMIN", "USER")
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider).addFilterBefore(

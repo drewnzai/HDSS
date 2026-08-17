@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +40,7 @@ public class LocationController implements LocationApi {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> createLocation(@RequestBody CreateLocationRequest request) {
         locationService.createLocation(
                 request.getName(), request.getType(), request.getParentId()
@@ -47,6 +49,7 @@ public class LocationController implements LocationApi {
     }
 
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public LocationImportResult importLocations(@RequestParam("file") MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("Uploaded file is empty.");
