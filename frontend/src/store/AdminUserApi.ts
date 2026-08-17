@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "./AuthApi";
 import type { PagedResponse } from "../models/PagedResponse";
 import type { UserSummary } from "../models/UserSummary";
+import type { CreateUserRequest } from "../models/CreateUserRequest";
 
 interface GetUsersParams {
     page: number;
@@ -29,6 +30,16 @@ export const adminUserApi = createApi({
             providesTags: (_result, _error, username) => [{ type: "User", id: username }]
         }),
 
+        createUser: builder.mutation<string, CreateUserRequest>({
+            query: (body) => ({
+                url: "user/add",
+                method: "POST",
+                body,
+                responseHandler: "text" // same plain-string response pattern as delete
+            }),
+            invalidatesTags: [{ type: "User", id: "LIST" }]
+        }),
+
         deleteUser: builder.mutation<string, UserSummary>({
             query: (user) => ({
                 url: "user/delete",
@@ -44,4 +55,9 @@ export const adminUserApi = createApi({
     })
 });
 
-export const { useGetUsersQuery, useGetUserByUsernameQuery, useDeleteUserMutation } = adminUserApi;
+export const {
+    useGetUsersQuery,
+    useGetUserByUsernameQuery,
+    useDeleteUserMutation,
+    useCreateUserMutation
+} = adminUserApi;

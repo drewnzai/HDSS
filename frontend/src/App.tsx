@@ -7,6 +7,7 @@ import UserDetail from "./pages/admin/UserDetail";
 import UserDelete from "./pages/admin/UserDelete";
 import ProtectedRoute from "./store/ProtectedRoute";
 import Layout from "./components/Layout";
+import CreateUser from "./pages/admin/CreateUser";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
 
           <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
             <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/users/create" element={<CreateUser />} />
             <Route path="/admin/users/:username" element={<UserDetail />} />
             <Route path="/admin/users/:username/delete" element={<UserDelete />} />
           </Route>

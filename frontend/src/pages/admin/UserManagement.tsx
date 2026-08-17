@@ -37,8 +37,15 @@ function UserManagement() {
 
     return (
         <div className="card card--wide">
-            <span className="ledger-section__eyebrow">§ Admin — User Management</span>
-            <h1>Users</h1>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                    <span className="ledger-section__eyebrow">§ Admin — User Management</span>
+                    <h1>Users</h1>
+                </div>
+                <button className="btn btn--primary" onClick={() => navigate("/admin/users/create")}>
+                    Create user
+                </button>
+            </div>
 
             {flash && (
                 <div className="flash flash--success" role="status">
