@@ -7,6 +7,7 @@ import com.andrew.hdss.dtos.LocationImportResult;
 import com.andrew.hdss.services.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,7 +44,7 @@ public class LocationController implements LocationApi {
         return new ResponseEntity<>("Location Created Successfully", HttpStatus.OK);
     }
 
-    @PostMapping("/import")
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public LocationImportResult importLocations(@RequestParam("file") MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("Uploaded file is empty.");
