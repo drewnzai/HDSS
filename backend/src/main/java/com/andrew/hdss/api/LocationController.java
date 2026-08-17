@@ -1,5 +1,6 @@
 package com.andrew.hdss.api;
 
+import com.andrew.hdss.api.swaggerinterfaces.LocationApi;
 import com.andrew.hdss.dtos.CreateLocationRequest;
 import com.andrew.hdss.dtos.LocationDto;
 import com.andrew.hdss.dtos.LocationImportResult;
@@ -16,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/locations")
 @RequiredArgsConstructor
-public class LocationController {
+public class LocationController implements LocationApi {
     private final LocationService locationService;
 
     @GetMapping
