@@ -15,7 +15,13 @@ function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
     }
 
     if (requiredRole && role !== requiredRole) {
-        return <Navigate to="/" replace />; // logged in, but not permitted
+        return (
+            <Navigate
+                to="/"
+                replace
+                state={{ flash: "You don't have permission to access that page.", flashType: "danger" }}
+            />
+        );
     }
 
     return <Outlet />;

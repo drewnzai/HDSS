@@ -1,12 +1,29 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../store/hooks";
-import { selectFirstName} from "../store/AuthSlice";
-import { useLogout } from "../store/useLogout";
-import ThemeToggle from "../components/ThemeToggle";
+import { selectFirstName } from "../store/AuthSlice";
+
+interface LocationState {
+    flash?: string;
+    flashType?: "success" | "danger";
+}
 
 function Home() {
     const firstName = useAppSelector(selectFirstName);
-    const handleLogout = useLogout();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const state = location.state as LocationState | null;
+    const [flash, setFlash] = useState<string | null>(state?.flash ?? null);
+    const [flashType] = useState<"success" | "danger">(state?.flashType ?? "success");
+
+    useEffect(() => {
+        if (!flash) return;
+        const timer = setTimeout(() => setFlash(null), 4000);
+        navigate(location.pathname, { replace: true, state: {} });
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash]);
 
     const today = new Date().toLocaleDateString(undefined, {
         weekday: "long",
@@ -17,6 +34,12 @@ function Home() {
 
     return (
         <div className="card">
+            {flash && (
+                <div className={`flash flash--${flashType}`} role={flashType === "danger" ? "alert" : "status"}>
+                    {flash}
+                </div>
+            )}
+
             <span className="ledger-section__eyebrow">§ 00 — Session</span>
             <h1>Welcome back{firstName ? `, ${firstName}` : ""}</h1>
             <p>{today}</p>
