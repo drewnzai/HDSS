@@ -17,6 +17,7 @@ import com.andrew.hdss.utils.NotificationEmail;
 import com.andrew.hdss.utils.PaginationRequest;
 import com.andrew.hdss.utils.Util;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -104,6 +105,10 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(
+            value = "users",
+            key = "#resourceRequest.page + '-' + #resourceRequest.size"
+    )
     public BatchResponse<UserDto> getUsers(ResourceRequest resourceRequest){
         PaginationRequest paginationRequest = PaginationRequest.builder()
                 .page(resourceRequest.getPage())
