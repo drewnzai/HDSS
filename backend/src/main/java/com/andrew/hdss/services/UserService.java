@@ -40,7 +40,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    @CacheEvict(cacheNames = "users")
+    @CacheEvict(cacheNames = "users", allEntries = true)
     public void createUser(UserCreationRequest userCreationRequest) throws Exception {
         if(userRepository.existsByEmail(userCreationRequest.getEmail())){
             throw new ResourceAlreadyExistsException("Email is already in use");
@@ -85,6 +85,7 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "users", allEntries = true)
     public void deleteUser(UserDto userDto) throws Exception {
         User user = userRepository.findByEmail(userDto.getEmail())
                 .orElseThrow(
