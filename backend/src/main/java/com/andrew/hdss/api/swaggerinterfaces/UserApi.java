@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -15,7 +16,7 @@ public interface UserApi {
 
     @Operation(
             summary = "Get Users",
-            description = "Get user information"
+            description = "Get users information"
     )
     @ApiResponses(
             value = {
@@ -25,6 +26,18 @@ public interface UserApi {
     )
     ResponseEntity<BatchResponse<UserDto>> getUsers(@RequestParam(name = "page", required = false) Integer page,
                                                     @RequestParam(name = "size", required = false) Integer size);
+
+    @Operation(
+            summary = "Individual User Information",
+            description = "Get individual user's information"
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200",
+                            description = "User information retrieved successfully")
+            }
+    )
+    ResponseEntity<UserDto> getUser(@PathVariable(name = "username") String username);
 
     @Operation(
             summary = "User Creation",
