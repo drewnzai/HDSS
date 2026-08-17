@@ -17,6 +17,7 @@ import com.andrew.hdss.utils.NotificationEmail;
 import com.andrew.hdss.utils.PaginationRequest;
 import com.andrew.hdss.utils.Util;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +40,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
+    @CacheEvict(cacheNames = "users")
     public void createUser(UserCreationRequest userCreationRequest) throws Exception {
         if(userRepository.existsByEmail(userCreationRequest.getEmail())){
             throw new ResourceAlreadyExistsException("Email is already in use");
