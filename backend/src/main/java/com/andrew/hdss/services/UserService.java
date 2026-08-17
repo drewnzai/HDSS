@@ -88,6 +88,10 @@ public class UserService {
                         () -> new EntityNotFoundException("User does not exist")
                 );
 
+        if(user.isDeleted()){
+            return;
+        }
+
         user.setEnabled(false);
         user.setDeleted(true);
 
