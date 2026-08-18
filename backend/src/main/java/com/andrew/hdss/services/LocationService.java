@@ -35,7 +35,7 @@ public class LocationService {
             @CacheEvict(cacheNames = "location-descendants", allEntries = true),
             @CacheEvict(cacheNames = "location-ancestors", allEntries = true)
     })
-    public Location createLocation(String name, String locationType, Long parentId) {
+    public Location createLocation(String name, String locationType, Long parentId, String code) {
         Location parent = null;
 
         LocationType type = LocationType.valueOf(locationType);
@@ -67,6 +67,7 @@ public class LocationService {
         Location location = new Location();
         location.setName(name);
         location.setType(type);
+        location.setCode(code);
         location.setParent(parent);
         location.setAncestorPath(buildAncestorPath(parent));
 

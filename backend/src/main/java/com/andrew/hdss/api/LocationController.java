@@ -6,6 +6,7 @@ import com.andrew.hdss.dtos.LocationDto;
 import com.andrew.hdss.dtos.LocationImportResult;
 import com.andrew.hdss.services.LocationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,9 +42,9 @@ public class LocationController implements LocationApi {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> createLocation(@RequestBody CreateLocationRequest request) {
+    public ResponseEntity<String> createLocation(@RequestBody @Valid CreateLocationRequest request) {
         locationService.createLocation(
-                request.getName(), request.getType(), request.getParentId()
+                request.getName(), request.getType(), request.getParentId(), request.getCode()
         );
         return new ResponseEntity<>("Location Created Successfully", HttpStatus.OK);
     }
