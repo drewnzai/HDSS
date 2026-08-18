@@ -18,8 +18,10 @@ function CreateLocation() {
     const type = parent ? childTypeOf(parent.type) : "COUNTRY";
 
     const [name, setName] = useState("");
+    const [code, setCode] = useState("");
+    const [nameError, setNameError] = useState<string | null>(null);
+    const [codeError, setCodeError] = useState<string | null>(null);
 
-    // A parent that can't have children shouldn't have reached this page at all.
     if (parent && !type) {
         return (
             <div className="card">
@@ -33,13 +35,32 @@ function CreateLocation() {
         );
     }
 
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setName(e.target.value);
+        if (nameError) setNameError(null);
+    };
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+            setNameError("Name is required.");
+            return;
+        }
+
+        const trimmedCode = code.trim();
+        if(!trimmedCode){
+            setCodeError("Code is required");
+            return;
+        }
+
         try {
             await createLocation({
-                name,
+                name: trimmedName,
                 type: type!,
-                parentId: parent ? parent.id : null
+                parentId: parent ? parent.id : null,
+                code: trimmedCode
             }).unwrap();
 
             navigate("/admin/locations", {
@@ -65,11 +86,27 @@ function CreateLocation() {
                 <div className="ledger-section">
                     <span className="ledger-section__eyebrow">§ 01 — Details</span>
                     <div className="field-group">
-                        <div className="field">
+                        <div className={`field ${nameError ? "field--invalid" : ""}`}>
                             <label className="field__label" htmlFor="name">
-                                Name
+                                Name <span className="required">*</span>
                             </label>
-                            <input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                            <input id="name" value={name} onChange={handleNameChange} required />
+                            {nameError && <span className="field__error">{nameError}</span>}
+                        </div>
+
+                        <div className={`field ${codeError ? "field--invalid" : ""}`}>
+                            <label className="field__label" htmlFor="code">
+                                Code <span className="required">*</span>
+                            </label>
+                            <input
+                                id="code"
+                                value={code}
+                                onChange={(e) => setCode(e.target.value)}
+                                placeholder="e.g. KE030"
+                                required
+                            />
+                            {codeError && <span className="field__error">{codeError}</span>}
+                            <span className="field__hint">Statistical or administrative code.</span>
                         </div>
                     </div>
                 </div>
