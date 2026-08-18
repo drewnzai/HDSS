@@ -200,11 +200,7 @@ public class LocationService {
                             if (existing != null) {
                                 reused.merge(levels[i], 1, Integer::sum);
                             } else {
-                                existing = createLocation(name, levels[i].name(), parentId);
-                                if (code != null && !code.isBlank()) {
-                                    existing.setCode(code);
-                                    locationRepository.save(existing);
-                                }
+                                existing = createLocation(name, levels[i].name(), parentId, code);
                                 created.merge(levels[i], 1, Integer::sum);
                             }
                             cache.put(cacheKey, existing);
