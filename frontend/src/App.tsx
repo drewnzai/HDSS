@@ -8,6 +8,9 @@ import UserDelete from "./pages/admin/UserDelete";
 import ProtectedRoute from "./store/ProtectedRoute";
 import Layout from "./components/Layout";
 import CreateUser from "./pages/admin/CreateUser";
+import CreateLocation from "./pages/admin/CreateLocation";
+import LocationImport from "./pages/admin/LocationImport";
+import LocationManagement from "./pages/admin/LocationManagement";
 
 function App() {
   return (
@@ -24,6 +27,10 @@ function App() {
             <Route path="/admin/users/create" element={<CreateUser />} />
             <Route path="/admin/users/:username" element={<UserDetail />} />
             <Route path="/admin/users/:username/delete" element={<UserDelete />} />
+
+            <Route path="/admin/locations" element={<LocationManagement />} />
+            <Route path="/admin/locations/create" element={<CreateLocation />} />
+            <Route path="/admin/locations/import" element={<LocationImport />} />
           </Route>
         </Route>
       </Route>

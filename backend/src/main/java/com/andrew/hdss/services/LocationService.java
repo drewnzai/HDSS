@@ -12,7 +12,9 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +30,11 @@ public class LocationService {
     private LocationRepository locationRepository;
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "location-children", allEntries = true),
+            @CacheEvict(cacheNames = "location-descendants", allEntries = true),
+            @CacheEvict(cacheNames = "location-ancestors", allEntries = true)
+    })
     public Location createLocation(String name, String locationType, Long parentId) {
         Location parent = null;
 
@@ -85,7 +92,7 @@ public class LocationService {
     @Transactional(readOnly = true)
     @Cacheable(
             value = "location-children",
-            key = "#parentId"
+            key = "#parentId != null ? #parentId : 'ROOT'"
     )
     public List<LocationDto> getChildren(Long parentId) {
         List<Location> children;
@@ -123,6 +130,11 @@ public class LocationService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "location-children", allEntries = true),
+            @CacheEvict(cacheNames = "location-descendants", allEntries = true),
+            @CacheEvict(cacheNames = "location-ancestors", allEntries = true)
+    })
     public LocationImportResult importFromSpreadsheet(MultipartFile file) throws IOException {
         Map<LocationType, Integer> created = new EnumMap<>(LocationType.class);
         Map<LocationType, Integer> reused = new EnumMap<>(LocationType.class);

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, LayoutDashboard, Users, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Home, LayoutDashboard, Users, ChevronLeft, ChevronRight, X, MapPin } from "lucide-react";
 import { useAppSelector } from "../store/hooks";
 import { selectRole, selectFirstName } from "../store/AuthSlice";
 import type { LucideIcon } from "lucide-react";
@@ -24,7 +24,8 @@ const primaryNav: NavItem[] = [
 ];
 
 const adminNav: NavItem[] = [
-    { label: "User management", to: "/admin/users", icon: Users }
+    { label: "User management", to: "/admin/users", icon: Users },
+    { label: "Locations", to: "/admin/locations", icon: MapPin }
 ];
 
 function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SidebarProps) {
