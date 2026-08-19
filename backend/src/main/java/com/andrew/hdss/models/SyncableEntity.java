@@ -13,6 +13,9 @@ public abstract class SyncableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, updatable = false)
+    private String clientId;
+
     @Column(nullable = false)
     private boolean isSynced = false;
 
