@@ -20,6 +20,7 @@ import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 import java.util.List;
 
+@SuppressWarnings("removal")
 @Configuration
 @EnableCaching
 public class RedisConfig {
