@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/location")
+@RequestMapping("/api/locations")
 @RequiredArgsConstructor
 @Tag(name= "Location Management")
 public class LocationController implements LocationApi {
