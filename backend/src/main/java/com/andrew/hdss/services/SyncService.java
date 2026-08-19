@@ -14,10 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -159,36 +156,58 @@ public class SyncService {
             Map<String, Individual> individualsByClientId,
             User currentUser
     ) {
-        Membership membership = membershipRepository.findByClientId(dto.clientId())
-                .orElseGet(Membership::new);
-
-        boolean isNew = membership.getId() == null;
-
+        Optional<Membership> existingByClientId = membershipRepository.findByClientId(dto.clientId());
         Individual individual = resolveIndividual(dto.individualClientId(), individualsByClientId);
         Household household = resolveHousehold(dto.householdClientId(), householdsByClientId);
 
-        if (isNew && dto.endDate() == null) {
-            membershipRepository.findByIndividualIdAndEndDateIsNull(individual.getId())
-                    .ifPresent(existingOpen -> {
-                        throw new IllegalStateException(
-                                "Individual " + individual.getExtendedId() +
-                                        " already has an open membership (id " + existingOpen.getId() +
-                                        "). Close it before opening a new one."
-                        );
-                    });
+        Membership membership;
+        boolean isNew;
+
+        if (existingByClientId.isPresent()) {
+            // Genuine update to a membership the device already knows the id of.
+            membership = existingByClientId.get();
+            isNew = false;
+        } else if (dto.endDate() == null) {
+            // No membership under this clientId yet — check whether this is a
+            // relationship correction against an already-open episode at the
+            // SAME household, rather than a brand-new episode.
+            Optional<Membership> openAtThisHousehold = membershipRepository
+                    .findByIndividualIdAndHouseholdIdAndEndDateIsNull(individual.getId(), household.getId());
+
+            if (openAtThisHousehold.isPresent()) {
+                membership = openAtThisHousehold.get();
+                isNew = false;
+                // Deliberately NOT overwriting clientId, startDate, or startType —
+                // this is the same residency episode, just a corrected role.
+            } else {
+                Optional<Membership> openElsewhere = membershipRepository
+                        .findByIndividualIdAndEndDateIsNull(individual.getId());
+                if (openElsewhere.isPresent()) {
+                    throw new IllegalStateException(
+                            "Individual " + individual.getExtendedId() +
+                                    " already has an open membership at a different household (id " +
+                                    openElsewhere.get().getId() + "). Close it before opening a new one."
+                    );
+                }
+                membership = new Membership();
+                isNew = true;
+            }
+        } else {
+            membership = new Membership();
+            isNew = true;
         }
 
-        membership.setClientId(dto.clientId());
         membership.setIndividual(individual);
         membership.setHousehold(household);
         membership.setRelationshipToHead(dto.relationshipToHead());
-        membership.setStartDate(dto.startDate());
-        membership.setStartType(dto.startType());
         membership.setEndDate(dto.endDate());
         membership.setEndType(dto.endType());
         membership.setUpdatedAt(Instant.now());
 
         if (isNew) {
+            membership.setClientId(dto.clientId());
+            membership.setStartDate(dto.startDate());
+            membership.setStartType(dto.startType());
             membership.setCreatedBy(currentUser);
             membership.setCreatedAt(Instant.now());
         }

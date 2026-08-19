@@ -14,4 +14,5 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
     Optional<Membership> findByIndividualIdAndEndDateIsNull(Long individualId);
     List<Membership> findByHouseholdIdInAndUpdatedAtAfter(List<Long> householdIds, Instant since);
     List<Membership> findByHouseholdIdIn(List<Long> householdIds);
+    Optional<Membership> findByIndividualIdAndHouseholdIdAndEndDateIsNull(Long individualId, Long householdId);
 }
