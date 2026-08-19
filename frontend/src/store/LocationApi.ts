@@ -11,7 +11,7 @@ export const locationApi = createApi({
     endpoints: (builder) => ({
         getChildren: builder.query<LocationDto[], number | null>({
             query: (parentId) =>
-                parentId === null ? "location" : `location?id=${parentId}`,
+                parentId === null ? "locations" : `locations?id=${parentId}`,
             providesTags: (result, _error, parentId) =>
                 result
                     ? [
@@ -22,16 +22,16 @@ export const locationApi = createApi({
         }),
 
         getDescendants: builder.query<LocationDto[], number>({
-            query: (id) => `location/${id}/descendants`
+            query: (id) => `locations/${id}/descendants`
         }),
 
         getAncestors: builder.query<LocationDto[], number>({
-            query: (id) => `location/${id}/ancestors`
+            query: (id) => `locations/${id}/ancestors`
         }),
 
         createLocation: builder.mutation<string, CreateLocationRequest>({
             query: (body) => ({
-                url: "location",
+                url: "locations",
                 method: "POST",
                 body,
                 responseHandler: "text"
@@ -43,7 +43,7 @@ export const locationApi = createApi({
 
         importLocations: builder.mutation<LocationImportResult, FormData>({
             query: (formData) => ({
-                url: "location/import",
+                url: "locations/import",
                 method: "POST",
                 body: formData
             }),

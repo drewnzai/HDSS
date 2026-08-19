@@ -26,13 +26,13 @@ export const adminUserApi = createApi({
         }),
 
         getUserByUsername: builder.query<UserSummary, string>({
-            query: (username) => `user/${username}`,
+            query: (username) => `users/${username}`,
             providesTags: (_result, _error, username) => [{ type: "User", id: username }]
         }),
 
         createUser: builder.mutation<string, CreateUserRequest>({
             query: (body) => ({
-                url: "user/add",
+                url: "users/add",
                 method: "POST",
                 body,
                 responseHandler: "text" // same plain-string response pattern as delete
@@ -42,7 +42,7 @@ export const adminUserApi = createApi({
 
         deleteUser: builder.mutation<string, UserSummary>({
             query: (user) => ({
-                url: "user/delete",
+                url: "users/delete",
                 method: "DELETE",
                 body: user,
                 responseHandler: "text"
