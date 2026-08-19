@@ -32,32 +32,29 @@ public class SyncService {
     public SyncPushResponse push(SyncPushRequest request) {
         User currentUser = authService.getCurrentUser();
 
-        // Households first — nothing else can resolve without them.
         Map<String, Household> householdsByClientId = new HashMap<>();
         List<SyncItemResult> householdResults = new ArrayList<>();
         for (HouseholdPushDto dto : request.households()) {
             try {
-                Household household = upsertHousehold(dto, currentUser);
-                householdsByClientId.put(dto.clientId(), household);
-                householdResults.add(household.getId() == null
-                        ? SyncItemResult.created(dto.clientId(), null)
-                        : SyncItemResult.updated(dto.clientId(), household.getId()));
+                UpsertResult<Household> result = upsertHousehold(dto, currentUser);
+                householdsByClientId.put(dto.clientId(), result.entity());
+                householdResults.add(result.wasNew()
+                        ? SyncItemResult.created(dto.clientId(), result.entity().getId())
+                        : SyncItemResult.updated(dto.clientId(), result.entity().getId()));
             } catch (Exception e) {
                 householdResults.add(SyncItemResult.error(dto.clientId(), e.getMessage()));
             }
         }
 
-        // Individuals — two passes so mother/father can reference a sibling
-        // in the same batch regardless of array order.
         Map<String, Individual> individualsByClientId = new HashMap<>();
         List<SyncItemResult> individualResults = new ArrayList<>();
         for (IndividualPushDto dto : request.individuals()) {
             try {
-                Individual individual = upsertIndividualShell(dto, currentUser);
-                individualsByClientId.put(dto.clientId(), individual);
-                individualResults.add(individual.getId() == null
-                        ? SyncItemResult.created(dto.clientId(), null)
-                        : SyncItemResult.updated(dto.clientId(), individual.getId()));
+                UpsertResult<Individual> result = upsertIndividualShell(dto, currentUser);
+                individualsByClientId.put(dto.clientId(), result.entity());
+                individualResults.add(result.wasNew()
+                        ? SyncItemResult.created(dto.clientId(), result.entity().getId())
+                        : SyncItemResult.updated(dto.clientId(), result.entity().getId()));
             } catch (Exception e) {
                 individualResults.add(SyncItemResult.error(dto.clientId(), e.getMessage()));
             }
@@ -66,14 +63,14 @@ public class SyncService {
             resolveParents(dto, individualsByClientId);
         }
 
-        // Memberships last — depends on both maps above being fully populated.
         List<SyncItemResult> membershipResults = new ArrayList<>();
         for (MembershipPushDto dto : request.memberships()) {
             try {
-                Membership membership = upsertMembership(dto, householdsByClientId, individualsByClientId, currentUser);
-                membershipResults.add(membership.getId() == null
-                        ? SyncItemResult.created(dto.clientId(), null)
-                        : SyncItemResult.updated(dto.clientId(), membership.getId()));
+                UpsertResult<Membership> result =
+                        upsertMembership(dto, householdsByClientId, individualsByClientId, currentUser);
+                membershipResults.add(result.wasNew()
+                        ? SyncItemResult.created(dto.clientId(), result.entity().getId())
+                        : SyncItemResult.updated(dto.clientId(), result.entity().getId()));
             } catch (Exception e) {
                 membershipResults.add(SyncItemResult.error(dto.clientId(), e.getMessage()));
             }
@@ -82,14 +79,14 @@ public class SyncService {
         return new SyncPushResponse(householdResults, individualResults, membershipResults);
     }
 
-    private Household upsertHousehold(HouseholdPushDto dto, User currentUser) {
+    private UpsertResult<Household> upsertHousehold(HouseholdPushDto dto, User currentUser) {
         Household household = householdRepository.findByClientId(dto.clientId())
                 .orElseGet(Household::new);
 
         boolean isNew = household.getId() == null;
 
         Location location = locationRepository.findById(dto.locationId())
-                .orElseThrow(() -> new EntityNotFoundException("Location not found: " + dto.locationId()));
+                .orElseThrow(() -> new IllegalArgumentException("Location not found: " + dto.locationId()));
 
         if (!locationRepository.findByParentId(location.getId()).isEmpty()) {
             throw new IllegalArgumentException(
@@ -107,15 +104,16 @@ public class SyncService {
         if (isNew) {
             household.setCreatedBy(currentUser);
             household.setCreatedAt(Instant.now());
-            household.setStatus(HouseholdStatus.NOT_VIABLE); // no head assigned yet
+            household.setStatus(HouseholdStatus.NOT_VIABLE);
         }
 
-        return householdRepository.save(household);
+        Household saved = householdRepository.save(household);
+        return new UpsertResult<>(saved, isNew);
     }
 
     // ---------- Individuals ----------
 
-    private Individual upsertIndividualShell(IndividualPushDto dto, User currentUser) {
+    private UpsertResult<Individual> upsertIndividualShell(IndividualPushDto dto, User currentUser) {
         Individual individual = individualRepository.findByClientId(dto.clientId())
                 .orElseGet(Individual::new);
 
@@ -135,7 +133,8 @@ public class SyncService {
             individual.setCreatedAt(Instant.now());
         }
 
-        return individualRepository.save(individual);
+        Individual saved = individualRepository.save(individual);
+        return new UpsertResult<>(saved, isNew);
     }
 
     private void resolveParents(IndividualPushDto dto, Map<String, Individual> individualsByClientId) {
@@ -154,7 +153,7 @@ public class SyncService {
 
     // ---------- Memberships ----------
 
-    private Membership upsertMembership(
+    private UpsertResult<Membership> upsertMembership(
             MembershipPushDto dto,
             Map<String, Household> householdsByClientId,
             Map<String, Individual> individualsByClientId,
@@ -168,7 +167,6 @@ public class SyncService {
         Individual individual = resolveIndividual(dto.individualClientId(), individualsByClientId);
         Household household = resolveHousehold(dto.householdClientId(), householdsByClientId);
 
-        // Enforce: an individual has at most one OPEN membership at a time.
         if (isNew && dto.endDate() == null) {
             membershipRepository.findByIndividualIdAndEndDateIsNull(individual.getId())
                     .ifPresent(existingOpen -> {
@@ -195,11 +193,10 @@ public class SyncService {
             membership.setCreatedAt(Instant.now());
         }
 
-        membership = membershipRepository.save(membership);
+        Membership saved = membershipRepository.save(membership);
+        applyHeadOfHouseholdRules(saved, household);
 
-        applyHeadOfHouseholdRules(membership, household);
-
-        return membership;
+        return new UpsertResult<>(saved, isNew);
     }
 
     // A HEAD membership opening assigns the head and marks the household viable.
