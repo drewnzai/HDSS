@@ -1,8 +1,6 @@
 package com.andrew.hdss.configs;
 
-import com.andrew.hdss.dtos.BatchResponse;
-import com.andrew.hdss.dtos.LocationDto;
-import com.andrew.hdss.dtos.UserDto;
+import com.andrew.hdss.dtos.*;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,7 +37,10 @@ public class RedisConfig {
                 .withCacheConfiguration("location-children", locationListCacheConfig())
                 .withCacheConfiguration("location-descendants", locationListCacheConfig())
                 .withCacheConfiguration("location-ancestors", locationListCacheConfig())
-                .withCacheConfiguration("users", usersCacheConfig());
+                .withCacheConfiguration("users", usersCacheConfig())
+                .withCacheConfiguration("households", householdsCacheConfig())
+                .withCacheConfiguration("individuals", individualsCacheConfig())
+                .withCacheConfiguration("memberships", membershipsCacheConfig());
     }
 
     @Bean
@@ -69,6 +70,36 @@ public class RedisConfig {
         JavaType type = objectMapper().getTypeFactory()
                 .constructParametricType(BatchResponse.class, UserDto.class);
 
+        return RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper(), type)));
+    }
+
+    private RedisCacheConfiguration householdsCacheConfig() {
+        JavaType type = objectMapper().getTypeFactory()
+                .constructParametricType(BatchResponse.class, HouseholdDto.class);
+        return RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper(), type)));
+    }
+
+    private RedisCacheConfiguration individualsCacheConfig() {
+        JavaType type = objectMapper().getTypeFactory()
+                .constructParametricType(BatchResponse.class, IndividualDto.class);
+        return RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper(), type)));
+    }
+
+    private RedisCacheConfiguration membershipsCacheConfig() {
+        JavaType type = objectMapper().getTypeFactory()
+                .constructParametricType(BatchResponse.class, MembershipDto.class);
         return RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new StringRedisSerializer()))

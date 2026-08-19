@@ -10,6 +10,8 @@ import com.andrew.hdss.repositories.IndividualRepository;
 import com.andrew.hdss.repositories.LocationRepository;
 import com.andrew.hdss.repositories.MembershipRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,11 @@ public class SyncService {
     private final AuthService authService;
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "households", allEntries = true),
+            @CacheEvict(cacheNames = "individuals", allEntries = true),
+            @CacheEvict(cacheNames = "memberships", allEntries = true)
+    })
     public SyncPushResponse push(SyncPushRequest request) {
         User currentUser = authService.getCurrentUser();
 
