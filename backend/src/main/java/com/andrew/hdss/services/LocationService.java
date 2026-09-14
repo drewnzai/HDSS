@@ -157,11 +157,10 @@ public class LocationService {
             }
 
             // Column order matches the template: Country, CountryCode, County, CountyCode,
-            // SubCounty, SubCountyCode, Division, DivisionCode, Location, LocationCode,
+            // SubCounty, SubCountyCode, Location, LocationCode,
             // SubLocation, SubLocationCode
             LocationType[] levels = {
-                    LocationType.COUNTRY, LocationType.COUNTY, LocationType.SUB_COUNTY,
-                    LocationType.DIVISION, LocationType.LOCATION, LocationType.SUB_LOCATION
+                    LocationType.COUNTRY, LocationType.COUNTY, LocationType.SUB_COUNTY, LocationType.LOCATION, LocationType.SUB_LOCATION
             };
 
             for (Row row : sheet) {

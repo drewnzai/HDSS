@@ -4,9 +4,8 @@ public enum LocationType {
     COUNTRY(0),
     COUNTY(1),
     SUB_COUNTY(2),
-    DIVISION(3),
-    LOCATION(4),
-    SUB_LOCATION(5);
+    LOCATION(3),
+    SUB_LOCATION(4);
 
     private final int level;
 
