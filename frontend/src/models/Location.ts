@@ -2,7 +2,6 @@ export type LocationType =
     | "COUNTRY"
     | "COUNTY"
     | "SUB_COUNTY"
-    | "DIVISION"
     | "LOCATION"
     | "SUB_LOCATION";
 
@@ -10,7 +9,6 @@ export const LOCATION_TYPE_ORDER: LocationType[] = [
     "COUNTRY",
     "COUNTY",
     "SUB_COUNTY",
-    "DIVISION",
     "LOCATION",
     "SUB_LOCATION"
 ];
@@ -19,7 +17,6 @@ export const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
     COUNTRY: "Country",
     COUNTY: "County",
     SUB_COUNTY: "Sub-County",
-    DIVISION: "Division",
     LOCATION: "Location",
     SUB_LOCATION: "Sub-Location"
 };
