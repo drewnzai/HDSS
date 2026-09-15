@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -67,9 +68,10 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public User getCurrentUser() {
-        UserDetailsImpl principal = (UserDetailsImpl) SecurityContextHolder.
-                getContext().getAuthentication().getPrincipal();
+        UserDetailsImpl principal = (UserDetailsImpl) Objects.requireNonNull(SecurityContextHolder.
+                getContext().getAuthentication()).getPrincipal();
 
+        assert principal != null;
         return userRepository.findByUsername(principal.getUsername())
                 .orElseThrow(
                         () -> new EntityNotFoundException("Could not find user")
@@ -138,6 +140,7 @@ public class AuthService {
         return LoginResponse.builder()
                 .authenticationToken(token)
                 .firstName(user.getFirstName())
+                .username(user.getUsername())
                 .role(user.getRole().name())
                 .refreshToken(refreshToken)
                 .expiresAt(Instant.now().plusSeconds(jwtUtil.getJwtExpiration()))
@@ -146,7 +149,9 @@ public class AuthService {
 
     public boolean isLoggedIn() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
+        if (authentication instanceof AnonymousAuthenticationToken) return false;
+        assert authentication != null;
+        return authentication.isAuthenticated();
     }
 
 }
