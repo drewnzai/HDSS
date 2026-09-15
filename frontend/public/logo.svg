@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1B2A4A"/>
+      <stop offset="1" stop-color="#131D33"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="225" ry="225" fill="url(#bgGrad)"/>
+
+  <g stroke="#F4EFE3" stroke-width="23" stroke-linecap="round" opacity="0.9">
+    <line x1="512" y1="284" x2="360" y2="474"/>
+    <line x1="512" y1="284" x2="664" y2="474"/>
+    <line x1="360" y1="474" x2="265" y2="664"/>
+    <line x1="360" y1="474" x2="455" y2="664"/>
+    <line x1="664" y1="474" x2="569" y2="664"/>
+    <line x1="664" y1="474" x2="758" y2="664"/>
+  </g>
+
+  <g fill="#F4EFE3">
+    <circle cx="265" cy="664" r="40"/>
+    <circle cx="455" cy="664" r="40"/>
+    <circle cx="569" cy="664" r="40"/>
+    <circle cx="758" cy="664" r="40"/>
+  </g>
+
+  <g fill="#F4EFE3">
+    <circle cx="360" cy="474" r="47"/>
+    <circle cx="664" cy="474" r="47"/>
+  </g>
+
+  <circle cx="512" cy="284" r="62" fill="#D98E4A"/>
+</svg>
