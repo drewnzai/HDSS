@@ -51,6 +51,7 @@ fun NavGraph(
                 firstName = firstName ?: "",
                 onLogout = {
                     scope.launch {
+                        authViewModel.reset()
                         tokenDataStore.clear()
                         navController.navigate(Routes.LOGIN) {
                             popUpTo(Routes.HOME) { inclusive = true }

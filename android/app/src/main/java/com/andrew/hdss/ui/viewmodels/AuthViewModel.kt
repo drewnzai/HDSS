@@ -110,6 +110,10 @@ class AuthViewModel(
         )
     }
 
+    fun reset() {
+        _uiState.value = LoginUiState()
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {

@@ -1,5 +1,6 @@
 package com.andrew.hdss.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,8 +23,10 @@ fun HomeScreen(
 ) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
+            .fillMaxWidth()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Welcome back${if (firstName.isNotBlank()) ", $firstName" else ""}",
@@ -35,7 +39,7 @@ fun HomeScreen(
             style = MaterialTheme.typography.bodyMedium
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(0.5f))
 
         OutlinedButton(
             onClick = onLogout,
