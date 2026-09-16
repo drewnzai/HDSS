@@ -38,7 +38,7 @@ class DownloadDatabaseViewModel(
     private val steps: List<DownloadStep> = listOf(
         DownloadStep(
             label = "Locations",
-            execute = { locationApiService.syncLocations() }
+            execute = { locationApiService.fetchLocations() }
         )
     )
 
