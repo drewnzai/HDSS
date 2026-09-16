@@ -15,3 +15,10 @@ data class LoginResponse (
     val role: String,
     val expiresAt: String
 )
+
+
+@Serializable
+data class RefreshTokenRequest(
+    val token: String,
+    val username: String
+)
