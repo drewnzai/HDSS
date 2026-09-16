@@ -12,20 +12,6 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-sealed interface AuthResult {
-    data class Success(
-        val response: LoginResponse
-    ) : AuthResult
-
-    data class Failure(
-        val error: ErrorResponse
-    ) : AuthResult
-
-    data class NetworkError(
-        val exception: Throwable
-    ) : AuthResult
-}
-
 interface AuthApiRepository{
     @POST("auth/login")
     suspend fun login(

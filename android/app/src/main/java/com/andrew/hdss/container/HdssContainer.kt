@@ -2,10 +2,13 @@ package com.andrew.hdss.container
 
 import android.content.Context
 import com.andrew.hdss.BuildConfig
+import com.andrew.hdss.data.AppDatabase
 import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.network.AuthApiRepository
 import com.andrew.hdss.network.AuthApiService
 import com.andrew.hdss.network.AuthInterceptor
+import com.andrew.hdss.network.LocationApiRepository
+import com.andrew.hdss.network.LocationApiService
 import com.andrew.hdss.network.TokenAuthenticator
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
@@ -23,6 +26,10 @@ class HdssContainer(private val context: Context) {
 
     val tokenDataStore: TokenDataStore by lazy {
         TokenDataStore(context)
+    }
+
+    val database: AppDatabase by lazy{
+        AppDatabase.getInstance(context)
     }
 
     // Auth endpoints only — no authenticator, or a failed refresh would
@@ -63,6 +70,16 @@ class HdssContainer(private val context: Context) {
             .build()
     }
 
-    // Future repositories go through apiRetrofit, e.g.:
-    // val householdApiRepository by lazy { apiRetrofit.create(HouseholdApiRepository::class.java) }
+    private val locationApiRepository: LocationApiRepository by lazy{
+        apiRetrofit.create(LocationApiRepository::class.java)
+    }
+
+    val locationApiService: LocationApiService by lazy {
+        LocationApiService(
+            locationApiRepository = locationApiRepository,
+            locationDao = database.locationDao(),
+            database = database,
+            json = json
+        )
+    }
 }
