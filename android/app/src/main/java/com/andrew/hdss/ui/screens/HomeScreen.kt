@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.andrew.hdss.ui.theme.AndroidTheme
 
 @Composable
 fun HomeScreen(
@@ -53,8 +54,14 @@ fun HomeScreen(
 @Preview
 @Composable
 fun HomeScreenPreview(){
-    HomeScreen(
-        firstName = "Test",
-        onLogout = {}
-    )
+    AndroidTheme(
+        darkTheme = false,
+        dynamicColor = false
+    ) {
+        HomeScreen(
+            firstName = "Test",
+            onLogout = {}
+        )
+    }
+
 }

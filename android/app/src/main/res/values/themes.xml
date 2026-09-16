@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.Android" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+        Compose owns the real color scheme via AndroidTheme.kt / MaterialTheme.
+        This XML theme only covers the window before Compose content is set —
+        no colorPrimary/colorSecondary/etc here, since those require the
+        Material Components view library, which this app doesn't depend on.
+    -->
+    <style name="Theme.Android" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/brand_primary</item>
+        <item name="android:navigationBarColor">@color/background</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
 </resources>
