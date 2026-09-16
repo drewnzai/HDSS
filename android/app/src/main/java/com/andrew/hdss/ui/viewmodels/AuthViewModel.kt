@@ -9,7 +9,7 @@ import com.andrew.hdss.HdssApplication
 import com.andrew.hdss.dtos.LoginRequest
 import com.andrew.hdss.dtos.LoginResponse
 import com.andrew.hdss.network.AuthApiService
-import com.andrew.hdss.network.LoginResult
+import com.andrew.hdss.network.AuthResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -79,7 +79,7 @@ class AuthViewModel(
 
             when (val result = authApiService.login(request)) {
 
-                is LoginResult.Success -> {
+                is AuthResult.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoginSuccessful = true,
@@ -87,14 +87,14 @@ class AuthViewModel(
                     )
                 }
 
-                is LoginResult.Failure -> {
+                is AuthResult.Failure -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = result.error.detail
                     )
                 }
 
-                is LoginResult.NetworkError -> {
+                is AuthResult.NetworkError -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = "Could not contact the server"
@@ -112,6 +112,10 @@ class AuthViewModel(
 
     fun reset() {
         _uiState.value = LoginUiState()
+    }
+
+    suspend fun refreshToken(): AuthResult {
+        return authApiService.refreshToken()
     }
 
     companion object {

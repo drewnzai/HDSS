@@ -5,33 +5,40 @@ import com.andrew.hdss.BuildConfig
 import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.network.AuthApiRepository
 import com.andrew.hdss.network.AuthApiService
+import com.andrew.hdss.network.AuthInterceptor
+import com.andrew.hdss.network.TokenAuthenticator
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 
-class HdssContainer(context: Context) {
+class HdssContainer(private val context: Context) {
     private val baseUrl: String = BuildConfig.BASE_URL
 
-    private val json: Json = Json{
+    private val json: Json = Json {
         ignoreUnknownKeys = true
         isLenient = true
-    }
-
-    private val retrofit = Retrofit.Builder()
-        .baseUrl(baseUrl)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-        .build()
-
-    private val authApiRepository: AuthApiRepository by lazy{
-        retrofit.create(AuthApiRepository::class.java)
     }
 
     val tokenDataStore: TokenDataStore by lazy {
         TokenDataStore(context)
     }
 
-    val authApiService: AuthApiService by lazy{
+    // Auth endpoints only — no authenticator, or a failed refresh would
+    // recursively trigger itself trying to refresh its own 401.
+    private val authRetrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+    }
+
+    private val authApiRepository: AuthApiRepository by lazy {
+        authRetrofit.create(AuthApiRepository::class.java)
+    }
+
+    val authApiService: AuthApiService by lazy {
         AuthApiService(
             authApiRepository = authApiRepository,
             tokenDataStore = tokenDataStore,
@@ -39,4 +46,23 @@ class HdssContainer(context: Context) {
         )
     }
 
+    // Everything else — attaches the access token to outgoing requests,
+    // and refreshes automatically on a 401.
+    private val apiOkHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(tokenDataStore))
+            .authenticator(TokenAuthenticator(tokenDataStore, authApiService))
+            .build()
+    }
+
+    val apiRetrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(apiOkHttpClient)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+    }
+
+    // Future repositories go through apiRetrofit, e.g.:
+    // val householdApiRepository by lazy { apiRetrofit.create(HouseholdApiRepository::class.java) }
 }

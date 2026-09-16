@@ -18,6 +18,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.andrew.hdss.datastore.TokenDataStore
+import com.andrew.hdss.network.AuthResult
 import com.andrew.hdss.ui.screens.HomeScreen
 import com.andrew.hdss.ui.screens.LoginScreen
 import com.andrew.hdss.ui.viewmodels.AuthViewModel
@@ -48,6 +49,7 @@ fun NavGraph(
     ) {
         composable(Routes.SPLASH) {
             SplashScreen(
+                authViewModel = authViewModel,
                 tokenDataStore = tokenDataStore,
                 onResult = { loggedIn ->
                     navController.navigate(if (loggedIn) Routes.HOME else Routes.LOGIN) {
@@ -88,6 +90,7 @@ fun NavGraph(
 @Composable
 private fun SplashScreen(
     tokenDataStore: TokenDataStore,
+    authViewModel: AuthViewModel,
     onResult: (loggedIn: Boolean) -> Unit
 ) {
     LaunchedEffect(Unit) {
@@ -97,7 +100,22 @@ private fun SplashScreen(
         val stillValid = accessToken != null &&
                 expiresAt?.let { Instant.parse(it).isAfter(Instant.now()) } ?: false
 
-        onResult(stillValid)
+        val loggedIn = when {
+            stillValid -> true
+            accessToken != null -> {
+
+                when (authViewModel.refreshToken()) {
+                    is AuthResult.Success -> true
+                    else -> {
+                        tokenDataStore.clear()
+                        false
+                    }
+                }
+            }
+            else -> false // never logged in
+        }
+
+        onResult(loggedIn)
     }
 
     Surface(

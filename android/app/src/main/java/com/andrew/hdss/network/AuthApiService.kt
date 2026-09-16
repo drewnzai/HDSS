@@ -5,24 +5,25 @@ import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.dtos.ErrorResponse
 import com.andrew.hdss.dtos.LoginRequest
 import com.andrew.hdss.dtos.LoginResponse
+import com.andrew.hdss.dtos.RefreshTokenRequest
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
-import kotlin.time.ExperimentalTime
 
-sealed interface LoginResult {
+sealed interface AuthResult {
     data class Success(
         val response: LoginResponse
-    ) : LoginResult
+    ) : AuthResult
 
     data class Failure(
         val error: ErrorResponse
-    ) : LoginResult
+    ) : AuthResult
 
     data class NetworkError(
         val exception: Throwable
-    ) : LoginResult
+    ) : AuthResult
 }
 
 interface AuthApiRepository{
@@ -31,75 +32,81 @@ interface AuthApiRepository{
         @Body
         loginRequest: LoginRequest
     ): Response<LoginResponse>
+
+    @POST("auth/refresh")
+    suspend fun refresh(
+        @Body
+        refreshTokenRequest: RefreshTokenRequest
+    ): Response<LoginResponse>
 }
 
-class AuthApiService (
+class AuthApiService(
     private val authApiRepository: AuthApiRepository,
     private val tokenDataStore: TokenDataStore,
     private val json: Json
-){
-    @OptIn(ExperimentalTime::class)
-    suspend fun login(
-        loginRequest: LoginRequest
-    ): LoginResult {
+) {
+    suspend fun login(loginRequest: LoginRequest): AuthResult {
+        return try {
+            handleAuthResponse(authApiRepository.login(loginRequest))
+        } catch (e: Exception) {
+            Log.e("AuthApiService", "Login request failed", e)
+            AuthResult.NetworkError(e)
+        }
+    }
+
+    suspend fun refreshToken(): AuthResult {
+        val currentRefreshToken = tokenDataStore.refreshToken.first()
+        val currentUsername = tokenDataStore.username.first()
+
+        if (currentRefreshToken == null || currentUsername == null) {
+            return AuthResult.NetworkError(
+                IllegalStateException("No stored session to refresh")
+            )
+        }
 
         return try {
-
-            val response = authApiRepository.login(loginRequest)
-
-            if (response.isSuccessful) {
-
-                val loginResponse = response.body()
-
-                if (loginResponse != null) {
-                    tokenDataStore.saveSession(
-                        accessToken = loginResponse.authenticationToken,
-                        refreshToken = loginResponse.refreshToken,
-                        firstName = loginResponse.firstName,
-                        role = loginResponse.role,
-                        username = loginResponse.username,
-                        expiresAt = loginResponse.expiresAt.toString()
+            handleAuthResponse(
+                authApiRepository.refresh(
+                    RefreshTokenRequest(
+                        token = currentRefreshToken,
+                        username = currentUsername
                     )
+                )
+            )
+        } catch (e: Exception) {
+            Log.e("AuthApiService", "Token refresh failed", e)
+            AuthResult.NetworkError(e)
+        }
+    }
 
-                    LoginResult.Success(loginResponse)
-                } else {
-                    LoginResult.NetworkError(
-                        IllegalStateException(
-                            "Server returned an empty response"
-                        )
-                    )
-                }
-
+    private fun handleAuthResponse(response: Response<LoginResponse>): AuthResult {
+        if (response.isSuccessful) {
+            val loginResponse = response.body()
+            return if (loginResponse != null) {
+                AuthResult.Success(loginResponse)
             } else {
+                AuthResult.NetworkError(
+                    IllegalStateException("Server returned an empty response")
+                )
+            }
+        }
 
-                val errorResponse = response.errorBody()
-                    ?.string()
-                    ?.let { errorBody ->
-                        try {
-                            json.decodeFromString<ErrorResponse>(errorBody)
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
-
-                if (errorResponse != null) {
-                    LoginResult.Failure(errorResponse)
-                } else {
-                    LoginResult.NetworkError(
-                        IllegalStateException(
-                            "Unknown server error: HTTP ${response.code()}"
-                        )
-                    )
+        val errorResponse = response.errorBody()
+            ?.string()
+            ?.let { errorBody ->
+                try {
+                    json.decodeFromString<ErrorResponse>(errorBody)
+                } catch (e: Exception) {
+                    null
                 }
             }
 
-        } catch (e: Exception) {
-            Log.e(
-                "AuthApiService",
-                "Login request failed",
-                e
+        return if (errorResponse != null) {
+            AuthResult.Failure(errorResponse)
+        } else {
+            AuthResult.NetworkError(
+                IllegalStateException("Unknown server error: HTTP ${response.code()}")
             )
-            LoginResult.NetworkError(e)
         }
     }
 }

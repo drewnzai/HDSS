@@ -21,6 +21,7 @@ class TokenDataStore(private val context: Context) {
     }
 
     val accessToken: Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
+    val refreshToken: Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
     val firstName: Flow<String?> = context.dataStore.data.map { it[FIRST_NAME] }
     val username: Flow<String?> = context.dataStore.data.map { it[USERNAME] }
     val expiresAt: Flow<String?> = context.dataStore.data.map { it[EXPIRES_AT] }
