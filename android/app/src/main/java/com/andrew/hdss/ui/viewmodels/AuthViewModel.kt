@@ -80,6 +80,7 @@ class AuthViewModel(
             when (val result = authApiService.login(request)) {
 
                 is AuthResult.Success -> {
+
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoginSuccessful = true,

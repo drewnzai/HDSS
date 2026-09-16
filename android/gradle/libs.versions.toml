@@ -14,7 +14,7 @@ retrofit = "3.0.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
 navigationRuntimeKtx = "2.10.1"
 room = "2.8.5"
-ksp = "2.2.10-2.0.2"
+ksp = "2.3.10"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

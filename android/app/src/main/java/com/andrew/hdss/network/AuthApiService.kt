@@ -65,10 +65,20 @@ class AuthApiService(
         }
     }
 
-    private fun handleAuthResponse(response: Response<LoginResponse>): AuthResult {
+    private suspend fun handleAuthResponse(response: Response<LoginResponse>): AuthResult {
         if (response.isSuccessful) {
             val loginResponse = response.body()
             return if (loginResponse != null) {
+
+                tokenDataStore.saveSession(
+                    accessToken = loginResponse.authenticationToken,
+                    refreshToken = loginResponse.refreshToken,
+                    username = loginResponse.username,
+                    firstName = loginResponse.firstName,
+                    role = loginResponse.role,
+                    expiresAt = loginResponse.expiresAt
+                )
+
                 AuthResult.Success(loginResponse)
             } else {
                 AuthResult.NetworkError(

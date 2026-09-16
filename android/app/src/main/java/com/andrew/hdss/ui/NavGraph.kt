@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.network.AuthResult
+import com.andrew.hdss.ui.screens.DownloadDatabaseScreen
 import com.andrew.hdss.ui.screens.HomeScreen
 import com.andrew.hdss.ui.screens.LoginScreen
 import com.andrew.hdss.ui.viewmodels.AuthViewModel
@@ -31,6 +32,7 @@ object Routes {
     const val SPLASH = "splash"
     const val LOGIN = "login"
     const val HOME = "home"
+    const val DOWNLOAD_DATABASE = "download_database"
 }
 
 @Composable
@@ -81,8 +83,13 @@ fun NavGraph(
                             popUpTo(Routes.HOME) { inclusive = true }
                         }
                     }
-                }
+                },
+                onNavigateToDownload = {navController.navigate(Routes.DOWNLOAD_DATABASE)}
             )
+        }
+
+        composable(Routes.DOWNLOAD_DATABASE) {
+            DownloadDatabaseScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }

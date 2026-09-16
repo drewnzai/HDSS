@@ -88,7 +88,9 @@ class LocationApiService(
             }
         }
 
-        return errorResponse?.let { SyncResult.Failure(it) }
+        return errorResponse?.let {
+            SyncResult.Failure(it)
+        }
             ?: SyncResult.NetworkError(IllegalStateException("Unknown server error: HTTP ${code()}"))
     }
 }
