@@ -15,17 +15,17 @@ import retrofit2.http.Query
 
 interface LocationApiRepository {
 
-    @GET("api/locations")
+    @GET("locations")
     suspend fun getChildren(
         @Query("id") parentId: Long? = null
     ): Response<List<LocationDto>>
 
-    @GET("api/locations/{id}/descendants")
+    @GET("locations/{id}/descendants")
     suspend fun getDescendants(
         @Path("id") id: Long
     ): Response<List<LocationDto>>
 
-    @GET("api/locations/{id}/ancestors")
+    @GET("locations/{id}/ancestors")
     suspend fun getAncestors(
         @Path("id") id: Long
     ): Response<List<LocationDto>>
