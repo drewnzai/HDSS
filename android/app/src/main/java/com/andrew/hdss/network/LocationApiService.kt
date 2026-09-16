@@ -38,7 +38,7 @@ class LocationApiService(
     private val json: Json
 ) {
 
-    suspend fun syncLocations(): SyncResult {
+    suspend fun fetchLocations(): SyncResult {
         val allDtos = mutableListOf<LocationDto>()
 
         val rootsResponse = try {
@@ -72,11 +72,18 @@ class LocationApiService(
 
         val entities = allDtos.mapNotNull { it.toEntity() }
 
+        val entitiesSize = entities.size
+        val currentLocationCount = locationDao.getCount().toInt()
+
+        if(currentLocationCount == entitiesSize){
+            return SyncResult.Success(entitiesSize)
+        }
+
         database.withTransaction {
             locationDao.insertAll(entities)
         }
 
-        return SyncResult.Success(entities.size)
+        return SyncResult.Success(entitiesSize)
     }
 
     private fun <T> Response<T>.toFailureResult(): SyncResult {

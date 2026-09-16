@@ -29,6 +29,9 @@ interface LocationDao {
     @Query("SELECT * FROM locations")
     fun getAll(): Flow<List<Location>>
 
+    @Query("SELECT count(*) FROM locations")
+    suspend fun getCount(): Long
+
     @Query("DELETE FROM locations")
     suspend fun deleteAll()
 }
