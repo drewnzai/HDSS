@@ -10,6 +10,8 @@ import com.andrew.hdss.network.AuthInterceptor
 import com.andrew.hdss.network.services.LocationApiRepository
 import com.andrew.hdss.network.services.LocationApiService
 import com.andrew.hdss.network.TokenAuthenticator
+import com.andrew.hdss.network.services.HouseholdApiRepository
+import com.andrew.hdss.network.services.HouseholdApiService
 import com.andrew.hdss.network.services.IndividualApiRepository
 import com.andrew.hdss.network.services.IndividualApiService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -93,6 +95,21 @@ class HdssContainer(private val context: Context) {
         IndividualApiService(
             individualApiRepository = individualApiRepository,
             individualDao = database.individualDao(),
+            database = database,
+            json = json
+        )
+    }
+
+    private val householdApiRepository: HouseholdApiRepository by lazy {
+        apiRetrofit.create(HouseholdApiRepository::class.java)
+    }
+
+    val householdApiService: HouseholdApiService by lazy {
+        HouseholdApiService(
+            householdApiRepository = householdApiRepository,
+            householdDao = database.householdDao(),
+            individualDao = database.individualDao(),
+            locationDao = database.locationDao(),
             database = database,
             json = json
         )
