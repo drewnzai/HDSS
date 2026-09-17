@@ -22,7 +22,7 @@ import com.andrew.hdss.data.models.Location
         Membership::class
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
