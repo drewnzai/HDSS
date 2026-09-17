@@ -20,11 +20,49 @@ data class IndividualDto(
     val fatherId: Long?
 )
 
+fun List<IndividualDto>.topologicallySorted(): List<IndividualDto> {
+    val byId = associateBy { it.id }
+    val result = mutableListOf<IndividualDto>()
+    val visited = mutableSetOf<Long>()
+    val visiting = mutableSetOf<Long>()
+
+    fun visit(id: Long) {
+        if (id in visited) return
+
+        // Detect malformed/cyclic data
+        if (!visiting.add(id)) {
+            throw IllegalStateException(
+                "Circular parent relationship detected involving individual id=$id"
+            )
+        }
+
+        val individual = byId[id]
+            ?: throw IllegalStateException(
+                "Individual id=$id was referenced but is not present in this batch"
+            )
+
+        // Parents must come first
+        individual.motherId?.let { visit(it) }
+        individual.fatherId?.let { visit(it) }
+
+        visiting.remove(id)
+        visited.add(id)
+        result.add(individual)
+    }
+
+    forEach { visit(it.id) }
+
+    return result
+}
+
 fun List<IndividualDto>.toEntities(): List<Individual> {
-    val idToClientId: Map<Long, String> = associate { it.id to it.clientId }
+    val sorted = topologicallySorted()
+
+    val idToClientId = sorted.associate { it.id to it.clientId }
 
     fun resolve(parentId: Long?, role: String, ownClientId: String): String? {
         if (parentId == null) return null
+
         return idToClientId[parentId] ?: run {
             Log.w(
                 "IndividualMapper",
@@ -34,7 +72,7 @@ fun List<IndividualDto>.toEntities(): List<Individual> {
         }
     }
 
-    return map { dto ->
+    return sorted.map { dto ->
         Individual(
             clientId = dto.clientId,
             serverId = dto.id,
