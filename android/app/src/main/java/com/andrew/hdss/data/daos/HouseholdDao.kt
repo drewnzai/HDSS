@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.HouseholdWithDetails
+import com.andrew.hdss.data.utils.HouseholdIdentifiers
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -48,4 +49,7 @@ interface HouseholdDao {
     @Transaction
     @Query("SELECT * FROM households")
     fun getAllWithDetails(): Flow<List<HouseholdWithDetails>>
+
+    @Query("SELECT clientId, serverId FROM households WHERE serverId IN (:serverIds)")
+    suspend fun getIdentifiersByServerIds(serverIds: List<Long>): List<HouseholdIdentifiers>
 }
