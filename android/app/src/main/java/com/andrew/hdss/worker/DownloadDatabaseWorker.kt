@@ -192,22 +192,6 @@ class DownloadDatabaseWorker(
             .putString(KEY_STEPS_JSON, Json.encodeToString(stepStates))
             .build()
 
-    private fun createForegroundInfo(contentText: String): ForegroundInfo {
-        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setContentTitle("HDSS Database Download")
-            .setContentText(contentText)
-            .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
-
-        return ForegroundInfo(
-            NOTIFICATION_ID,
-            notification,
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-        )
-    }
-
     private fun ensureNotificationChannel() {
         val manager = applicationContext.getSystemService(NotificationManager::class.java)
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
