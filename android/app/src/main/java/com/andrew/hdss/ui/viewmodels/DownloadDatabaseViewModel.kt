@@ -5,22 +5,19 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.andrew.hdss.HdssApplication
-import com.andrew.hdss.network.services.LocationApiService
-import com.andrew.hdss.network.SyncResult
-import com.andrew.hdss.network.services.HouseholdApiService
-import com.andrew.hdss.network.services.IndividualApiService
-import com.andrew.hdss.network.services.MembershipApiService
 import com.andrew.hdss.ui.DownloadStepStatus
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.andrew.hdss.worker.DownloadDatabaseWorker
+import com.andrew.hdss.worker.WorkerStepState
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-
-private data class DownloadStep(
-    val label: String,
-    val execute: suspend () -> SyncResult
-)
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.serialization.json.Json
 
 data class DownloadStepUiState(
     val label: String,
@@ -35,73 +32,24 @@ data class DownloadDatabaseUiState(
 }
 
 class DownloadDatabaseViewModel(
-    private val locationApiService: LocationApiService,
-    private val individualApiService: IndividualApiService,
-    private val householdApiService: HouseholdApiService,
-    private val membershipApiService: MembershipApiService
+    private val workManager: WorkManager
 ) : ViewModel() {
 
-    private val steps: List<DownloadStep> = listOf(
-        DownloadStep(
-            label = "Locations",
-            execute = { locationApiService.fetchLocations() }
-        ),
-        DownloadStep(
-            label = "Individuals",
-            execute = { individualApiService.fetchIndividuals() }
-        ),
-        DownloadStep(
-            label = "Households",
-            execute = { householdApiService.fetchHouseholds() }
-        ),
-        DownloadStep(
-            label = "Memberships",
-            execute = { membershipApiService.fetchMemberships() }
-        )
-    )
-
-    private val _uiState = MutableStateFlow(
-        DownloadDatabaseUiState(steps = steps.map {
-            step ->
-            DownloadStepUiState(label = step.label)
-        }
-        )
-    )
-    val uiState: StateFlow<DownloadDatabaseUiState> = _uiState.asStateFlow()
-
-    fun startDownload() {
-        if (_uiState.value.isDownloading) return
-
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isDownloading = true,
-                steps = steps.map { DownloadStepUiState(label = it.label) }
+    val uiState: StateFlow<DownloadDatabaseUiState> =
+        workManager.getWorkInfosForUniqueWorkFlow(DownloadDatabaseWorker.WORK_NAME)
+            .map { infos -> infos.firstOrNull()?.toUiState() ?: DownloadDatabaseUiState() }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = DownloadDatabaseUiState()
             )
 
-            for (index in steps.indices) {
-                updateStepStatus(index, DownloadStepStatus.InProgress)
-
-                val result = steps[index].execute()
-
-                val status = when (result) {
-                    is SyncResult.Success -> DownloadStepStatus.Success(result.count)
-                    is SyncResult.Failure -> DownloadStepStatus.Failure(result.error.detail)
-                    is SyncResult.NetworkError -> DownloadStepStatus.Failure("Could not contact the server")
-                }
-                updateStepStatus(index, status)
-
-                if (status is DownloadStepStatus.Failure) break
-            }
-
-            _uiState.value = _uiState.value.copy(isDownloading = false)
-        }
-    }
-
-    private fun updateStepStatus(index: Int, status: DownloadStepStatus) {
-        _uiState.value = _uiState.value.copy(
-            steps = _uiState.value.steps.toMutableList().also {
-                it[index] = it[index].copy(status = status)
-            }
+    fun startDownload() {
+        val request = OneTimeWorkRequestBuilder<DownloadDatabaseWorker>().build()
+        workManager.enqueueUniqueWork(
+            DownloadDatabaseWorker.WORK_NAME,
+            ExistingWorkPolicy.KEEP,
+            request
         )
     }
 
@@ -109,13 +57,38 @@ class DownloadDatabaseViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val application = (this[APPLICATION_KEY] as HdssApplication)
-                DownloadDatabaseViewModel(
-                    locationApiService = application.container.locationApiService,
-                    individualApiService = application.container.individualApiService,
-                    householdApiService = application.container.householdApiService,
-                    membershipApiService = application.container.membershipApiService
-                )
+                DownloadDatabaseViewModel(WorkManager.getInstance(application))
             }
         }
     }
+
+    private fun WorkInfo.toUiState(): DownloadDatabaseUiState {
+        val data = if (state.isFinished) outputData else progress
+        val json = data.getString(DownloadDatabaseWorker.KEY_STEPS_JSON)
+
+        val stepStates: List<WorkerStepState> = json?.let { jsonString ->
+            try {
+                Json.decodeFromString<List<WorkerStepState>>(jsonString)
+            } catch (e: Exception) {
+                null
+            }
+        }.orEmpty()
+
+        val steps = stepStates.map { it.toUiState() }
+
+        return DownloadDatabaseUiState(
+            steps = steps.ifEmpty { listOf(DownloadStepUiState(label = "Locations")) },
+            isDownloading = state == WorkInfo.State.RUNNING || state == WorkInfo.State.ENQUEUED
+        )
+    }
+
+private fun WorkerStepState.toUiState(): DownloadStepUiState = DownloadStepUiState(
+    label = label,
+    status = when (status) {
+        "IN_PROGRESS" -> DownloadStepStatus.InProgress
+        "SUCCESS" -> DownloadStepStatus.Success(count = count ?: 0)
+        "FAILURE" -> DownloadStepStatus.Failure(message = message ?: "Unknown error")
+        else -> DownloadStepStatus.Pending
+    }
+)
 }

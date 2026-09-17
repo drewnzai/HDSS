@@ -1,7 +1,12 @@
 package com.andrew.hdss.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.andrew.hdss.ui.DownloadStepStatus
 import com.andrew.hdss.ui.theme.AndroidTheme
@@ -97,20 +103,37 @@ private fun DownloadDatabaseContent(
     onStartDownload: () -> Unit,
     contentPadding: PaddingValues
 ) {
+    val context = LocalContext.current
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        onStartDownload()
+    }
+
+    fun startWithPermissionCheck() {
+        val needsPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+
+        if (needsPermission) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            onStartDownload()
+        }
+    }
+
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .padding(24.dp)
+        modifier = Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth().weight(1f)
-        ) {
+        LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
             items(uiState.steps) { step -> DownloadStepRow(step) }
         }
 
         Button(
-            onClick = onStartDownload,
+            onClick = ::startWithPermissionCheck,
             enabled = uiState.canStartDownload,
             modifier = Modifier.fillMaxWidth()
         ) {
