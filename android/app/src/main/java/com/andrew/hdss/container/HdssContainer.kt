@@ -14,6 +14,8 @@ import com.andrew.hdss.network.services.HouseholdApiRepository
 import com.andrew.hdss.network.services.HouseholdApiService
 import com.andrew.hdss.network.services.IndividualApiRepository
 import com.andrew.hdss.network.services.IndividualApiService
+import com.andrew.hdss.network.services.MembershipApiRepository
+import com.andrew.hdss.network.services.MembershipApiService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -110,6 +112,21 @@ class HdssContainer(private val context: Context) {
             householdDao = database.householdDao(),
             individualDao = database.individualDao(),
             locationDao = database.locationDao(),
+            database = database,
+            json = json
+        )
+    }
+
+    private val membershipApiRepository: MembershipApiRepository by lazy {
+        apiRetrofit.create(MembershipApiRepository::class.java)
+    }
+
+    val membershipApiService: MembershipApiService by lazy {
+        MembershipApiService(
+            membershipApiRepository = membershipApiRepository,
+            membershipDao = database.membershipDao(),
+            householdDao = database.householdDao(),
+            individualDao = database.individualDao(),
             database = database,
             json = json
         )
