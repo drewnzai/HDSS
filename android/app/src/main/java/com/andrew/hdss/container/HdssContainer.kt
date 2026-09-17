@@ -4,11 +4,11 @@ import android.content.Context
 import com.andrew.hdss.BuildConfig
 import com.andrew.hdss.data.AppDatabase
 import com.andrew.hdss.datastore.TokenDataStore
-import com.andrew.hdss.network.AuthApiRepository
-import com.andrew.hdss.network.AuthApiService
+import com.andrew.hdss.network.services.AuthApiRepository
+import com.andrew.hdss.network.services.AuthApiService
 import com.andrew.hdss.network.AuthInterceptor
-import com.andrew.hdss.network.LocationApiRepository
-import com.andrew.hdss.network.LocationApiService
+import com.andrew.hdss.network.services.LocationApiRepository
+import com.andrew.hdss.network.services.LocationApiService
 import com.andrew.hdss.network.TokenAuthenticator
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json

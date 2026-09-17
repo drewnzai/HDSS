@@ -1,4 +1,4 @@
-package com.andrew.hdss.network
+package com.andrew.hdss.network.services
 
 import android.util.Log
 import androidx.room.withTransaction
@@ -7,6 +7,7 @@ import com.andrew.hdss.data.daos.LocationDao
 import com.andrew.hdss.dtos.ErrorResponse
 import com.andrew.hdss.dtos.LocationDto
 import com.andrew.hdss.dtos.toEntity
+import com.andrew.hdss.network.SyncResult
 import kotlinx.serialization.json.Json
 import retrofit2.Response
 import retrofit2.http.GET

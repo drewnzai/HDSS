@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.andrew.hdss.HdssApplication
-import com.andrew.hdss.network.LocationApiService
+import com.andrew.hdss.network.services.LocationApiService
 import com.andrew.hdss.network.SyncResult
 import com.andrew.hdss.ui.DownloadStepStatus
 import kotlinx.coroutines.flow.MutableStateFlow

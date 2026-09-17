@@ -1,6 +1,7 @@
 package com.andrew.hdss.network
 
 import com.andrew.hdss.datastore.TokenDataStore
+import com.andrew.hdss.network.services.AuthApiService
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex

@@ -1,4 +1,4 @@
-package com.andrew.hdss.network
+package com.andrew.hdss.network.services
 
 import android.util.Log
 import com.andrew.hdss.datastore.TokenDataStore
@@ -6,6 +6,7 @@ import com.andrew.hdss.dtos.ErrorResponse
 import com.andrew.hdss.dtos.LoginRequest
 import com.andrew.hdss.dtos.LoginResponse
 import com.andrew.hdss.dtos.RefreshTokenRequest
+import com.andrew.hdss.network.AuthResult
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import retrofit2.Response
