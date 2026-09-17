@@ -34,4 +34,7 @@ interface LocationDao {
 
     @Query("DELETE FROM locations")
     suspend fun deleteAll()
+
+    @Query("SELECT id FROM locations")
+    suspend fun getAllIds(): List<Long>
 }
