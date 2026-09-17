@@ -72,7 +72,7 @@ suspend fun List<MembershipDto>.toEntities(
             individualClientId = individualClientId,
             householdClientId = householdClientId,
             relationshipToHead = dto.relationshipToHead,
-            startDate = LocalDateTime.parse(dto.startDate).toLocalDate(),
+            startDate = LocalDate.parse(dto.startDate),
             startType = dto.startType,
             endDate = dto.endDate?.let { LocalDate.parse(it) },
             endType = dto.endType
