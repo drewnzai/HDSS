@@ -20,7 +20,7 @@ import retrofit2.http.QueryMap
 
 interface HouseholdApiRepository {
 
-    @GET("api/households")
+    @GET("households")
     suspend fun getHouseholds(
         @QueryMap request: Map<String, String>
     ): Response<BatchResponse<HouseholdDto>>

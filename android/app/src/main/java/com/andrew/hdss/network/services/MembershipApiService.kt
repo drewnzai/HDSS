@@ -20,7 +20,7 @@ import retrofit2.http.QueryMap
 
 interface MembershipApiRepository {
 
-    @GET("api/memberships")
+    @GET("memberships")
     suspend fun getMemberships(
         @QueryMap request: Map<String, String>
     ): Response<BatchResponse<MembershipDto>>
