@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.andrew.hdss.HdssApplication
 import com.andrew.hdss.network.services.LocationApiService
 import com.andrew.hdss.network.SyncResult
+import com.andrew.hdss.network.services.HouseholdApiService
 import com.andrew.hdss.network.services.IndividualApiService
 import com.andrew.hdss.ui.DownloadStepStatus
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +35,8 @@ data class DownloadDatabaseUiState(
 
 class DownloadDatabaseViewModel(
     private val locationApiService: LocationApiService,
-    private val individualApiService: IndividualApiService
+    private val individualApiService: IndividualApiService,
+    private val householdApiService: HouseholdApiService
 ) : ViewModel() {
 
     private val steps: List<DownloadStep> = listOf(
@@ -45,6 +47,10 @@ class DownloadDatabaseViewModel(
         DownloadStep(
             label = "Individuals",
             execute = { individualApiService.fetchIndividuals() }
+        ),
+        DownloadStep(
+            label = "Households",
+            execute = { householdApiService.fetchHouseholds() }
         )
     )
 
@@ -99,7 +105,8 @@ class DownloadDatabaseViewModel(
                 val application = (this[APPLICATION_KEY] as HdssApplication)
                 DownloadDatabaseViewModel(
                     locationApiService = application.container.locationApiService,
-                    individualApiService = application.container.individualApiService
+                    individualApiService = application.container.individualApiService,
+                    householdApiService = application.container.householdApiService
                 )
             }
         }
