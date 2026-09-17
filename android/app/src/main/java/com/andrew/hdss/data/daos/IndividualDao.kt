@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.andrew.hdss.data.models.Individual
+import com.andrew.hdss.data.utils.IndividualIdentifiers
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -43,4 +44,7 @@ interface IndividualDao {
         ORDER BY firstName, lastName
     """)
     fun search(query: String): Flow<List<Individual>>
+
+    @Query("SELECT clientId, serverId FROM individuals WHERE serverId IN (:serverIds)")
+    suspend fun getIdentifiersByServerIds(serverIds: List<Long>): List<IndividualIdentifiers>
 }
