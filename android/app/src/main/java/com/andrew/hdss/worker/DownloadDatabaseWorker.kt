@@ -48,34 +48,143 @@ class DownloadDatabaseWorker(
 
     override suspend fun doWork(): Result {
         ensureNotificationChannel()
-        setForeground(createForegroundInfo("Starting download…"))
 
-        val stepStates = steps.map { WorkerStepState(label = it.label, status = "PENDING") }.toMutableList()
-        setProgress(buildData(stepStates))
+        val stepStates = steps
+            .map { WorkerStepState(label = it.label, status = "PENDING") }
+            .toMutableList()
 
-        for (index in steps.indices) {
-            stepStates[index] = stepStates[index].copy(status = "IN_PROGRESS")
-            setProgress(buildData(stepStates))
-            setForeground(createForegroundInfo("Downloading ${steps[index].label}…"))
+        updateProgress(stepStates)
 
-            val result = steps[index].execute()
+        try {
+            for (index in steps.indices) {
+                val step = steps[index]
 
-            stepStates[index] = when (result) {
-                is SyncResult.Success ->
-                    stepStates[index].copy(status = "SUCCESS", count = result.count)
-                is SyncResult.Failure ->
-                    stepStates[index].copy(status = "FAILURE", message = result.error.detail)
-                is SyncResult.NetworkError ->
-                    stepStates[index].copy(status = "FAILURE", message = "Could not contact the server")
+                stepStates[index] = stepStates[index].copy(
+                    status = "IN_PROGRESS"
+                )
+
+                updateProgress(stepStates)
+                updateNotification("Downloading ${step.label}…")
+
+                try {
+                    val result = step.execute()
+
+                    when (result) {
+                        is SyncResult.Success -> {
+                            stepStates[index] = stepStates[index].copy(
+                                status = "SUCCESS",
+                                count = result.count
+                            )
+
+                            updateProgress(stepStates)
+
+                            updateNotification(
+                                "${step.label} complete (${result.count})"
+                            )
+                        }
+
+                        is SyncResult.Failure -> {
+                            stepStates[index] = stepStates[index].copy(
+                                status = "FAILURE",
+                                message = result.error.detail
+                            )
+
+                            updateProgress(stepStates)
+
+                            updateNotification(
+                                "${step.label} failed: ${result.error.detail}",
+                                failed = true
+                            )
+
+                            return Result.failure(buildData(stepStates))
+                        }
+
+                        is SyncResult.NetworkError -> {
+                            stepStates[index] = stepStates[index].copy(
+                                status = "FAILURE",
+                                message = "Could not contact the server"
+                            )
+
+                            updateProgress(stepStates)
+
+                            updateNotification(
+                                "${step.label} failed: Could not contact the server",
+                                failed = true
+                            )
+
+                            return Result.failure(buildData(stepStates))
+                        }
+                    }
+                } catch (e: Exception) {
+                    stepStates[index] = stepStates[index].copy(
+                        status = "FAILURE",
+                        message = e.message ?: "Unexpected error"
+                    )
+
+                    updateProgress(stepStates)
+
+                    updateNotification(
+                        "${step.label} failed",
+                        failed = true
+                    )
+
+                    return Result.failure(buildData(stepStates))
+                }
             }
-            setProgress(buildData(stepStates))
 
-            if (stepStates[index].status == "FAILURE") {
-                return Result.failure(buildData(stepStates))
-            }
+            updateNotification(
+                "Database download complete",
+                completed = true
+            )
+
+            return Result.success(buildData(stepStates))
+
+        } catch (e: Exception) {
+            updateNotification(
+                "Database download failed",
+                failed = true
+            )
+
+            return Result.failure(buildData(stepStates))
         }
+    }
 
-        return Result.success(buildData(stepStates))
+    private suspend fun updateProgress(
+        stepStates: List<WorkerStepState>
+    ) {
+        setProgress(buildData(stepStates))
+    }
+
+    private suspend fun updateNotification(
+        contentText: String,
+        completed: Boolean = false,
+        failed: Boolean = false
+    ) {
+        val notification = NotificationCompat.Builder(
+            applicationContext,
+            CHANNEL_ID
+        )
+            .setContentTitle("HDSS Database Download")
+            .setContentText(contentText)
+            .setSmallIcon(
+                when {
+                    failed -> android.R.drawable.stat_notify_error
+                    completed -> android.R.drawable.stat_sys_download_done
+                    else -> android.R.drawable.stat_sys_download
+                }
+            )
+            .setOngoing(!completed && !failed)
+            .setAutoCancel(completed || failed)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+
+        setForeground(
+            ForegroundInfo(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        )
     }
 
     private fun buildData(stepStates: List<WorkerStepState>): Data =
