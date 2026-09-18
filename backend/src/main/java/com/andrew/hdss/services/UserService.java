@@ -161,6 +161,7 @@ public class UserService {
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .role(user.getRole().name())
                 .email(user.getEmail())
                 .enabled(user.isEnabled())
                 .deleted(user.isDeleted())
