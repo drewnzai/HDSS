@@ -1,10 +1,14 @@
 package com.andrew.hdss.worker
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ForegroundInfo
@@ -55,98 +59,61 @@ class DownloadDatabaseWorker(
 
         updateProgress(stepStates)
 
-        try {
-            for (index in steps.indices) {
-                val step = steps[index]
+        for (index in steps.indices) {
+            val step = steps[index]
 
-                stepStates[index] = stepStates[index].copy(
-                    status = "IN_PROGRESS"
-                )
+            stepStates[index] = stepStates[index].copy(status = "IN_PROGRESS")
+            updateProgress(stepStates)
+            updateNotification("Downloading ${step.label}…")
 
-                updateProgress(stepStates)
-                updateNotification("Downloading ${step.label}…")
-
-                try {
-                    val result = step.execute()
-
-                    when (result) {
-                        is SyncResult.Success -> {
-                            stepStates[index] = stepStates[index].copy(
-                                status = "SUCCESS",
-                                count = result.count
-                            )
-
-                            updateProgress(stepStates)
-
-                            updateNotification(
-                                "${step.label} complete (${result.count})"
-                            )
-                        }
-
-                        is SyncResult.Failure -> {
-                            stepStates[index] = stepStates[index].copy(
-                                status = "FAILURE",
-                                message = result.error.detail
-                            )
-
-                            updateProgress(stepStates)
-
-                            updateNotification(
-                                "${step.label} failed: ${result.error.detail}",
-                                failed = true
-                            )
-
-                            return Result.failure(buildData(stepStates))
-                        }
-
-                        is SyncResult.NetworkError -> {
-                            stepStates[index] = stepStates[index].copy(
-                                status = "FAILURE",
-                                message = "Could not contact the server"
-                            )
-
-                            updateProgress(stepStates)
-
-                            updateNotification(
-                                "${step.label} failed: Could not contact the server",
-                                failed = true
-                            )
-
-                            return Result.failure(buildData(stepStates))
-                        }
+            try {
+                when (val result = step.execute()) {
+                    is SyncResult.Success -> {
+                        stepStates[index] = stepStates[index].copy(
+                            status = "SUCCESS",
+                            count = result.count
+                        )
+                        updateProgress(stepStates)
+                        updateNotification("${step.label} complete (${result.count})")
                     }
-                } catch (e: Exception) {
-                    stepStates[index] = stepStates[index].copy(
-                        status = "FAILURE",
-                        message = e.message ?: "Unexpected error"
-                    )
 
-                    updateProgress(stepStates)
+                    is SyncResult.Failure -> {
+                        stepStates[index] = stepStates[index].copy(
+                            status = "FAILURE",
+                            message = result.error.detail
+                        )
+                        updateProgress(stepStates)
+                        updateNotification("${step.label} failed: ${result.error.detail}", failed = true)
+                        postFinalNotification("Database download failed at ${step.label}", failed = true)
+                        return Result.failure(buildData(stepStates))
+                    }
 
-                    updateNotification(
-                        "${step.label} failed",
-                        failed = true
-                    )
-
-                    return Result.failure(buildData(stepStates))
+                    is SyncResult.NetworkError -> {
+                        stepStates[index] = stepStates[index].copy(
+                            status = "FAILURE",
+                            message = "Could not contact the server"
+                        )
+                        updateProgress(stepStates)
+                        updateNotification("${step.label} failed: Could not contact the server", failed = true)
+                        postFinalNotification("Database download failed at ${step.label}", failed = true)
+                        return Result.failure(buildData(stepStates))
+                    }
                 }
+            } catch (e: Exception) {
+                stepStates[index] = stepStates[index].copy(
+                    status = "FAILURE",
+                    message = e.message ?: "Unexpected error"
+                )
+                updateProgress(stepStates)
+                updateNotification("${step.label} failed", failed = true)
+                postFinalNotification("Database download failed at ${step.label}", failed = true)
+                return Result.failure(buildData(stepStates))
             }
-
-            updateNotification(
-                "Database download complete",
-                completed = true
-            )
-
-            return Result.success(buildData(stepStates))
-
-        } catch (e: Exception) {
-            updateNotification(
-                "Database download failed",
-                failed = true
-            )
-
-            return Result.failure(buildData(stepStates))
         }
+
+        updateNotification("Database download complete", completed = true)
+        postFinalNotification("Database download complete", failed = false)
+        return Result.success(buildData(stepStates))
     }
 
     private suspend fun updateProgress(
@@ -187,6 +154,26 @@ class DownloadDatabaseWorker(
         )
     }
 
+    private fun postFinalNotification(contentText: String, failed: Boolean) {
+        if (ContextCompat.checkSelfPermission(
+                applicationContext, Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) return
+
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+            .setContentTitle("HDSS Database Download")
+            .setContentText(contentText)
+            .setSmallIcon(
+                if (failed) android.R.drawable.stat_notify_error
+                else android.R.drawable.stat_sys_download_done
+            )
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        NotificationManagerCompat.from(applicationContext).notify(FINAL_NOTIFICATION_ID, notification)
+    }
+
     private fun buildData(stepStates: List<WorkerStepState>): Data =
         Data.Builder()
             .putString(KEY_STEPS_JSON, Json.encodeToString(stepStates))
@@ -206,5 +193,6 @@ class DownloadDatabaseWorker(
         const val KEY_STEPS_JSON = "steps_json"
         const val CHANNEL_ID = "download_channel"
         private const val NOTIFICATION_ID = 1001
+        private const val FINAL_NOTIFICATION_ID = 1002
     }
 }
