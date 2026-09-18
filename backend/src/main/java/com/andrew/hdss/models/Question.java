@@ -39,6 +39,7 @@ public class Question {
     private boolean required;
 
     private String relevant;
+    @Column(name = "constraint_value")
     private String constraint;
     private String constraintMessage;
     private String calculation;
