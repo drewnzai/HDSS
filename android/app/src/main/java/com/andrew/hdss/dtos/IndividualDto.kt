@@ -37,9 +37,14 @@ fun List<IndividualDto>.topologicallySorted(): List<IndividualDto> {
         }
 
         val individual = byId[id]
-            ?: throw IllegalStateException(
-                "Individual id=$id was referenced but is not present in this batch"
-            )
+        if (individual == null) {
+            // Referenced as a parent but not present in this batch — not an
+            // error. resolve() in toEntities() already handles this id being
+            // absent by nulling the reference and logging a warning.
+            visiting.remove(id)
+            visited.add(id)
+            return
+        }
 
         // Parents must come first
         individual.motherId?.let { visit(it) }
