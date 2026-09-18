@@ -1,0 +1,63 @@
+/*
+ * HDSS design tokens
+ * Light mode = :root defaults. Dark mode = [data-theme="dark"] overrides,
+ * matching the existing data-theme toggle used across the app.
+ */
+
+:root {
+  --color-background: #FBF9F4;
+  --color-surface: #FFFFFF;
+  --color-surface-variant: #F4EFE3;   /* ledger row-stripe / secondary surface */
+  --color-outline: #D8CBAE;
+  --color-divider: #E9E1CD;
+
+  --color-text-primary: #131A26;
+  --color-text-secondary: #3B4658;
+  --color-text-muted: #64708A;
+
+  --color-primary: #1B2A4A;           /* structural brand chrome: app bar, nav, headers */
+  --color-on-primary: #FBF9F4;
+
+  --color-accent: #D98E4A;            /* interactive: CTAs, links, active states, focus */
+  --color-on-accent: #131A26;
+
+  --color-success: #4C7A5E;
+  --color-on-success: #FFFFFF;
+  --color-warning: #C1783A;
+  --color-on-warning: #131A26;
+  --color-error: #B5533F;
+  --color-on-error: #FFFFFF;
+  --color-info: #3F6E8C;
+  --color-on-info: #FFFFFF;
+
+  --color-scrim: rgba(19, 26, 38, 0.4);
+}
+
+[data-theme="dark"] {
+  --color-background: #0F1526;
+  --color-surface: #131D33;
+  --color-surface-variant: #1B2A4A;
+  --color-outline: #24365C;
+  --color-divider: #263A63;
+
+  --color-text-primary: #F4EFE3;
+  --color-text-secondary: #B8AF9C;
+  --color-text-muted: #7C8398;
+
+  --color-primary: #24365C;
+  --color-on-primary: #F4EFE3;
+
+  --color-accent: #E4A66E;
+  --color-on-accent: #131A26;
+
+  --color-success: #6FA080;
+  --color-on-success: #0F1526;
+  --color-warning: #D98E4A;
+  --color-on-warning: #131A26;
+  --color-error: #D97862;
+  --color-on-error: #0F1526;
+  --color-info: #6B9DBB;
+  --color-on-info: #0F1526;
+
+  --color-scrim: rgba(0, 0, 0, 0.6);
+}
