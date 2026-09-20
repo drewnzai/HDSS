@@ -1,9 +1,6 @@
 package com.andrew.hdss.configs;
 
-import com.andrew.hdss.exceptions.EntityNotFoundException;
-import com.andrew.hdss.exceptions.ResourceAlreadyExistsException;
-import com.andrew.hdss.exceptions.UserDeletedException;
-import com.andrew.hdss.exceptions.UserNotVerifiedException;
+import com.andrew.hdss.exceptions.*;
 import com.andrew.hdss.utils.ApiError;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -128,6 +125,18 @@ public class GlobalExceptionHandler {
                 400,
                 "Malformed JWT",
                 request.getRequestURI(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(FormLockedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleEditedFormManipulation(FormLockedException ex, HttpServletRequest req) {
+        return new ApiError(
+                "Already Edited Form",
+                500,
+                ex.getMessage(),
+                req.getRequestURI(),
                 Instant.now()
         );
     }
