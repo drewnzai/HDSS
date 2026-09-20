@@ -1,10 +1,10 @@
+import clsx from "clsx";
 import {
   ChevronLeft,
   ChevronRight,
   Home,
   LayoutDashboard,
   MapPin,
-  Menu,
   Users,
   X,
 } from "lucide-react";
@@ -74,12 +74,7 @@ function Sidebar({
         end={end}
         onClick={onCloseMobile}
         className={({ isActive }) =>
-          [
-            "sidebar__link",
-            isActive ? "sidebar__link--active" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")
+          clsx("sidebar__link", isActive && "sidebar__link--active")
         }
         title={collapsed ? label : undefined}
       >
@@ -98,17 +93,6 @@ function Sidebar({
 
   return (
     <>
-      {/* Mobile menu trigger */}
-      <button
-        type="button"
-        className="sidebar__mobile-trigger"
-        onClick={onOpenMobile}
-        aria-label="Open navigation menu"
-        aria-expanded={mobileOpen}
-      >
-        <Menu size={20} aria-hidden="true" />
-      </button>
-
       {/* Mobile backdrop */}
       {mobileOpen && (
         <button
@@ -120,13 +104,11 @@ function Sidebar({
       )}
 
       <aside
-        className={[
+        className={clsx(
           "sidebar",
-          collapsed ? "sidebar--collapsed" : "",
-          mobileOpen ? "sidebar--mobile-open" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
+          collapsed && "sidebar--collapsed",
+          mobileOpen && "sidebar--mobile-open"
+        )}
       >
         <div className="sidebar__header">
           <div className="sidebar__brand">
@@ -152,22 +134,23 @@ function Sidebar({
 
         <nav className="sidebar__nav" aria-label="Primary navigation">
           <div className="sidebar__nav-group">
-            {!collapsed && (
-              <span className="sidebar__nav-eyebrow">
-                Workspace
-              </span>
-            )}
+            {/* Always rendered now, hidden via CSS when collapsed — same
+                pattern as sidebar__label. Being JS-skipped instead of
+                CSS-hidden meant collapsing on desktop also silently deleted
+                these from the mobile drawer, since mobile only overrides
+                CSS, not the JS that decided whether the element exists. */}
+            <span className="sidebar__nav-eyebrow">
+              Workspace
+            </span>
 
             {renderLinks(primaryNav)}
           </div>
 
           {isAdmin && (
             <div className="sidebar__nav-group">
-              {!collapsed && (
-                <span className="sidebar__nav-eyebrow">
-                  Administration
-                </span>
-              )}
+              <span className="sidebar__nav-eyebrow">
+                Administration
+              </span>
 
               {renderLinks(adminNav)}
             </div>
@@ -175,23 +158,21 @@ function Sidebar({
         </nav>
 
         <div className="sidebar__footer">
-          {!collapsed && (
-            <div className="sidebar__user">
-              <div className="sidebar__avatar">
-                {firstName?.charAt(0).toUpperCase() ?? "U"}
-              </div>
-
-              <div className="sidebar__user-info">
-                <span className="sidebar__user-name">
-                  {firstName || "User"}
-                </span>
-
-                <span className="sidebar__user-role">
-                  {role}
-                </span>
-              </div>
+          <div className="sidebar__user">
+            <div className="sidebar__avatar">
+              {firstName?.charAt(0).toUpperCase() ?? "U"}
             </div>
-          )}
+
+            <div className="sidebar__user-info">
+              <span className="sidebar__user-name">
+                {firstName || "User"}
+              </span>
+
+              <span className="sidebar__user-role">
+                {role}
+              </span>
+            </div>
+          </div>
 
           <button
             type="button"
