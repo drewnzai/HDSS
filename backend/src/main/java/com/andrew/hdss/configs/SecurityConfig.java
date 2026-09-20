@@ -38,6 +38,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/users/delete").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/locations").hasRole("ADMIN")
                         .requestMatchers("/api/locations/import").hasRole("ADMIN")
+                        .requestMatchers("/api/forms").hasRole("ADMIN")
+                        .requestMatchers("/api/forms/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider).addFilterBefore(
