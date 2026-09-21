@@ -1,6 +1,6 @@
 package com.andrew.hdss.api;
 
-import com.andrew.hdss.api.swaggerinterfaces.MembershipApi;
+import com.andrew.hdss.api.swagger.MembershipApi;
 import com.andrew.hdss.dtos.BatchResponse;
 import com.andrew.hdss.dtos.MembershipDto;
 import com.andrew.hdss.dtos.ResourceRequest;

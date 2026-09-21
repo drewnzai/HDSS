@@ -1,6 +1,6 @@
 package com.andrew.hdss.api;
 
-import com.andrew.hdss.api.swaggerinterfaces.HouseholdApi;
+import com.andrew.hdss.api.swagger.HouseholdApi;
 import com.andrew.hdss.dtos.BatchResponse;
 import com.andrew.hdss.dtos.HouseholdDto;
 import com.andrew.hdss.dtos.ResourceRequest;

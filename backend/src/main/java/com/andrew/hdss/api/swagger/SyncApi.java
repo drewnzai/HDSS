@@ -1,4 +1,4 @@
-package com.andrew.hdss.api.swaggerinterfaces;
+package com.andrew.hdss.api.swagger;
 
 import com.andrew.hdss.dtos.sync.SyncPullResponse;
 import com.andrew.hdss.dtos.sync.SyncPushRequest;

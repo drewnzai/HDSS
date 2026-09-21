@@ -1,13 +1,12 @@
 package com.andrew.hdss.api;
 
-import com.andrew.hdss.api.swaggerinterfaces.VisitApi;
+import com.andrew.hdss.api.swagger.VisitApi;
 import com.andrew.hdss.dtos.CreateVisitRequest;
 import com.andrew.hdss.dtos.UpdateVisitStatusRequest;
 import com.andrew.hdss.dtos.VisitDto;
 import com.andrew.hdss.services.VisitService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

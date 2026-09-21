@@ -1,4 +1,4 @@
-package com.andrew.hdss.api.swaggerinterfaces;
+package com.andrew.hdss.api.swagger;
 
 import com.andrew.hdss.dtos.AnswerDto;
 import com.andrew.hdss.dtos.SubmitAnswerRequest;

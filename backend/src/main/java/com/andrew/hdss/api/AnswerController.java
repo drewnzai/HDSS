@@ -1,6 +1,6 @@
 package com.andrew.hdss.api;
 
-import com.andrew.hdss.api.swaggerinterfaces.AnswerApi;
+import com.andrew.hdss.api.swagger.AnswerApi;
 import com.andrew.hdss.dtos.AnswerDto;
 import com.andrew.hdss.dtos.SubmitAnswerRequest;
 import com.andrew.hdss.services.AnswerService;

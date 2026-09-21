@@ -1,6 +1,6 @@
 package com.andrew.hdss.api;
 
-import com.andrew.hdss.api.swaggerinterfaces.AuthApi;
+import com.andrew.hdss.api.swagger.AuthApi;
 import com.andrew.hdss.dtos.LoginRequest;
 import com.andrew.hdss.dtos.LoginResponse;
 import com.andrew.hdss.dtos.RefreshTokenRequest;

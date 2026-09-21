@@ -1,6 +1,6 @@
 package com.andrew.hdss.api;
 
-import com.andrew.hdss.api.swaggerinterfaces.UserApi;
+import com.andrew.hdss.api.swagger.UserApi;
 import com.andrew.hdss.dtos.BatchResponse;
 import com.andrew.hdss.dtos.ResourceRequest;
 import com.andrew.hdss.dtos.UserCreationRequest;

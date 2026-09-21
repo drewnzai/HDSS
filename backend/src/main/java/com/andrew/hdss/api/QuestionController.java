@@ -1,6 +1,6 @@
 package com.andrew.hdss.api;
 
-import com.andrew.hdss.api.swaggerinterfaces.QuestionApi;
+import com.andrew.hdss.api.swagger.QuestionApi;
 import com.andrew.hdss.dtos.CreateQuestionRequest;
 import com.andrew.hdss.dtos.QuestionDto;
 import com.andrew.hdss.dtos.ReorderQuestionsRequest;

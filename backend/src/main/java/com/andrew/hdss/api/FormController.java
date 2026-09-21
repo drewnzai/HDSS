@@ -1,6 +1,6 @@
 package com.andrew.hdss.api;
 
-import com.andrew.hdss.api.swaggerinterfaces.FormApi;
+import com.andrew.hdss.api.swagger.FormApi;
 import com.andrew.hdss.dtos.CreateFormRequest;
 import com.andrew.hdss.dtos.FormDto;
 import com.andrew.hdss.dtos.UpdateFormRequest;
