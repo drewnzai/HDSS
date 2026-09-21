@@ -24,6 +24,16 @@ public class FormController implements FormApi {
         return formService.getAllForms();
     }
 
+    @GetMapping("/core")
+    public List<FormDto> getAllCoreForms() {
+        return formService.getCoreForms();
+    }
+
+    @GetMapping("/extra")
+    public List<FormDto> getAllExtraForms() {
+        return formService.getExtraForms();
+    }
+
     @GetMapping("/{id}")
     public FormDto getForm(@PathVariable Long id) {
         return formService.getForm(id);

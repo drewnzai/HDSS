@@ -7,6 +7,7 @@ import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.exceptions.FormLockedException;
 import com.andrew.hdss.exceptions.ResourceAlreadyExistsException;
 import com.andrew.hdss.models.Form;
+import com.andrew.hdss.models.enums.FormCategory;
 import com.andrew.hdss.repositories.FormRepository;
 import com.andrew.hdss.repositories.FormResponseRepository;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,21 @@ public class FormService {
     @Transactional(readOnly = true)
     public List<FormDto> getAllForms() {
         return formRepository.findAll().stream()
+                .map(form -> FormDto.from(form, isLocked(form.getId())))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<FormDto> getCoreForms(){
+        return formRepository.findByCategory(FormCategory.CORE)
+                .stream()
+                .map(form -> FormDto.from(form, isLocked(form.getId())))
+                .toList();
+    }
+    @Transactional(readOnly = true)
+    public List<FormDto> getExtraForms(){
+        return formRepository.findByCategory(FormCategory.EXTRA)
+                .stream()
                 .map(form -> FormDto.from(form, isLocked(form.getId())))
                 .toList();
     }

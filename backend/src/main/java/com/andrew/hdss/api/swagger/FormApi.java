@@ -18,11 +18,33 @@ public interface FormApi {
             value = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Forms retrieved successfully"
+                            description = "All forms retrieved successfully"
                     )
             }
     )
     List<FormDto> getAllForms();
+
+    @Operation(summary = "Get all core forms")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "All core forms retrieved successfully"
+                    )
+            }
+    )
+    List<FormDto> getAllCoreForms();
+
+    @Operation(summary = "Get all extra forms")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "All extra forms retrieved successfully"
+                    )
+            }
+    )
+    List<FormDto> getAllExtraForms();
 
     @Operation(summary = "Get an individual form")
     @ApiResponses(
