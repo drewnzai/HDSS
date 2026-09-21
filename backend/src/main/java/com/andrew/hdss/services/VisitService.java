@@ -2,6 +2,7 @@ package com.andrew.hdss.services;
 
 import com.andrew.hdss.dtos.CreateVisitRequest;
 import com.andrew.hdss.dtos.VisitDto;
+import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.models.Household;
 import com.andrew.hdss.models.Individual;
 import com.andrew.hdss.models.User;
@@ -9,9 +10,7 @@ import com.andrew.hdss.models.Visit;
 import com.andrew.hdss.models.enums.VisitStatus;
 import com.andrew.hdss.repositories.HouseholdRepository;
 import com.andrew.hdss.repositories.IndividualRepository;
-import com.andrew.hdss.repositories.UserRepository;
 import com.andrew.hdss.repositories.VisitRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
