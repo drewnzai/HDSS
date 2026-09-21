@@ -1,7 +1,6 @@
 package com.andrew.hdss.services;
 
 import com.andrew.hdss.dtos.sync.*;
-import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.models.*;
 import com.andrew.hdss.models.enums.HouseholdStatus;
 import com.andrew.hdss.models.enums.RelationshipToHead;
