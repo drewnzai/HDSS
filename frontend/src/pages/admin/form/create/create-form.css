@@ -1,0 +1,22 @@
+.form-field__hint {
+    margin: -0.125rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.6875rem;
+    line-height: 1.45;
+}
+
+.form-field--full {
+    grid-column: 1 / -1;
+}
+
+.form-field__textarea {
+    min-height: 8rem;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+    .form-field--full {
+        grid-column: auto;
+    }
+}
