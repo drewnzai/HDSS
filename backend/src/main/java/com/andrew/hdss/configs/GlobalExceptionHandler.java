@@ -57,9 +57,12 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({
+            IllegalArgumentException.class,
+            IllegalStateException.class
+    })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleIllegalArguments(IllegalArgumentException exception, HttpServletRequest request){
+    public ApiError handleIllegalArguments(Exception exception, HttpServletRequest request){
         return new ApiError(
                 "Malformed Parameters",
                 400,
