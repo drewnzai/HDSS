@@ -26,6 +26,8 @@ data class WorkerStepState(
     val label: String,
     val status: String,
     val count: Int? = null,
+    val total: Int? = null,
+    val downloaded: Int? = null,
     val message: String? = null
 )
 
@@ -40,14 +42,28 @@ class DownloadDatabaseWorker(
 
     private data class DownloadStep(
         val label: String,
-        val execute: suspend () -> SyncResult
+        val execute: suspend (
+            onProgress: (suspend (downloaded: Int, total:Int) -> Unit)?
+        ) -> SyncResult
     )
 
     private val steps: List<DownloadStep> = listOf(
-        DownloadStep(label = "Locations") { locationApiService.fetchLocations() },
-        DownloadStep(label = "Individuals") { individualApiService.fetchIndividuals() },
-        DownloadStep(label = "Households") { householdApiService.fetchHouseholds() },
-        DownloadStep(label = "Memberships") { membershipApiService.fetchMemberships() }
+        DownloadStep(label = "Locations") {
+            _ ->
+            locationApiService.fetchLocations()
+                                          },
+        DownloadStep(label = "Individuals") {
+            onProgress ->
+            individualApiService.fetchIndividuals(onProgress)
+                                            },
+        DownloadStep(label = "Households") {
+            onProgress ->
+            householdApiService.fetchHouseholds(onProgress)
+                                           },
+        DownloadStep(label = "Memberships") {
+            onProgress ->
+            membershipApiService.fetchMemberships(onProgress)
+        }
     )
 
     override suspend fun doWork(): Result {
@@ -62,19 +78,52 @@ class DownloadDatabaseWorker(
         for (index in steps.indices) {
             val step = steps[index]
 
-            stepStates[index] = stepStates[index].copy(status = "IN_PROGRESS")
+            stepStates[index] = stepStates[index].copy(
+                status = "IN_PROGRESS",
+                downloaded = 0,
+                total = null
+            )
+
             updateProgress(stepStates)
             updateNotification("Downloading ${step.label}…")
 
             try {
-                when (val result = step.execute()) {
+                when (
+                    val result = step.execute { downloaded, total ->
+
+                        stepStates[index] = stepStates[index].copy(
+                            status = "IN_PROGRESS",
+                            downloaded = downloaded,
+                            total = total
+                        )
+
+                        updateProgress(stepStates)
+
+                        val percentage =
+                            if (total > 0) {
+                                downloaded * 100 / total
+                            } else {
+                                0
+                            }
+
+                        updateNotification(
+                            "Downloading ${step.label}: $downloaded / $total ($percentage%)"
+                        )
+                    }
+                ) {
                     is SyncResult.Success -> {
                         stepStates[index] = stepStates[index].copy(
                             status = "SUCCESS",
-                            count = result.count
+                            count = result.count,
+                            downloaded = result.count,
+                            total = result.count
                         )
+
                         updateProgress(stepStates)
-                        updateNotification("${step.label} complete (${result.count})")
+
+                        updateNotification(
+                            "${step.label} complete (${result.count})"
+                        )
                     }
 
                     is SyncResult.Failure -> {
@@ -82,9 +131,19 @@ class DownloadDatabaseWorker(
                             status = "FAILURE",
                             message = result.error.detail
                         )
+
                         updateProgress(stepStates)
-                        updateNotification("${step.label} failed: ${result.error.detail}", failed = true)
-                        postFinalNotification("Database download failed at ${step.label}", failed = true)
+
+                        updateNotification(
+                            "${step.label} failed: ${result.error.detail}",
+                            failed = true
+                        )
+
+                        postFinalNotification(
+                            "Database download failed at ${step.label}",
+                            failed = true
+                        )
+
                         return Result.failure(buildData(stepStates))
                     }
 
@@ -93,9 +152,19 @@ class DownloadDatabaseWorker(
                             status = "FAILURE",
                             message = "Could not contact the server"
                         )
+
                         updateProgress(stepStates)
-                        updateNotification("${step.label} failed: Could not contact the server", failed = true)
-                        postFinalNotification("Database download failed at ${step.label}", failed = true)
+
+                        updateNotification(
+                            "${step.label} failed: Could not contact the server",
+                            failed = true
+                        )
+
+                        postFinalNotification(
+                            "Database download failed at ${step.label}",
+                            failed = true
+                        )
+
                         return Result.failure(buildData(stepStates))
                     }
                 }
@@ -104,9 +173,19 @@ class DownloadDatabaseWorker(
                     status = "FAILURE",
                     message = e.message ?: "Unexpected error"
                 )
+
                 updateProgress(stepStates)
-                updateNotification("${step.label} failed", failed = true)
-                postFinalNotification("Database download failed at ${step.label}", failed = true)
+
+                updateNotification(
+                    "${step.label} failed",
+                    failed = true
+                )
+
+                postFinalNotification(
+                    "Database download failed at ${step.label}",
+                    failed = true
+                )
+
                 return Result.failure(buildData(stepStates))
             }
         }

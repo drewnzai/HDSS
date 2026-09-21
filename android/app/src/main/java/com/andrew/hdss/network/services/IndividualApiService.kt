@@ -33,8 +33,11 @@ class IndividualApiService(
 
     private val pageSize = 500
 
-    suspend fun fetchIndividuals(): SyncResult {
+    suspend fun fetchIndividuals(
+        onProgress: (suspend (downloaded: Int, total: Int) -> Unit)?
+    ): SyncResult {
         val allDtos = mutableListOf<IndividualDto>()
+        var totalElements: Int? = null
         var currentPage = 0
 
         while (true) {
@@ -54,7 +57,16 @@ class IndividualApiService(
             val batch = response.body()
                 ?: return SyncResult.NetworkError(IllegalStateException("Empty response body"))
 
+            if (totalElements == null) {
+                totalElements = batch.totalElements?.toInt() ?: 0
+            }
+
             allDtos += batch.data
+
+            onProgress?.invoke(
+                allDtos.size,
+                totalElements
+            )
 
             val totalPages = batch.totalPages ?: 1
             currentPage++

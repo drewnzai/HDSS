@@ -37,8 +37,11 @@ class HouseholdApiService(
 
     private val pageSize = 500
 
-    suspend fun fetchHouseholds(): SyncResult {
+    suspend fun fetchHouseholds(
+        onProgress: (suspend (Int, Int) -> Unit)? = null
+    ): SyncResult {
         val allDtos = mutableListOf<HouseholdDto>()
+        var totalElements: Int? = null
         var currentPage = 0
 
         while (true) {
@@ -58,7 +61,16 @@ class HouseholdApiService(
             val batch = response.body()
                 ?: return SyncResult.NetworkError(IllegalStateException("Empty response body"))
 
+            if (totalElements == null) {
+                totalElements = batch.totalElements?.toInt() ?: 0
+            }
+
             allDtos += batch.data
+
+            onProgress?.invoke(
+                allDtos.size,
+                totalElements
+            )
 
             val totalPages = batch.totalPages ?: 1
             currentPage++

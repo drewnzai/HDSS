@@ -39,7 +39,9 @@ class LocationApiService(
     private val json: Json
 ) {
 
-    suspend fun fetchLocations(): SyncResult {
+    suspend fun fetchLocations(
+        onProgress: (suspend (Int, Int) -> Unit)? = null
+    ): SyncResult {
         val allDtos = mutableListOf<LocationDto>()
 
         val rootsResponse = try {
