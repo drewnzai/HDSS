@@ -18,20 +18,26 @@ export const formApi = createApi({
             }), invalidatesTags: ["Form"]
         }),
 
-       getAllForms: builder.query<PagedResponse<FormDto>, GetPageParams>({
-                   query: ({ page, size }) => `forms?page=${page}&size=${size}`,
-                   providesTags: (result) =>
-                       result
-                           ? [
-                               ...result.data.map((u) => ({ type: "Form" as const, id: u.id })),
-                               { type: "Form" as const, id: "LIST" }
-                           ]
-                           : [{ type: "Form" as const, id: "LIST" }]
-               }),
-    })
+        getAllForms: builder.query<PagedResponse<FormDto>, GetPageParams>({
+            query: ({ page, size }) => `forms?page=${page}&size=${size}`,
+            providesTags: (result) =>
+                result
+                    ? [
+                        ...result.data.map((u) => ({ type: "Form" as const, id: u.id })),
+                        { type: "Form" as const, id: "LIST" }
+                    ]
+                    : [{ type: "Form" as const, id: "LIST" }]
+        }),
+
+        getFormById: builder.query<FormDto, number>({
+            query: (id) => `forms/${id}`,
+            providesTags: (_result, _error, id) => [{ type: "Form", id: id }] 
+        })
+    }),
 });
 
 export const {
     useGetAllFormsQuery,
-    useCreateFormMutation
+    useCreateFormMutation,
+    useGetFormByIdQuery
 } = formApi;
