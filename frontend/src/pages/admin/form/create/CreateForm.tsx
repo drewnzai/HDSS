@@ -7,8 +7,8 @@ import { useNavigate } from "react-router-dom";
 
 import "./create-form.css";
 import FormPage from "../../../../components/form-page/FormPage";
-import type { FormCategory, FormTarget } from "../../../../models/FormDto";
 import { useCreateFormMutation } from "../../../../redux/FormApi";
+import type { FormCategory, FormTarget } from "../../../../models/types/FormTypes";
 
 interface FormState {
     name: string;
