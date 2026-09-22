@@ -1,13 +1,19 @@
 import { useState } from "react";
-import DataTable, { type DataTableColumn } from "../../../../components/data/DataTable";
+import { Link } from "react-router-dom";
+
+import DataTable, {
+    type DataTableColumn,
+} from "../../../../components/data/DataTable";
 import DataTablePagination from "../../../../components/data/DataTablePagination";
 import PageContainer from "../../../../components/PageContainer";
 import type { FormDto } from "../../../../models/FormDto";
 import { useGetAllFormsQuery } from "../../../../store/FormApi";
 
+import "./form-management.css";
+
 function FormManagement() {
     const [page, setPage] = useState(0);
-    const [pageSize, setPageSize] = useState(10)
+    const [pageSize, setPageSize] = useState(10);
 
     const {
         data,
@@ -40,7 +46,11 @@ function FormManagement() {
         {
             key: "category",
             header: "Category",
-            render: (form) => form.category,
+            render: (form) => (
+                <span className="form-management__category">
+                    {form.category}
+                </span>
+            ),
         },
         {
             key: "target",
@@ -50,7 +60,11 @@ function FormManagement() {
         {
             key: "version",
             header: "Version",
-            render: (form) => `v${form.version} `,
+            render: (form) => (
+                <span className="form-management__version">
+                    v{form.version}
+                </span>
+            ),
         },
         {
             key: "status",
@@ -62,13 +76,13 @@ function FormManagement() {
                             Draft
                         </span>
                     );
-                } else {
-                    return (
-                        <span className="status-badge status-badge--success">
-                            Published
-                        </span>
-                    );
                 }
+
+                return (
+                    <span className="status-badge status-badge--success">
+                        Published
+                    </span>
+                );
             },
         },
         {
@@ -88,62 +102,85 @@ function FormManagement() {
                         Inactive
                     </span>
                 );
-            }
-        }
+            },
+        },
     ];
 
     return (
         <PageContainer size="wide">
-            <div className="page-header">
-                <div>
-                    <h1>Forms</h1>
+            <div className="form-management">
+                <header className="form-management__header">
+                    <div className="form-management__heading">
+                        <span className="form-management__eyebrow">
+                            Administration
+                        </span>
 
-                    <p>
-                        Manage forms available in the portal.
-                    </p>
-                </div>
+                        <h1 className="form-management__title">
+                            Forms
+                        </h1>
 
-                <button type="button">
-                    Create form
-                </button>
-            </div>
+                        <p className="form-management__description">
+                            Manage forms available in the portal.
+                        </p>
+                    </div>
 
-            {error ? (
-                <div className="page-state">
-                    <p>
-                        Unable to load forms.
-                    </p>
-
-                    <button
-                        type="button"
-                        onClick={refetch}
+                    <Link
+                        to="/admin/forms/create"
+                        className="form-management__create"
                     >
-                        Try again
-                    </button>
-                </div>
-            ) : (
-                <>
-                    <DataTable<FormDto>
-                        columns={columns}
-                        data={forms}
-                        getRowKey={(form) => form.id}
-                        isLoading={isLoading || isFetching}
-                        emptyMessage="No forms have been created yet."
-                        loadingMessage="Loading forms"
-                    />
+                        Create form
+                    </Link>
+                </header>
 
-                    <DataTablePagination
-                        page={page}
-                        pageSize={pageSize}
-                        totalItems={data?.totalElements ?? 0}
-                        onPageChange={setPage}
-                        onPageSizeChange={setPageSize}
-                    />
-                </>
-            )}
+                {error ? (
+                    <div className="form-management__state">
+                        <div>
+                            <h2>
+                                Unable to load forms
+                            </h2>
+
+                            <p>
+                                Something went wrong while retrieving
+                                the forms.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="form-management__retry"
+                            onClick={refetch}
+                        >
+                            Try again
+                        </button>
+                    </div>
+                ) : (
+                    <section className="form-management__table-section">
+                        <DataTable<FormDto>
+                            columns={columns}
+                            data={forms}
+                            getRowKey={(form) => form.id}
+                            isLoading={isLoading || isFetching}
+                            emptyMessage="No forms have been created yet."
+                            loadingMessage="Loading forms"
+                        />
+
+                        <div className="form-management__pagination">
+                            <DataTablePagination
+                                page={page}
+                                pageSize={pageSize}
+                                totalItems={data?.totalElements ?? 0}
+                                onPageChange={setPage}
+                                onPageSizeChange={(size) => {
+                                    setPageSize(size);
+                                    setPage(0);
+                                }}
+                            />
+                        </div>
+                    </section>
+                )}
+            </div>
         </PageContainer>
     );
 }
 
 export default FormManagement;
-
