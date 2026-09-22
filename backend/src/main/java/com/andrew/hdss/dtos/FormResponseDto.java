@@ -1,9 +1,9 @@
-package com.andrew.hdss.dtos;
+package com.andrew.hdss.dtos;// package: match your existing dto package
 
 import com.andrew.hdss.models.FormResponse;
 import com.andrew.hdss.models.enums.FormResponseStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record FormResponseDto(
         Long id,
@@ -14,8 +14,8 @@ public record FormResponseDto(
         String formTitle,
         Integer formVersion,
         FormResponseStatus status,
-        LocalDateTime startedAt,
-        LocalDateTime completedAt
+        Instant startedAt,
+        Instant completedAt
 ) {
     public static FormResponseDto from(FormResponse formResponse) {
         return new FormResponseDto(

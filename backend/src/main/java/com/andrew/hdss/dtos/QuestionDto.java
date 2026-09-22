@@ -1,4 +1,4 @@
-package com.andrew.hdss.dtos;
+package com.andrew.hdss.dtos;// package: match your existing dto package
 
 import com.andrew.hdss.models.Question;
 import com.andrew.hdss.models.enums.QuestionType;
@@ -16,7 +16,9 @@ public record QuestionDto(
         String constraintMessage,
         String calculation,
         String choiceListName,
-        Integer orderIndex
+        Integer orderIndex,
+        MappedEntity mappedEntity,
+        String mappedField
 ) {
     public static QuestionDto from(Question question) {
         return new QuestionDto(
@@ -32,7 +34,9 @@ public record QuestionDto(
                 question.getConstraintMessage(),
                 question.getCalculation(),
                 question.getChoiceListName(),
-                question.getOrderIndex()
+                question.getOrderIndex(),
+                question.getMappedEntity(),
+                question.getMappedField()
         );
     }
 }

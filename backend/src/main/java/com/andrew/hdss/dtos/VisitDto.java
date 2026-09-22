@@ -1,4 +1,4 @@
-package com.andrew.hdss.dtos;
+package com.andrew.hdss.dtos;// package: match your existing dto package
 
 import com.andrew.hdss.models.Visit;
 import com.andrew.hdss.models.enums.VisitStatus;

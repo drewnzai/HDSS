@@ -2,6 +2,7 @@ package com.andrew.hdss.dtos;
 
 import com.andrew.hdss.models.Form;
 import com.andrew.hdss.models.enums.FormCategory;
+import com.andrew.hdss.models.enums.FormStatus;
 import com.andrew.hdss.models.enums.FormTarget;
 
 public record FormDto(
@@ -13,9 +14,9 @@ public record FormDto(
         Integer version,
         String description,
         boolean active,
-        boolean locked // computed — does any FormResponse exist for this form?
+        FormStatus status
 ) {
-    public static FormDto from(Form form, boolean locked) {
+    public static FormDto from(Form form) {
         return new FormDto(
                 form.getId(),
                 form.getName(),
@@ -25,7 +26,7 @@ public record FormDto(
                 form.getVersion(),
                 form.getDescription(),
                 form.isActive(),
-                locked
+                form.getStatus()
         );
     }
 }
