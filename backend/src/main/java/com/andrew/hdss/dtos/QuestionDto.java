@@ -1,6 +1,7 @@
 package com.andrew.hdss.dtos;// package: match your existing dto package
 
 import com.andrew.hdss.models.Question;
+import com.andrew.hdss.models.enums.MappedEntity;
 import com.andrew.hdss.models.enums.QuestionType;
 
 public record QuestionDto(
