@@ -7,6 +7,7 @@ import com.andrew.hdss.dtos.UpdateQuestionRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -65,7 +66,7 @@ public interface QuestionApi {
             summary = "Delete a question",
             description = "Delete an existing question in a form if the form has not received form responses yet"
     )
-    void deleteQuestion(@PathVariable Long formId, @PathVariable Long questionId);
+    ResponseEntity<String> deleteQuestion(@PathVariable Long formId, @PathVariable Long questionId);
 
     @Operation(
             summary = "Reorder questions",

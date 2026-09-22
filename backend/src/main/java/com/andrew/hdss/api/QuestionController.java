@@ -8,6 +8,8 @@ import com.andrew.hdss.dtos.UpdateQuestionRequest;
 import com.andrew.hdss.services.QuestionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,8 +45,10 @@ public class QuestionController implements QuestionApi {
     }
 
     @DeleteMapping("/{questionId}")
-    public void deleteQuestion(@PathVariable Long formId, @PathVariable Long questionId) {
+    public ResponseEntity<String> deleteQuestion(@PathVariable Long formId, @PathVariable Long questionId) {
         questionService.deleteQuestion(formId, questionId);
+        return new ResponseEntity<>("Question deleted successfully",
+                HttpStatus.OK);
     }
 
     @PutMapping("/reorder")
