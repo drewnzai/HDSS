@@ -1,0 +1,251 @@
+.create-question {
+    width: 100%;
+}
+
+.form-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 1.5rem;
+    width: 100%;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 0.45rem;
+}
+
+.form-field--full {
+    grid-column: 1 / -1;
+}
+
+.form-field__label {
+    display: block;
+
+    margin: 0;
+
+    color: var(--color-text-primary);
+
+    font-size: 0.8rem;
+    font-weight: 650;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+}
+
+.form-field__input {
+    width: 100%;
+    min-height: 2.75rem;
+
+    box-sizing: border-box;
+
+    padding: 0.65rem 0.8rem;
+
+    border: 1px solid var(--color-outline);
+    border-radius: 0.45rem;
+
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+
+    font: inherit;
+    font-size: 0.9rem;
+    line-height: 1.4;
+
+    outline: none;
+
+    transition:
+        border-color 140ms ease,
+        box-shadow 140ms ease,
+        background-color 140ms ease;
+}
+
+.form-field__input::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.8;
+}
+
+.form-field__input:hover:not(:disabled) {
+    border-color: var(--color-text-muted);
+}
+
+.form-field__input:focus {
+    border-color: var(--color-primary);
+
+    box-shadow:
+        0 0 0 3px color-mix(in srgb,
+            var(--color-primary) 12%,
+            transparent);
+}
+
+.form-field__input:disabled {
+    cursor: not-allowed;
+
+    background: var(--color-surface-variant);
+    color: var(--color-text-muted);
+
+    opacity: 0.75;
+}
+
+select.form-field__input {
+    cursor: pointer;
+}
+
+select.form-field__input:disabled {
+    cursor: not-allowed;
+}
+
+.form-field--full .form-field__input {
+    min-height: 2.75rem;
+}
+
+#relevant,
+#constraint,
+#constraintMessage,
+#calculation {
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        "Liberation Mono",
+        monospace;
+
+    font-size: 0.84rem;
+}
+
+.form-field__hint {
+    margin: 0.05rem 0 0;
+
+    color: var(--color-text-muted);
+
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.form-field__checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+
+    min-height: 2.75rem;
+
+    padding: 0.55rem 0.7rem;
+
+    border: 1px solid var(--color-divider);
+    border-radius: 0.45rem;
+
+    background: var(--color-surface-variant);
+
+    color: var(--color-text-secondary);
+
+    font-size: 0.84rem;
+    line-height: 1.4;
+
+    cursor: pointer;
+
+    transition:
+        border-color 140ms ease,
+        background-color 140ms ease;
+}
+
+.form-field__checkbox:hover {
+    border-color: var(--color-outline);
+    background: color-mix(in srgb,
+            var(--color-surface-variant) 75%,
+            var(--color-surface));
+}
+
+.form-field__checkbox input {
+    width: 1rem;
+    height: 1rem;
+
+    margin: 0;
+
+    flex: 0 0 auto;
+
+    accent-color: var(--color-primary);
+
+    cursor: pointer;
+}
+
+.form-field__checkbox input:disabled {
+    cursor: not-allowed;
+}
+
+.form-field:has(.form-field__input:disabled) {
+    opacity: 0.85;
+}
+
+.form-page__section {
+    background: var(--color-surface);
+}
+
+.form-page__section-body {
+    min-width: 0;
+}
+
+.form-page__error {
+    border: 1px solid color-mix(in srgb,
+            var(--color-error) 35%,
+            var(--color-outline));
+
+    background: color-mix(in srgb,
+            var(--color-error) 6%,
+            var(--color-surface));
+
+    color: var(--color-error);
+}
+
+@media (max-width: 768px) {
+    .form-fields {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .form-field--full {
+        grid-column: auto;
+    }
+
+    .form-field__input {
+        min-height: 2.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-fields {
+        gap: 0.9rem;
+    }
+
+    .form-field__label {
+        font-size: 0.78rem;
+    }
+
+    .form-field__input {
+        padding: 0.65rem 0.7rem;
+
+        font-size: 0.88rem;
+    }
+
+    .form-field__hint {
+        font-size: 0.72rem;
+    }
+
+    .form-field__checkbox {
+        align-items: flex-start;
+
+        padding: 0.65rem 0.7rem;
+    }
+
+    .form-field__checkbox input {
+        margin-top: 0.15rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .form-field__input,
+    .form-field__checkbox {
+        transition: none;
+    }
+}

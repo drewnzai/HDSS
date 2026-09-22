@@ -5,6 +5,7 @@ import type { CreateQuestionRequest } from "../../../../models/CreateQuestionReq
 import type { MappedEntity } from "../../../../models/types/MappedEntity";
 import type { QuestionType } from "../../../../models/types/QuestionTypes";
 import { useCreateQuestionMutation } from "../../../../redux/QuestionApi";
+import "./create-question.css";
 
 interface QuestionFormState {
     name: string;
