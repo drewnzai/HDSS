@@ -1,8 +1,9 @@
-package com.andrew.hdss.api;
+package com.andrew.hdss.api;// package: match your existing controller package
+// Update to the FormController given earlier — adds /publish and /active.
 
-import com.andrew.hdss.api.swagger.FormApi;
 import com.andrew.hdss.dtos.CreateFormRequest;
 import com.andrew.hdss.dtos.FormDto;
+import com.andrew.hdss.dtos.SetFormActiveRequest;
 import com.andrew.hdss.dtos.UpdateFormRequest;
 import com.andrew.hdss.services.FormService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,23 +16,13 @@ import java.util.List;
 @RequestMapping("/api/forms")
 @RequiredArgsConstructor
 @Tag(name = "Form Management")
-public class FormController implements FormApi {
+public class FormController {
 
     private final FormService formService;
 
     @GetMapping
     public List<FormDto> getAllForms() {
         return formService.getAllForms();
-    }
-
-    @GetMapping("/core")
-    public List<FormDto> getAllCoreForms() {
-        return formService.getCoreForms();
-    }
-
-    @GetMapping("/extra")
-    public List<FormDto> getAllExtraForms() {
-        return formService.getExtraForms();
     }
 
     @GetMapping("/{id}")
@@ -52,5 +43,15 @@ public class FormController implements FormApi {
     @DeleteMapping("/{id}")
     public void deleteForm(@PathVariable Long id) {
         formService.deleteForm(id);
+    }
+
+    @PutMapping("/{id}/publish")
+    public FormDto publishForm(@PathVariable Long id) {
+        return formService.publishForm(id);
+    }
+
+    @PutMapping("/{id}/active")
+    public FormDto setActive(@PathVariable Long id, @RequestBody SetFormActiveRequest request) {
+        return formService.setActive(id, request.active());
     }
 }
