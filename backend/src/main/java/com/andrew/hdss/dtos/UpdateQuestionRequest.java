@@ -1,4 +1,4 @@
-package com.andrew.hdss.dtos;// package: match your existing dto package
+package com.andrew.hdss.dtos;
 
 import com.andrew.hdss.models.enums.MappedEntity;
 import com.andrew.hdss.models.enums.QuestionType;

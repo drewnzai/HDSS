@@ -3,6 +3,7 @@ package com.andrew.hdss.dtos;// package: match your existing dto package
 import com.andrew.hdss.models.Visit;
 import com.andrew.hdss.models.enums.VisitStatus;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record VisitDto(
@@ -10,7 +11,7 @@ public record VisitDto(
         String clientId,
         Long householdId,
         Long individualId,
-        LocalDateTime visitDate,
+        Instant visitDate,
         Long conductedById,
         String conductedByName,
         VisitStatus status

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "form_responses")
@@ -38,7 +39,7 @@ public class FormResponse {
     private FormResponseStatus status;
 
     @Column(nullable = false)
-    private Instant startedAt;
+    private LocalDateTime startedAt;
 
-    private Instant completedAt;
+    private LocalDateTime completedAt;
 }

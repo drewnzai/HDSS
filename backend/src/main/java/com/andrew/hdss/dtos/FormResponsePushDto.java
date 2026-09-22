@@ -1,12 +1,9 @@
-package com.andrew.hdss.dtos;// package: match your existing dto package
-// formId/questionId reference synced-down reference data by their real
-// server ids (same as Household.locationId) — no clientId needed for those,
-// unlike visitClientId/formResponseClientId below which point at
-// offline-created records.
+package com.andrew.hdss.dtos;
 
 import com.andrew.hdss.models.enums.FormResponseStatus;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 public record FormResponsePushDto(
         String clientId,
@@ -14,6 +11,6 @@ public record FormResponsePushDto(
         Long formId,
         Integer formVersion,
         FormResponseStatus status,
-        Instant startedAt,
-        Instant completedAt
+        LocalDateTime startedAt,
+        LocalDateTime completedAt
 ) {}
