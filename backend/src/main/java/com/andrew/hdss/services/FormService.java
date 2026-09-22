@@ -1,14 +1,17 @@
 package com.andrew.hdss.services;
 
-import com.andrew.hdss.dtos.CreateFormRequest;
-import com.andrew.hdss.dtos.FormDto;
-import com.andrew.hdss.dtos.UpdateFormRequest;
+import com.andrew.hdss.dtos.*;
 import com.andrew.hdss.exceptions.FormLockedException;
 import com.andrew.hdss.models.Form;
 import com.andrew.hdss.models.enums.FormStatus;
 import com.andrew.hdss.repositories.FormRepository;
+import com.andrew.hdss.utils.PaginationRequest;
+import com.andrew.hdss.utils.Util;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +24,25 @@ public class FormService {
     private final FormRepository formRepository;
 
     @Transactional(readOnly = true)
-    public List<FormDto> getAllForms() {
-        return formRepository.findAll().stream().map(FormDto::from).toList();
+    public BatchResponse<FormDto> getAllForms(ResourceRequest resourceRequest) {
+        Pageable pageable = Util.getPageable(
+                PaginationRequest.builder()
+                        .page(resourceRequest.getPage())
+                        .size(resourceRequest.getSize())
+                        .direction(Sort.Direction.ASC)
+                        .sortField("id")
+                        .build()
+        );
+
+        Page<Form> page = formRepository.findAll(pageable);
+
+        BatchResponse<FormDto> response = new BatchResponse<>();
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalPages(page.getTotalPages());
+        response.setTotalElements(page.getTotalElements());
+        response.setData(page.stream().map(FormDto::from).toList());
+        return response;
     }
 
     @Transactional(readOnly = true)

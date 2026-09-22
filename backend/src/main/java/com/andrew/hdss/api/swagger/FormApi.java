@@ -1,13 +1,13 @@
 package com.andrew.hdss.api.swagger;
 
-import com.andrew.hdss.dtos.CreateFormRequest;
-import com.andrew.hdss.dtos.FormDto;
-import com.andrew.hdss.dtos.UpdateFormRequest;
+import com.andrew.hdss.dtos.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -22,29 +22,10 @@ public interface FormApi {
                     )
             }
     )
-    List<FormDto> getAllForms();
-
-    @Operation(summary = "Get all core forms")
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "All core forms retrieved successfully"
-                    )
-            }
-    )
-    List<FormDto> getAllCoreForms();
-
-    @Operation(summary = "Get all extra forms")
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "All extra forms retrieved successfully"
-                    )
-            }
-    )
-    List<FormDto> getAllExtraForms();
+    BatchResponse<FormDto> getAllForms(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    );
 
     @Operation(summary = "Get an individual form")
     @ApiResponses(
@@ -70,7 +51,7 @@ public interface FormApi {
 
     @Operation(
             summary = "Update a form",
-            description = "Can only update a form if the form has not received form responses yet"
+            description = "Can only update a form if the form has not been marked as published"
     )
     @ApiResponses(
             value = {
@@ -83,8 +64,41 @@ public interface FormApi {
     FormDto updateForm(@PathVariable Long id, @RequestBody UpdateFormRequest request);
 
     @Operation(
-            summary = "Delete a form",
-            description = "Can only delete a form if the form has not received form responses yet"
+            summary = "Delete a form"
     )
-    void deleteForm(@PathVariable Long id);
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Form deleted successfully"
+                    )
+            }
+    )
+    ResponseEntity<String> deleteForm(@PathVariable Long id);
+
+    @Operation(
+            summary = "Mark a form as published"
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Form marked as published successfully"
+                    )
+            }
+    )
+    FormDto publishForm(@PathVariable Long id);
+
+    @Operation(
+            summary = "Mark a form as active"
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Form marked as active successfully"
+                    )
+            }
+    )
+    FormDto setActive(@PathVariable Long id, @RequestBody SetFormActiveRequest request);
 }
