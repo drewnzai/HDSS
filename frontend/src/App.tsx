@@ -12,6 +12,7 @@ import CreateForm from "./pages/admin/form/create/CreateForm"
 import FormManagement from "./pages/admin/form/management/FormManagement"
 import QuestionManagement from "./pages/admin/question/management/QuestionManagement"
 import CreateQuestion from "./pages/admin/question/create/CreateQuestion"
+import EditQuestion from "./pages/admin/question/edit/EditQuestion"
 
 function App() {
 
@@ -34,6 +35,7 @@ function App() {
           <Route path="/admin/forms" element={<FormManagement />} />
           <Route path="/admin/forms/:formId/questions" element={<QuestionManagement />} />
           < Route path="/admin/forms/:formId/questions/create" element={<CreateQuestion />} />
+          < Route path="/admin/forms/:formId/questions/:questionId/edit" element={<EditQuestion />} />
         </Route>
       </Route>
     </Routes>

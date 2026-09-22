@@ -1,6 +1,6 @@
-.create-question {
-    width: 100%;
-}
+/* =========================================================
+   Create / Edit Question
+   ========================================================= */
 
 .form-fields {
     display: grid;
@@ -20,6 +20,10 @@
     grid-column: 1 / -1;
 }
 
+/* ---------------------------------------------------------
+   Labels
+   --------------------------------------------------------- */
+
 .form-field__label {
     display: block;
 
@@ -33,10 +37,13 @@
     letter-spacing: 0.01em;
 }
 
+/* ---------------------------------------------------------
+   Inputs
+   --------------------------------------------------------- */
+
 .form-field__input {
     width: 100%;
     min-height: 2.75rem;
-
     box-sizing: border-box;
 
     padding: 0.65rem 0.8rem;
@@ -86,6 +93,10 @@
     opacity: 0.75;
 }
 
+/* ---------------------------------------------------------
+   Selects
+   --------------------------------------------------------- */
+
 select.form-field__input {
     cursor: pointer;
 }
@@ -94,9 +105,9 @@ select.form-field__input:disabled {
     cursor: not-allowed;
 }
 
-.form-field--full .form-field__input {
-    min-height: 2.75rem;
-}
+/* ---------------------------------------------------------
+   Technical / XLSForm fields
+   --------------------------------------------------------- */
 
 #relevant,
 #constraint,
@@ -114,6 +125,10 @@ select.form-field__input:disabled {
     font-size: 0.84rem;
 }
 
+/* ---------------------------------------------------------
+   Hints
+   --------------------------------------------------------- */
+
 .form-field__hint {
     margin: 0.05rem 0 0;
 
@@ -123,12 +138,17 @@ select.form-field__input:disabled {
     line-height: 1.5;
 }
 
+/* ---------------------------------------------------------
+   Required checkbox
+   --------------------------------------------------------- */
+
 .form-field__checkbox {
     display: flex;
     align-items: center;
     gap: 0.65rem;
 
     min-height: 2.75rem;
+    box-sizing: border-box;
 
     padding: 0.55rem 0.7rem;
 
@@ -136,7 +156,6 @@ select.form-field__input:disabled {
     border-radius: 0.45rem;
 
     background: var(--color-surface-variant);
-
     color: var(--color-text-secondary);
 
     font-size: 0.84rem;
@@ -151,6 +170,7 @@ select.form-field__input:disabled {
 
 .form-field__checkbox:hover {
     border-color: var(--color-outline);
+
     background: color-mix(in srgb,
             var(--color-surface-variant) 75%,
             var(--color-surface));
@@ -161,7 +181,6 @@ select.form-field__input:disabled {
     height: 1rem;
 
     margin: 0;
-
     flex: 0 0 auto;
 
     accent-color: var(--color-primary);
@@ -173,13 +192,18 @@ select.form-field__input:disabled {
     cursor: not-allowed;
 }
 
-.form-field:has(.form-field__input:disabled) {
-    opacity: 0.85;
+/* ---------------------------------------------------------
+   Loading / disabled state
+   --------------------------------------------------------- */
+
+.form-field__input:disabled,
+.form-field__checkbox:has(input:disabled) {
+    opacity: 0.7;
 }
 
-.form-page__section-body {
-    min-width: 0;
-}
+/* ---------------------------------------------------------
+   Error styling
+   --------------------------------------------------------- */
 
 .form-page__error {
     border: 1px solid color-mix(in srgb,
@@ -192,6 +216,45 @@ select.form-field__input:disabled {
 
     color: var(--color-error);
 }
+
+/* ---------------------------------------------------------
+   Page loading / state
+   --------------------------------------------------------- */
+
+.question-management__state {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    padding: 1.5rem;
+
+    border: 1px solid var(--color-outline);
+    border-radius: 0.65rem;
+
+    background: var(--color-surface);
+}
+
+.question-management__state h2 {
+    margin: 0;
+
+    color: var(--color-text-primary);
+
+    font-size: 1rem;
+    font-weight: 650;
+}
+
+.question-management__state p {
+    margin: 0;
+
+    color: var(--color-text-secondary);
+
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
 
 @media (max-width: 768px) {
     .form-fields {
@@ -219,7 +282,6 @@ select.form-field__input:disabled {
 
     .form-field__input {
         padding: 0.65rem 0.7rem;
-
         font-size: 0.88rem;
     }
 
@@ -229,14 +291,21 @@ select.form-field__input:disabled {
 
     .form-field__checkbox {
         align-items: flex-start;
-
         padding: 0.65rem 0.7rem;
     }
 
     .form-field__checkbox input {
         margin-top: 0.15rem;
     }
+
+    .question-management__state {
+        padding: 1.15rem;
+    }
 }
+
+/* ---------------------------------------------------------
+   Reduced motion
+   --------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
 

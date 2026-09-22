@@ -9,7 +9,7 @@ export interface QuestionDto{
     hint: string;
     type: QuestionType;
     required: boolean;
-    relevent: string;
+    relevant: string;
     constraint: string;
     constraintMessage: string;
     calculation: string;
