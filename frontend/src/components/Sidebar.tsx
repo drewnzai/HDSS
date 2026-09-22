@@ -5,6 +5,7 @@ import {
   Home,
   LayoutDashboard,
   MapPin,
+  NotepadText,
   Users,
   X,
 } from "lucide-react";
@@ -52,6 +53,11 @@ const adminNav: NavItem[] = [
     to: "/admin/locations",
     icon: MapPin,
   },
+  {
+    label: "Forms",
+    to: "/admin/forms",
+    icon: NotepadText
+  }
 ];
 
 function Sidebar({
