@@ -10,6 +10,7 @@ import LocationManagement from "./pages/admin/location/management/LocationManage
 import LocationImport from "./pages/admin/location/import/LocationImport"
 import CreateForm from "./pages/admin/form/create/CreateForm"
 import FormManagement from "./pages/admin/form/management/FormManagement"
+import QuestionManagement from "./pages/admin/question/management/QuestionManagement"
 
 function App() {
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="/admin/locations/import" element={<LocationImport />} />
           <Route path="/admin/forms/create" element={<CreateForm />} />
           <Route path="/admin/forms" element={<FormManagement />} />
+          <Route path="/admin/forms/:formId/questions" element={<QuestionManagement />} />
         </Route>
       </Route>
     </Routes>
