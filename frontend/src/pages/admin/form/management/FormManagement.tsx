@@ -7,20 +7,20 @@ import { useGetAllFormsQuery } from "../../../../store/FormApi";
 
 function FormManagement() {
     const [page, setPage] = useState(0);
-    const [size, setSize] = useState(10);
+    const [pageSize, setPageSize] = useState(10)
 
     const {
         data,
         isLoading,
         isFetching,
-        isError,
+        error,
         refetch,
     } = useGetAllFormsQuery({
         page,
-        size,
+        size: pageSize,
     });
 
-    const forms = data?.content ?? [];
+    const forms = data?.data ?? [];
 
     const columns: DataTableColumn<FormDto>[] = [
         {
@@ -50,20 +50,31 @@ function FormManagement() {
         {
             key: "version",
             header: "Version",
-            render: (form) => `v${ form.version } `,
+            render: (form) => `v${form.version} `,
         },
         {
             key: "status",
             header: "Status",
             render: (form) => {
-                if (form.locked) {
+                if (form.status === "DRAFT") {
                     return (
                         <span className="status-badge status-badge--warning">
-                            Locked
+                            Draft
+                        </span>
+                    );
+                } else {
+                    return (
+                        <span className="status-badge status-badge--success">
+                            Published
                         </span>
                     );
                 }
-
+            },
+        },
+        {
+            key: "active",
+            header: "Active",
+            render: (form) => {
                 if (form.active) {
                     return (
                         <span className="status-badge status-badge--success">
@@ -77,21 +88,12 @@ function FormManagement() {
                         Inactive
                     </span>
                 );
-            },
-        },
+            }
+        }
     ];
 
-    const handlePageChange = (nextPage: number) => {
-        setPage(nextPage);
-    };
-
-    const handlePageSizeChange = (nextSize: number) => {
-        setSize(nextSize);
-        setPage(0);
-    };
-
     return (
-        <PageContainer>
+        <PageContainer size="wide">
             <div className="page-header">
                 <div>
                     <h1>Forms</h1>
@@ -106,7 +108,7 @@ function FormManagement() {
                 </button>
             </div>
 
-            {isError ? (
+            {error ? (
                 <div className="page-state">
                     <p>
                         Unable to load forms.
@@ -124,19 +126,18 @@ function FormManagement() {
                     <DataTable<FormDto>
                         columns={columns}
                         data={forms}
-                        rowKey={(form) => form.id}
-                        loading={isLoading}
+                        getRowKey={(form) => form.id}
+                        isLoading={isLoading || isFetching}
                         emptyMessage="No forms have been created yet."
+                        loadingMessage="Loading forms"
                     />
 
                     <DataTablePagination
-                        page={data?.page ?? page}
-                        size={data?.size ?? size}
-                        totalElements={data?.totalElements ?? 0}
-                        totalPages={data?.totalPages ?? 0}
-                        onPageChange={handlePageChange}
-                        onPageSizeChange={handlePageSizeChange}
-                        loading={isFetching}
+                        page={page}
+                        pageSize={pageSize}
+                        totalItems={data?.totalElements ?? 0}
+                        onPageChange={setPage}
+                        onPageSizeChange={setPageSize}
                     />
                 </>
             )}
