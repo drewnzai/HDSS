@@ -1,4 +1,5 @@
-import type { FormCategory, FormTarget } from "./FormDto";
+import type { FormCategory, FormTarget } from "./types/FormTypes";
+
 
 export interface CreateFormRequest{
     name: string;

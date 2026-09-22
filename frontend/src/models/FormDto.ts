@@ -1,7 +1,4 @@
-export type FormCategory = "CORE" | "EXTRA";
-export type FormTarget = "INDIVIDUAL" | "HOUSEHOLD";
-export type FormStatus = "DRAFT" | "PUBLISHED";
-
+import type { FormCategory, FormStatus, FormTarget } from "./types/FormTypes";
 
 export interface FormDto{
     id: number;

@@ -1,0 +1,1 @@
+export type MappedEntity = "NONE" | "HOUSEHOLD" | "INDIVIDUAL" | "MEMBERSHIP";
