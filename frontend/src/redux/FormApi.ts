@@ -3,7 +3,7 @@ import { baseQueryWithReauth } from "./AuthApi";
 import type { FormDto } from "../models/FormDto";
 import type { CreateFormRequest } from "../models/CreateFormRequest";
 import type { PagedResponse } from "../models/PagedResponse";
-import type { GetPageParams } from "./PageParams";
+import type { PageParams } from "../models/PageParams";
 
 export const formApi = createApi({
     reducerPath: "formApi",
@@ -18,7 +18,7 @@ export const formApi = createApi({
             }), invalidatesTags: ["Form"]
         }),
 
-        getAllForms: builder.query<PagedResponse<FormDto>, GetPageParams>({
+        getAllForms: builder.query<PagedResponse<FormDto>, PageParams>({
             query: ({ page, size }) => `forms?page=${page}&size=${size}`,
             providesTags: (result) =>
                 result
@@ -31,7 +31,7 @@ export const formApi = createApi({
 
         getFormById: builder.query<FormDto, number>({
             query: (id) => `forms/${id}`,
-            providesTags: (_result, _error, id) => [{ type: "Form", id: id }] 
+            providesTags: (_result, _error, id) => [{ type: "Form", id: id }]
         })
     }),
 });

@@ -3,7 +3,7 @@ import { baseQueryWithReauth } from "./AuthApi";
 import type { PagedResponse } from "../models/PagedResponse";
 import type { UserSummary } from "../models/UserSummary";
 import type { CreateUserRequest } from "../models/CreateUserRequest";
-import type { GetPageParams } from "./PageParams";
+import type { PageParams } from "../models/PageParams";
 
 
 export const userApi = createApi({
@@ -11,7 +11,7 @@ export const userApi = createApi({
     baseQuery: baseQueryWithReauth,
     tagTypes: ["User"],
     endpoints: (builder) => ({
-        getUsers: builder.query<PagedResponse<UserSummary>, GetPageParams>({
+        getUsers: builder.query<PagedResponse<UserSummary>, PageParams>({
             query: ({ page, size }) => `users?page=${page}&size=${size}`,
             providesTags: (result) =>
                 result
