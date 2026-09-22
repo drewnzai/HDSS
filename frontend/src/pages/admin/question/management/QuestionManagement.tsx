@@ -5,6 +5,7 @@ import type { QuestionDto } from "../../../../models/QuestionDto";
 import { useGetFormByIdQuery } from "../../../../redux/FormApi";
 import { useGetQuestionsByFormQuery, useDeleteQuestionMutation } from "../../../../redux/QuestionApi";
 import { Edit2, Trash2 } from "lucide-react";
+import "./question-management.css";
 
 function QuestionManagement() {
     const { formId } = useParams<{ formId: string }>();
