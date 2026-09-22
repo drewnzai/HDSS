@@ -1,7 +1,19 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "./AuthApi";
 import type { QuestionDto } from "../models/QuestionDto";
+import type { CreateQuestionRequest } from "../models/CreateQuestionRequest";
+import type { UpdateQuestionRequest } from "../models/UpdateQuestionRequest";
 
+interface CreateQuestionArgs {
+    formId: number;
+    body: CreateQuestionRequest;
+}
+
+interface UpdateQuestionArgs {
+    formId: number;
+    questionId: number;
+    body: UpdateQuestionRequest;
+}
 
 export const questionApi = createApi({
     reducerPath: "questionApi",
@@ -19,8 +31,8 @@ export const questionApi = createApi({
                     : [{ type: "Question" as const, id: "LIST" }],
         }),
 
-        createQuestion: builder.mutation<QuestionDto, CreateQuestionRequest>({
-            query: ({ formId, ...body }) => ({
+        createQuestion: builder.mutation<QuestionDto, CreateQuestionArgs>({
+            query: ({ formId, body }) => ({
                 url: `forms/${formId}/questions`,
                 method: "POST",
                 body,
@@ -28,8 +40,8 @@ export const questionApi = createApi({
             invalidatesTags: [{ type: "Question", id: "LIST" }],
         }),
 
-        updateQuestion: builder.mutation<QuestionDto, UpdateQuestionRequest>({
-            query: ({ formId, questionId, ...body }) => ({
+        updateQuestion: builder.mutation<QuestionDto, UpdateQuestionArgs>({
+            query: ({ formId, questionId, body }) => ({
                 url: `forms/${formId}/questions/${questionId}`,
                 method: "PUT",
                 body,
