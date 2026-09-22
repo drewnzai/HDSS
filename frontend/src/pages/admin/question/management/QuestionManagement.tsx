@@ -5,7 +5,7 @@ import type { QuestionDto } from "../../../../models/QuestionDto";
 import { useGetFormByIdQuery } from "../../../../redux/FormApi";
 import { useGetQuestionsByFormQuery, useDeleteQuestionMutation } from "../../../../redux/QuestionApi";
 import { Edit2, Trash2 } from "lucide-react";
-import "./question-management.css";
+import "./question-management.css"
 
 function QuestionManagement() {
     const { formId } = useParams<{ formId: string }>();
@@ -31,12 +31,19 @@ function QuestionManagement() {
     const [deleteQuestion, { isLoading: isDeleting }] =
         useDeleteQuestionMutation();
 
-    const handleDelete = async (formId: number, questionId: number) => {
+    const handleDelete = async (question: QuestionDto) => {
+        const confirmed = window.confirm(
+            `Delete question "${question.label}"? This cannot be undone.`
+        );
+
+        if (!confirmed) {
+            return;
+        }
 
         try {
             await deleteQuestion({
-                formId,
-                questionId
+                formId: numericFormId,
+                questionId: question.id,
             }).unwrap();
         } catch {
             // API error surfaced via the error state below on next fetch.
@@ -44,15 +51,6 @@ function QuestionManagement() {
     };
 
     const columns: DataTableColumn<QuestionDto>[] = [
-        {
-            key: "order",
-            header: "#",
-            render: (question) => (
-                <span className="question-management__order">
-                    {question.orderIndex}
-                </span>
-            ),
-        },
         {
             key: "name",
             header: "Name",
@@ -98,7 +96,40 @@ function QuestionManagement() {
         {
             key: "choiceListName",
             header: "Choice list",
-            render: (question) => question.choiceListName ?? "—",
+            render: (question) => question.choiceListName || "—",
+        },
+        {
+            key: "mappedEntity",
+            header: "Maps to",
+            render: (question) => {
+                if (question.mappedEntity === "NONE") {
+                    return (
+                        <span className="status-badge status-badge--muted">
+                            Not mapped
+                        </span>
+                    );
+                }
+
+                // mappedField may be a comma-separated list of field
+                // names (e.g. a GEOPOINT question mapping to
+                // "latitude,longitude") — render each one qualified by
+                // the entity, joined for readability.
+                const fields = question.mappedField
+                    .split(",")
+                    .map((f) => f.trim())
+                    .filter(Boolean);
+
+                return (
+                    <span className="question-management__mapped">
+                        {fields
+                            .map(
+                                (field) =>
+                                    `${question.mappedEntity}.${field}`
+                            )
+                            .join(", ")}
+                    </span>
+                );
+            },
         },
         {
             key: "actions",
@@ -115,7 +146,7 @@ function QuestionManagement() {
                     <button
                         type="button"
                         className="question-management__delete"
-                        onClick={() => handleDelete(numericFormId, question.id)}
+                        onClick={() => handleDelete(question)}
                         disabled={isDeleting}
                     >
                         <Trash2 size={17} aria-hidden="true" />
@@ -125,9 +156,9 @@ function QuestionManagement() {
         },
     ];
 
-    const sortedQuestions = [...(questions ?? [])].sort(
-        (a, b) => a.orderIndex.localeCompare(b.orderIndex)
-    );
+    // No `order` field on Question in this schema — list as returned
+    // by the API (id order / insertion order).
+    const questionList = questions ?? [];
 
     return (
         <PageContainer size="wide">
@@ -182,7 +213,7 @@ function QuestionManagement() {
                     <section className="question-management__table-section">
                         <DataTable<QuestionDto>
                             columns={columns}
-                            data={sortedQuestions}
+                            data={questionList}
                             getRowKey={(question) => question.id}
                             isLoading={isLoading || isFetching}
                             emptyMessage="No questions have been added to this form yet."

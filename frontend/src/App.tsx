@@ -11,6 +11,7 @@ import LocationImport from "./pages/admin/location/import/LocationImport"
 import CreateForm from "./pages/admin/form/create/CreateForm"
 import FormManagement from "./pages/admin/form/management/FormManagement"
 import QuestionManagement from "./pages/admin/question/management/QuestionManagement"
+import CreateQuestion from "./pages/admin/question/create/CreateQuestion"
 
 function App() {
 
@@ -32,6 +33,7 @@ function App() {
           <Route path="/admin/forms/create" element={<CreateForm />} />
           <Route path="/admin/forms" element={<FormManagement />} />
           <Route path="/admin/forms/:formId/questions" element={<QuestionManagement />} />
+          < Route path="/admin/forms/:formId/questions/create" element={<CreateQuestion />} />
         </Route>
       </Route>
     </Routes>
