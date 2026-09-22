@@ -1,5 +1,6 @@
 export type FormCategory = "CORE" | "EXTRA";
 export type FormTarget = "INDIVIDUAL" | "HOUSEHOLD";
+export type FormStatus = "DRAFT" | "PUBLISHED";
 
 
 export interface FormDto{
@@ -11,5 +12,5 @@ export interface FormDto{
     version: number;
     description: string;
     active: boolean;
-    locked: boolean;
+    status: FormStatus;
 }
