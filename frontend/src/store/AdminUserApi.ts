@@ -3,18 +3,15 @@ import { baseQueryWithReauth } from "./AuthApi";
 import type { PagedResponse } from "../models/PagedResponse";
 import type { UserSummary } from "../models/UserSummary";
 import type { CreateUserRequest } from "../models/CreateUserRequest";
+import type { GetPageParams } from "./PageParams";
 
-interface GetUsersParams {
-    page: number;
-    size: number;
-}
 
 export const adminUserApi = createApi({
     reducerPath: "adminUserApi",
     baseQuery: baseQueryWithReauth,
     tagTypes: ["User"],
     endpoints: (builder) => ({
-        getUsers: builder.query<PagedResponse<UserSummary>, GetUsersParams>({
+        getUsers: builder.query<PagedResponse<UserSummary>, GetPageParams>({
             query: ({ page, size }) => `users?page=${page}&size=${size}`,
             providesTags: (result) =>
                 result

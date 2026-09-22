@@ -2,6 +2,8 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "./AuthApi";
 import type { FormDto } from "../models/FormDto";
 import type { CreateFormRequest } from "../models/CreateFormRequest";
+import type { PagedResponse } from "../models/PagedResponse";
+import type { GetPageParams } from "./PageParams";
 
 export const formApi = createApi({
     reducerPath: "formApi",
@@ -16,12 +18,16 @@ export const formApi = createApi({
             }), invalidatesTags: ["Form"]
         }),
 
-        getAllForms: builder.query<FormDto[], void>({ 
-            query: () => ({ 
-                url: "forms", 
-                method: "GET", 
-            }), providesTags: ["Form"], 
-        }),
+       getAllForms: builder.query<PagedResponse<FormDto>, GetPageParams>({
+                   query: ({ page, size }) => `forms?page=${page}&size=${size}`,
+                   providesTags: (result) =>
+                       result
+                           ? [
+                               ...result.data.map((u) => ({ type: "Form" as const, id: u.id })),
+                               { type: "Form" as const, id: "LIST" }
+                           ]
+                           : [{ type: "Form" as const, id: "LIST" }]
+               }),
     })
 });
 
