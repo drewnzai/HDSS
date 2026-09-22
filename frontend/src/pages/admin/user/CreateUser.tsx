@@ -5,7 +5,7 @@ import type {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import FormPage from "../../../components/form-page/FormPage";
-import { useCreateUserMutation } from "../../../redux/AdminUserApi";
+import { useCreateUserMutation } from "../../../redux/UserApi";
 
 
 const ROLE_OPTIONS = ["ADMIN", "USER"] as const;

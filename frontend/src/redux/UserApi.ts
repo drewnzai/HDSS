@@ -6,7 +6,7 @@ import type { CreateUserRequest } from "../models/CreateUserRequest";
 import type { GetPageParams } from "./PageParams";
 
 
-export const adminUserApi = createApi({
+export const userApi = createApi({
     reducerPath: "adminUserApi",
     baseQuery: baseQueryWithReauth,
     tagTypes: ["User"],
@@ -57,4 +57,4 @@ export const {
     useGetUserByUsernameQuery,
     useDeleteUserMutation,
     useCreateUserMutation
-} = adminUserApi;
+} = userApi;
