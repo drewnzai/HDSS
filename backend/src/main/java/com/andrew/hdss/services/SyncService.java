@@ -1,13 +1,13 @@
 package com.andrew.hdss.services;
 
+import com.andrew.hdss.dtos.AnswerPushDto;
+import com.andrew.hdss.dtos.FormResponsePushDto;
+import com.andrew.hdss.dtos.VisitPushDto;
 import com.andrew.hdss.dtos.sync.*;
 import com.andrew.hdss.models.*;
 import com.andrew.hdss.models.enums.HouseholdStatus;
 import com.andrew.hdss.models.enums.RelationshipToHead;
-import com.andrew.hdss.repositories.HouseholdRepository;
-import com.andrew.hdss.repositories.IndividualRepository;
-import com.andrew.hdss.repositories.LocationRepository;
-import com.andrew.hdss.repositories.MembershipRepository;
+import com.andrew.hdss.repositories.*;
 import lombok.AllArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
@@ -24,6 +24,11 @@ public class SyncService {
     private final IndividualRepository individualRepository;
     private final MembershipRepository membershipRepository;
     private final LocationRepository locationRepository;
+    private final VisitRepository visitRepository;
+    private final FormResponseRepository formResponseRepository;
+    private final FormRepository formRepository;
+    private final QuestionRepository questionRepository;
+    private final AnswerRepository answerRepository;
     private final AuthService authService;
 
     @Transactional
@@ -79,7 +84,51 @@ public class SyncService {
             }
         }
 
-        return new SyncPushResponse(householdResults, individualResults, membershipResults);
+        Map<String, Visit> visitsByClientId = new HashMap<>();
+        List<SyncItemResult> visitResults = new ArrayList<>();
+        for (VisitPushDto dto : request.visits()) {
+            try {
+                UpsertResult<Visit> result =
+                        upsertVisit(dto, householdsByClientId, individualsByClientId, currentUser);
+                visitsByClientId.put(dto.clientId(), result.entity());
+                visitResults.add(result.wasNew()
+                        ? SyncItemResult.created(dto.clientId(), result.entity().getId())
+                        : SyncItemResult.updated(dto.clientId(), result.entity().getId()));
+            } catch (Exception e) {
+                visitResults.add(SyncItemResult.error(dto.clientId(), e.getMessage()));
+            }
+        }
+
+        Map<String, FormResponse> formResponsesByClientId = new HashMap<>();
+        List<SyncItemResult> formResponseResults = new ArrayList<>();
+        for (FormResponsePushDto dto : request.formResponses()) {
+            try {
+                UpsertResult<FormResponse> result = upsertFormResponse(dto, visitsByClientId);
+                formResponsesByClientId.put(dto.clientId(), result.entity());
+                formResponseResults.add(result.wasNew()
+                        ? SyncItemResult.created(dto.clientId(), result.entity().getId())
+                        : SyncItemResult.updated(dto.clientId(), result.entity().getId()));
+            } catch (Exception e) {
+                formResponseResults.add(SyncItemResult.error(dto.clientId(), e.getMessage()));
+            }
+        }
+
+        List<SyncItemResult> answerResults = new ArrayList<>();
+        for (AnswerPushDto dto : request.answers()) {
+            try {
+                UpsertResult<Answer> result = upsertAnswer(dto, formResponsesByClientId);
+                answerResults.add(result.wasNew()
+                        ? SyncItemResult.created(dto.clientId(), result.entity().getId())
+                        : SyncItemResult.updated(dto.clientId(), result.entity().getId()));
+            } catch (Exception e) {
+                answerResults.add(SyncItemResult.error(dto.clientId(), e.getMessage()));
+            }
+        }
+
+        return new SyncPushResponse(
+                householdResults, individualResults, membershipResults,
+                visitResults, formResponseResults, answerResults
+        );
     }
 
     private UpsertResult<Household> upsertHousehold(HouseholdPushDto dto, User currentUser) {
@@ -170,21 +219,15 @@ public class SyncService {
         boolean isNew;
 
         if (existingByClientId.isPresent()) {
-            // Genuine update to a membership the device already knows the id of.
             membership = existingByClientId.get();
             isNew = false;
         } else if (dto.endDate() == null) {
-            // No membership under this clientId yet — check whether this is a
-            // relationship correction against an already-open episode at the
-            // SAME household, rather than a brand-new episode.
             Optional<Membership> openAtThisHousehold = membershipRepository
                     .findByIndividualIdAndHouseholdIdAndEndDateIsNull(individual.getId(), household.getId());
 
             if (openAtThisHousehold.isPresent()) {
                 membership = openAtThisHousehold.get();
                 isNew = false;
-                // Deliberately NOT overwriting clientId, startDate, or startType —
-                // this is the same residency episode, just a corrected role.
             } else {
                 Optional<Membership> openElsewhere = membershipRepository
                         .findByIndividualIdAndEndDateIsNull(individual.getId());
@@ -224,8 +267,6 @@ public class SyncService {
         return new UpsertResult<>(saved, isNew);
     }
 
-    // A HEAD membership opening assigns the head and marks the household viable.
-    // A HEAD membership closing without an immediate replacement marks it not-viable.
     private void applyHeadOfHouseholdRules(Membership membership, Household household) {
         if (membership.getRelationshipToHead() != RelationshipToHead.HEAD) {
             return;
@@ -244,6 +285,108 @@ public class SyncService {
         householdRepository.save(household);
     }
 
+    // ---------- Visits ----------
+
+    private UpsertResult<Visit> upsertVisit(
+            VisitPushDto dto,
+            Map<String, Household> householdsByClientId,
+            Map<String, Individual> individualsByClientId,
+            User currentUser
+    ) {
+        if (dto.householdClientId() == null && dto.individualClientId() == null) {
+            throw new IllegalArgumentException("A visit must reference a household, an individual, or both");
+        }
+
+        Visit visit = visitRepository.findByClientId(dto.clientId()).orElseGet(Visit::new);
+        boolean isNew = visit.getId() == null;
+
+        // status is the only field that legitimately changes post-creation
+        // (IN_PROGRESS -> COMPLETED/ABANDONED) — household/individual/
+        // visitDate/conductedBy are set once, at creation, same spirit as
+        // Membership not overwriting clientId/startDate/startType on a
+        // correction update.
+        visit.setStatus(dto.status());
+        visit.setUpdatedAt(Instant.now());
+
+        if (isNew) {
+            visit.setClientId(dto.clientId());
+            visit.setVisitDate(dto.visitDate());
+            visit.setConductedBy(currentUser);
+
+            if (dto.householdClientId() != null) {
+                visit.setHousehold(resolveHousehold(dto.householdClientId(), householdsByClientId));
+            }
+            if (dto.individualClientId() != null) {
+                visit.setIndividual(resolveIndividual(dto.individualClientId(), individualsByClientId));
+            }
+        }
+
+        Visit saved = visitRepository.save(visit);
+        return new UpsertResult<>(saved, isNew);
+    }
+
+    // ---------- FormResponses ----------
+
+    private UpsertResult<FormResponse> upsertFormResponse(
+            FormResponsePushDto dto,
+            Map<String, Visit> visitsByClientId
+    ) {
+        FormResponse formResponse = formResponseRepository.findByClientId(dto.clientId())
+                .orElseGet(FormResponse::new);
+        boolean isNew = formResponse.getId() == null;
+
+        formResponse.setStatus(dto.status());
+        formResponse.setCompletedAt(dto.completedAt());
+
+        if (isNew) {
+            Visit visit = resolveVisit(dto.visitClientId(), visitsByClientId);
+
+            // Form/Question are synced-down reference data (no clientId —
+            // Android already has the real server id from download), unlike
+            // Visit above which is offline-created and resolved by clientId.
+            Form form = formRepository.findById(dto.formId())
+                    .orElseThrow(() -> new IllegalArgumentException("Form not found: " + dto.formId()));
+
+            formResponse.setClientId(dto.clientId());
+            formResponse.setVisit(visit);
+            formResponse.setForm(form);
+            // Trusted as stamped by Android at start-time — see
+            // FormResponsePushDto's doc comment for why this is never
+            // recomputed from form.getVersion() here.
+            formResponse.setFormVersion(dto.formVersion());
+            formResponse.setStartedAt(dto.startedAt());
+        }
+
+        FormResponse saved = formResponseRepository.save(formResponse);
+        return new UpsertResult<>(saved, isNew);
+    }
+
+    // ---------- Answers ----------
+
+    private UpsertResult<Answer> upsertAnswer(
+            AnswerPushDto dto,
+            Map<String, FormResponse> formResponsesByClientId
+    ) {
+        Answer answer = answerRepository.findByClientId(dto.clientId()).orElseGet(Answer::new);
+        boolean isNew = answer.getId() == null;
+
+        answer.setValue(dto.value());
+
+        if (isNew) {
+            FormResponse formResponse = resolveFormResponse(dto.formResponseClientId(), formResponsesByClientId);
+
+            Question question = questionRepository.findById(dto.questionId())
+                    .orElseThrow(() -> new IllegalArgumentException("Question not found: " + dto.questionId()));
+
+            answer.setClientId(dto.clientId());
+            answer.setFormResponse(formResponse);
+            answer.setQuestion(question);
+        }
+
+        Answer saved = answerRepository.save(answer);
+        return new UpsertResult<>(saved, isNew);
+    }
+
     // ---------- Reference resolution: batch map first, DB fallback ----------
 
     private Individual resolveIndividual(String clientId, Map<String, Individual> batch) {
@@ -260,6 +403,20 @@ public class SyncService {
                 .orElseThrow(() -> new IllegalArgumentException("Unknown household clientId: " + clientId));
     }
 
+    private Visit resolveVisit(String clientId, Map<String, Visit> batch) {
+        Visit fromBatch = batch.get(clientId);
+        if (fromBatch != null) return fromBatch;
+        return visitRepository.findByClientId(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown visit clientId: " + clientId));
+    }
+
+    private FormResponse resolveFormResponse(String clientId, Map<String, FormResponse> batch) {
+        FormResponse fromBatch = batch.get(clientId);
+        if (fromBatch != null) return fromBatch;
+        return formResponseRepository.findByClientId(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown form response clientId: " + clientId));
+    }
+
     // ---------- Pull ----------
 
     @Transactional(readOnly = true)
@@ -271,7 +428,6 @@ public class SyncService {
                 ).stream()
                 .map(Location::getId)
                 .toList();
-        // include the scoping location itself, not just its descendants
         List<Long> scopedLocationIds = new ArrayList<>(locationIds);
         scopedLocationIds.add(locationId);
 
@@ -280,13 +436,9 @@ public class SyncService {
 
         List<Long> householdIds = households.stream().map(Household::getId).toList();
 
-        // Memberships changed since last sync, scoped to these households
         List<Membership> changedMemberships = membershipRepository
                 .findByHouseholdIdInAndUpdatedAtAfter(householdIds, since);
 
-        // Every individual ever linked to a household in scope, so a
-        // standalone individual edit (e.g. a name correction with no
-        // membership change) is still picked up.
         List<Long> allIndividualIdsInScope = membershipRepository
                 .findByHouseholdIdIn(householdIds).stream()
                 .map(m -> m.getIndividual().getId())

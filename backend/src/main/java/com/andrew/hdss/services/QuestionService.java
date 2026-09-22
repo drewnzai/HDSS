@@ -4,11 +4,12 @@ import com.andrew.hdss.dtos.CreateQuestionRequest;
 import com.andrew.hdss.dtos.QuestionDto;
 import com.andrew.hdss.dtos.ReorderQuestionsRequest;
 import com.andrew.hdss.dtos.UpdateQuestionRequest;
-import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.models.Form;
 import com.andrew.hdss.models.Question;
+import com.andrew.hdss.models.enums.MappedEntity;
 import com.andrew.hdss.repositories.FormRepository;
 import com.andrew.hdss.repositories.QuestionRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,8 +40,6 @@ public class QuestionService {
         Form form = findFormOrThrow(formId);
         formService.assertEditable(form);
 
-        // Always append — orderIndex is never client-supplied (see
-        // CreateQuestionRequest), so there's no gap/clash to worry about.
         int nextOrderIndex = (int) questionRepository.countByFormId(formId);
 
         Question question = new Question();
@@ -56,6 +55,8 @@ public class QuestionService {
         question.setCalculation(request.calculation());
         question.setChoiceListName(request.choiceListName());
         question.setOrderIndex(nextOrderIndex);
+        question.setMappedEntity(request.mappedEntity() != null ? request.mappedEntity() : MappedEntity.NONE);
+        question.setMappedField(request.mappedField());
 
         return QuestionDto.from(questionRepository.save(question));
     }
@@ -74,6 +75,8 @@ public class QuestionService {
         question.setConstraintMessage(request.constraintMessage());
         question.setCalculation(request.calculation());
         question.setChoiceListName(request.choiceListName());
+        question.setMappedEntity(request.mappedEntity() != null ? request.mappedEntity() : MappedEntity.NONE);
+        question.setMappedField(request.mappedField());
 
         return QuestionDto.from(questionRepository.save(question));
     }
