@@ -1,5 +1,4 @@
-package com.andrew.hdss.api;// package: match your existing controller package
-// Update to the FormController given earlier — adds /publish and /active.
+package com.andrew.hdss.api;
 
 import com.andrew.hdss.api.swagger.FormApi;
 import com.andrew.hdss.dtos.*;
