@@ -52,10 +52,6 @@ public class AnswerService {
         }
 
         validateValue(question, request.value());
-
-        // Upsert per (formResponse, question) — resubmitting an answer for
-        // the same question updates it rather than creating a duplicate row,
-        // since a user changing their mind mid-form is the normal case.
         Answer answer = answerRepository
                 .findByFormResponseIdAndQuestionId(formResponseId, request.questionId())
                 .orElseGet(() -> {
@@ -78,12 +74,6 @@ public class AnswerService {
                 .toList();
     }
 
-    /**
-     * Format-level validation only (does this look like a valid integer /
-     * date / choice value) — NOT the XPath-style relevant/constraint
-     * expressions from Question, which are stored as-is and not evaluated
-     * yet (see decisions-and-patterns: that's a separate future phase).
-     */
     private void validateValue(Question question, String value) {
         if (value == null || value.isBlank()) {
             // Absence is handled separately by
