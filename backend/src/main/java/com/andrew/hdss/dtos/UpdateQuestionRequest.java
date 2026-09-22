@@ -1,5 +1,6 @@
-package com.andrew.hdss.dtos;
+package com.andrew.hdss.dtos;// package: match your existing dto package
 
+import com.andrew.hdss.models.enums.MappedEntity;
 import com.andrew.hdss.models.enums.QuestionType;
 
 public record UpdateQuestionRequest(
@@ -11,5 +12,7 @@ public record UpdateQuestionRequest(
         String constraint,
         String constraintMessage,
         String calculation,
-        String choiceListName
+        String choiceListName,
+        MappedEntity mappedEntity,
+        String mappedField
 ) {}

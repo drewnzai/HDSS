@@ -1,10 +1,10 @@
-package com.andrew.hdss.dtos;
+package com.andrew.hdss.dtos;// package: match your existing dto package
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record CreateVisitRequest(
         String clientId,
         Long householdId,
         Long individualId,
-        LocalDateTime visitDate
+        Instant visitDate
 ) {}
