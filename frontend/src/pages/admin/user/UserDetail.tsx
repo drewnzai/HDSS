@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import RecordDetail from "../../../components/record-detail/RecordDetail";
 import type { UserSummary } from "../../../models/UserSummary";
-import { useGetUserByUsernameQuery } from "../../../store/AdminUserApi";
+import { useGetUserByUsernameQuery } from "../../../redux/AdminUserApi";
 
 interface LocationState {
     user?: UserSummary;

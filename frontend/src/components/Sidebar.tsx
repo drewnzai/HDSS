@@ -9,8 +9,8 @@ import {
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import { selectRole, selectFirstName } from "../store/AuthSlice";
-import { useAppSelector } from "../store/hooks";
+import { selectRole, selectFirstName } from "../redux/AuthSlice";
+import { useAppSelector } from "../redux/hooks";
 
 interface SidebarProps {
   collapsed: boolean;

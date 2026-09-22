@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight, Plus, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { type LocationDto, childTypeOf, LOCATION_TYPE_LABELS } from "../../models/Location";
-import { useGetChildrenQuery } from "../../store/LocationApi";
+import { useGetChildrenQuery } from "../../redux/LocationApi";
 
 interface LocationExplorerNodeProps {
     location: LocationDto;
@@ -51,9 +51,9 @@ function LocationExplorerNode({
                         aria-label={
                             canHaveChildren
                                 ? expanded
-                                    ? `Collapse ${ location.name } `
-                                    : `Expand ${ location.name } `
-                                : `${ location.name } has no child locations`
+                                    ? `Collapse ${location.name} `
+                                    : `Expand ${location.name} `
+                                : `${location.name} has no child locations`
                         }
                         aria-expanded={
                             canHaveChildren ? expanded : undefined
@@ -116,12 +116,10 @@ function LocationExplorerNode({
                             type="button"
                             className="location-explorer-node__add"
                             onClick={() => onAddChild(location)}
-                            aria-label={`Add ${
-    LOCATION_TYPE_LABELS[childType]
-} under ${ location.name } `}
-                            title={`Add ${
-    LOCATION_TYPE_LABELS[childType]
-} `}
+                            aria-label={`Add ${LOCATION_TYPE_LABELS[childType]
+                                } under ${location.name} `}
+                            title={`Add ${LOCATION_TYPE_LABELS[childType]
+                                } `}
                         >
                             <Plus size={16} aria-hidden="true" />
                         </button>

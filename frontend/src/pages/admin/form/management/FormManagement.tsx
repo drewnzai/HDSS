@@ -7,7 +7,7 @@ import DataTable, {
 import DataTablePagination from "../../../../components/data/DataTablePagination";
 import PageContainer from "../../../../components/PageContainer";
 import type { FormDto } from "../../../../models/FormDto";
-import { useGetAllFormsQuery } from "../../../../store/FormApi";
+import { useGetAllFormsQuery } from "../../../../redux/FormApi";
 
 import "./form-management.css";
 

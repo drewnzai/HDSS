@@ -5,7 +5,7 @@ import type {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import FormPage from "../../../components/form-page/FormPage";
-import { useCreateUserMutation } from "../../../store/AdminUserApi";
+import { useCreateUserMutation } from "../../../redux/AdminUserApi";
 
 
 const ROLE_OPTIONS = ["ADMIN", "USER"] as const;
@@ -188,8 +188,8 @@ function CreateUser() {
                         <div className="form-fields">
                             <div
                                 className={`form - field ${passwordError
-                                        ? "form-field--invalid"
-                                        : ""
+                                    ? "form-field--invalid"
+                                    : ""
                                     } `}
                             >
                                 <label
@@ -213,8 +213,8 @@ function CreateUser() {
 
                             <div
                                 className={`form - field ${passwordError
-                                        ? "form-field--invalid"
-                                        : ""
+                                    ? "form-field--invalid"
+                                    : ""
                                     } `}
                             >
                                 <label

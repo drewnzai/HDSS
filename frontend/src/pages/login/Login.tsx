@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLoginMutation } from '../../store/AuthApi';
+import { useLoginMutation } from '../../redux/AuthApi';
 import "./Login.css"
 
 function Login() {

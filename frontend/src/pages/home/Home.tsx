@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Download, Database, MapPin, Users, Activity } from "lucide-react";
-import { selectFirstName } from "../../store/AuthSlice";
-import { useAppSelector } from "../../store/hooks";
+import { selectFirstName } from "../../redux/AuthSlice";
+import { useAppSelector } from "../../redux/hooks";
 import "./home.css"
 
 interface LocationState {
@@ -39,7 +39,7 @@ function Home() {
         <div className="home-page">
             {flash && (
                 <div
-                    className={`flash flash--${ flashType } `}
+                    className={`flash flash--${flashType} `}
                     role={flashType === "danger" ? "alert" : "status"}
                 >
                     {flash}
@@ -52,7 +52,7 @@ function Home() {
                 </div>
 
                 <h1 className="home-hero__title">
-                    Welcome{firstName ? `, ${ firstName } ` : ""}
+                    Welcome{firstName ? `, ${firstName} ` : ""}
                 </h1>
 
                 <p className="home-hero__description">

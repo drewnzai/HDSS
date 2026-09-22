@@ -6,7 +6,7 @@ import DataTable, { type DataTableColumn } from "../../../../components/data/Dat
 import DataTablePagination from "../../../../components/data/DataTablePagination";
 import PageContainer from "../../../../components/PageContainer";
 import type { UserSummary } from "../../../../models/UserSummary";
-import { useDeleteUserMutation, useGetUsersQuery } from "../../../../store/AdminUserApi";
+import { useDeleteUserMutation, useGetUsersQuery } from "../../../../redux/AdminUserApi";
 import "./user-management.css";
 
 interface LocationState {

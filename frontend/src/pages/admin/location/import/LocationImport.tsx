@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./location-import.css";
 import FormPage from "../../../../components/form-page/FormPage";
 import { type LocationType, LOCATION_TYPE_LABELS } from "../../../../models/Location";
-import { useImportLocationsMutation } from "../../../../store/LocationApi";
+import { useImportLocationsMutation } from "../../../../redux/LocationApi";
 import type { LocationImportResult } from "../../../../models/LocationImportResult";
 import "./location-import.css";
 

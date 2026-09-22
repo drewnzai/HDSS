@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { selectIsAuthenticated, selectRole } from "../store/AuthSlice";
-import { useAppSelector } from "../store/hooks";
+import { selectIsAuthenticated, selectRole } from "../redux/AuthSlice";
+import { useAppSelector } from "../redux/hooks";
 
 interface ProtectedRouteProps {
     requiredRole?: "ADMIN" | "USER";

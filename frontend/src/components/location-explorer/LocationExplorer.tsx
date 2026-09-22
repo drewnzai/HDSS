@@ -1,5 +1,5 @@
 import type { LocationDto } from "../../models/Location";
-import { useGetChildrenQuery } from "../../store/LocationApi";
+import { useGetChildrenQuery } from "../../redux/LocationApi";
 import LocationExplorerNode from "./LocationExplorerNode";
 import "./location-explorer.css";
 
