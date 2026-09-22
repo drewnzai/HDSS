@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import DataTable, {
     type DataTableColumn,
@@ -14,6 +14,7 @@ import "./form-management.css";
 function FormManagement() {
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+    const navigate = useNavigate();
 
     const {
         data,
@@ -162,6 +163,11 @@ function FormManagement() {
                             isLoading={isLoading || isFetching}
                             emptyMessage="No forms have been created yet."
                             loadingMessage="Loading forms"
+                            onRowClick={(form) => {
+                                navigate(`/admin/forms/${form.id}/questions `, {
+                                    state: { form },
+                                });
+                            }}
                         />
 
                         <div className="form-management__pagination">
