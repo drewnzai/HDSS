@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "visits")
@@ -33,7 +33,7 @@ public class Visit {
     private Individual individual;
 
     @Column(nullable = false)
-    private LocalDateTime visitDate;
+    private Instant visitDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conducted_by", nullable = false)
@@ -44,8 +44,8 @@ public class Visit {
     private VisitStatus status;
 
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

@@ -1,6 +1,8 @@
-package com.andrew.hdss.models;
+package com.andrew.hdss.models;// package: match your existing entity package
+// Update to the Form given earlier — only change is the new `status` field.
 
 import com.andrew.hdss.models.enums.FormCategory;
+import com.andrew.hdss.models.enums.FormStatus;
 import com.andrew.hdss.models.enums.FormTarget;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -47,6 +49,9 @@ public class Form {
 
     @Column(nullable = false)
     private boolean active;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private FormStatus status;
 
     @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")

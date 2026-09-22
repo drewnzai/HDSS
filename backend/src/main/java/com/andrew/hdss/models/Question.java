@@ -1,5 +1,6 @@
 package com.andrew.hdss.models;
 
+import com.andrew.hdss.models.enums.MappedEntity;
 import com.andrew.hdss.models.enums.QuestionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -39,7 +40,6 @@ public class Question {
     private boolean required;
 
     private String relevant;
-    @Column(name = "constraint_value")
     private String constraint;
     private String constraintMessage;
     private String calculation;
@@ -47,4 +47,18 @@ public class Question {
 
     @Column(nullable = false)
     private Integer orderIndex;
+
+    // Which core entity (if any) this question's answer feeds into once
+    // translated on-device — Android reads this to drive local
+    // Household/Individual/Membership creation for Core forms. NONE for
+    // ordinary Extra-form questions that just stay as generic Answers.
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private MappedEntity mappedEntity = MappedEntity.NONE;
+
+    // e.g. "firstName", "latitude", "relationshipToHead" — the target
+    // field name on whatever mappedEntity points to. Null when
+    // mappedEntity is NONE.
+    private String mappedField;
 }
