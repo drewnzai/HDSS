@@ -5,6 +5,7 @@ import authReducer from "./AuthSlice";
 import { locationApi } from "./LocationApi";
 import { formApi } from "./FormApi";
 import { questionApi } from "./QuestionApi";
+import { choiceApi } from "./choiceApi";
 
 export const store = configureStore({
     reducer: {
@@ -13,10 +14,11 @@ export const store = configureStore({
         [locationApi.reducerPath]: locationApi.reducer,
         [formApi.reducerPath]: formApi.reducer,
         [questionApi.reducerPath]: questionApi.reducer,
+        [choiceApi.reducerPath]: choiceApi.reducer,
         auth: authReducer
     },
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(authApi.middleware, userApi.middleware, locationApi.middleware, formApi.middleware, questionApi.middleware)
+        getDefaultMiddleware().concat(authApi.middleware, userApi.middleware, locationApi.middleware, formApi.middleware, questionApi.middleware, choiceApi.middleware)
 });
 
 export type RootState = ReturnType<typeof store.getState>;

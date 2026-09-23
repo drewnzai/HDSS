@@ -1,4 +1,4 @@
-package com.andrew.hdss.models.enums;// package: match your existing entity/enum package
+package com.andrew.hdss.models.enums;
 
 public enum FormStatus {
     DRAFT,
