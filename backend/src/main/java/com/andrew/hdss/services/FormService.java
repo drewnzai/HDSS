@@ -9,6 +9,9 @@ import com.andrew.hdss.utils.PaginationRequest;
 import com.andrew.hdss.utils.Util;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,6 +27,7 @@ public class FormService {
     private final FormRepository formRepository;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "forms", key = "#resourceRequest.page + '-' + #resourceRequest.size")
     public BatchResponse<FormDto> getAllForms(ResourceRequest resourceRequest) {
         Pageable pageable = Util.getPageable(
                 PaginationRequest.builder()
@@ -51,6 +55,11 @@ public class FormService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "forms", allEntries = true)
+            }
+    )
     public FormDto createForm(CreateFormRequest request) {
         if (formRepository.findByName(request.name()).isPresent()) {
             throw new IllegalArgumentException("A form named '" + request.name() + "' already exists");
@@ -70,6 +79,11 @@ public class FormService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "forms", allEntries = true)
+            }
+    )
     public FormDto updateForm(Long id, UpdateFormRequest request) {
         Form form = findFormOrThrow(id);
         assertEditable(form);
@@ -84,6 +98,11 @@ public class FormService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "forms", allEntries = true)
+            }
+    )
     public void deleteForm(Long id) {
         Form form = findFormOrThrow(id);
         assertEditable(form);
@@ -91,6 +110,11 @@ public class FormService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "forms", allEntries = true)
+            }
+    )
     public FormDto publishForm(Long id) {
         Form form = findFormOrThrow(id);
         if (form.getStatus() == FormStatus.PUBLISHED) {
@@ -104,6 +128,11 @@ public class FormService {
     // whether a form is currently offered doesn't touch its structure, so
     // it's allowed even after publishing (e.g. retiring an old form).
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "forms", allEntries = true)
+            }
+    )
     public FormDto setActive(Long id, boolean active) {
         Form form = findFormOrThrow(id);
         form.setActive(active);

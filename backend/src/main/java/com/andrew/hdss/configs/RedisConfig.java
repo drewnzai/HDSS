@@ -42,7 +42,8 @@ public class RedisConfig {
                 .withCacheConfiguration("households", householdsCacheConfig())
                 .withCacheConfiguration("individuals", individualsCacheConfig())
                 .withCacheConfiguration("memberships", membershipsCacheConfig())
-                .withCacheConfiguration("questions", questionsCacheConfig());
+                .withCacheConfiguration("questions", questionsCacheConfig())
+                .withCacheConfiguration("forms", formsCacheConfig());
     }
 
     @Bean
@@ -118,6 +119,17 @@ public class RedisConfig {
                         .fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper(), type)));
+    }
+
+    private RedisCacheConfiguration formsCacheConfig(){
+            JavaType type = objectMapper().getTypeFactory()
+                    .constructParametricType(BatchResponse.class, FormDto.class);
+
+            return RedisCacheConfiguration.defaultCacheConfig()
+                    .serializeKeysWith(RedisSerializationContext.SerializationPair
+                            .fromSerializer(new StringRedisSerializer()))
+                    .serializeValuesWith(RedisSerializationContext.SerializationPair
+                            .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper(), type)));
     }
 
     private ObjectMapper objectMapper() {
