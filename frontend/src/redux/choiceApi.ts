@@ -4,13 +4,6 @@ import type { ChoiceDto } from "../models/ChoiceDto";
 import type { CreateChoiceRequest } from "../models/CreateChoiceRequest";
 import type { UpdateChoiceRequest } from "../models/UpdateChoiceRequest";
 
-// ASSUMPTION: no ChoiceController exists yet in the shared code — these
-// endpoints follow the same REST shape as questionApi. Adjust paths to
-// match once the backend controller is built.
-//
-// ChoiceRepository only exposes findByListName, so there is no "list
-// all choices" or "list all list names" endpoint here — every query is
-// scoped to one listName, same as questions are scoped to one formId.
 
 interface CreateChoiceArgs {
     body: CreateChoiceRequest;
