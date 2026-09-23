@@ -9,6 +9,7 @@ public enum QuestionType {
     DATETIME,
     SELECT_ONE,
     SELECT_MULTIPLE,
+    SELECT_HOUSEHOLD_MEMBER,
     NOTE,
     GEOPOINT,
     IMAGE,
