@@ -38,7 +38,6 @@ const emptyForm: QuestionFormState = {
     mappedField: "",
 };
 
-// ODK/XLSForm-aligned types, matching the Question domain model.
 const TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
     { value: "TEXT", label: "Text" },
     { value: "INTEGER", label: "Integer" },
@@ -48,6 +47,7 @@ const TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
     { value: "GEOPOINT", label: "GPS point" },
     { value: "SELECT_ONE", label: "Select one" },
     { value: "SELECT_MULTIPLE", label: "Select multiple" },
+    { value: "SELECT_HOUSEHOLD_MEMBER", label: "Select household member" },
     { value: "NOTE", label: "Note (no answer)" },
     { value: "CALCULATE", label: "Calculation" },
 ];
@@ -57,7 +57,8 @@ const TYPES_WITH_CHOICE_LIST: QuestionType[] = [
     "SELECT_MULTIPLE",
 ];
 
-// Matches the backend MappedEntity enum.
+const HOUSEHOLD_MEMBER_SELECT: QuestionType = "SELECT_HOUSEHOLD_MEMBER";
+
 const MAPPED_ENTITY_OPTIONS: { value: MappedEntity; label: string }[] = [
     { value: "NONE", label: "None — not mapped to a record field" },
     { value: "HOUSEHOLD", label: "Household" },
@@ -74,9 +75,6 @@ function EditQuestion() {
     const numericFormId = Number(formId);
     const numericQuestionId = Number(questionId);
 
-    // No getQuestionById endpoint exists yet — reuse the per-form list
-    // query (already cached from QuestionManagement in the common case)
-    // and pick the one being edited out of it.
     const {
         data: questions,
         isLoading: isQuestionLoading,
@@ -432,7 +430,9 @@ function EditQuestion() {
                                         placeholder={
                                             form.type === "GEOPOINT"
                                                 ? "e.g. latitude,longitude"
-                                                : "e.g. firstName"
+                                                : form.type === HOUSEHOLD_MEMBER_SELECT
+                                                    ? "e.g. motherClientId"
+                                                    : "e.g. firstName"
                                         }
                                         disabled={isSaving}
                                     />
@@ -440,7 +440,9 @@ function EditQuestion() {
                                     <p className="form-field__hint">
                                         {form.type === "GEOPOINT"
                                             ? `A comma-separated pair of field names on the ${form.mappedEntity.toLowerCase()} record — the captured point's latitude and longitude are written to these, in order.`
-                                            : `Exact field name on the ${form.mappedEntity.toLowerCase()} record. For a question whose answer must populate more than one field, separate field names with commas.`}
+                                            : form.type === HOUSEHOLD_MEMBER_SELECT
+                                                ? `Single field name on the ${form.mappedEntity.toLowerCase()} record (e.g. "motherClientId," "fatherClientId"). The app derives the sex/age filter for the picker from this name — keep it exact.`
+                                                : `Exact field name on the ${form.mappedEntity.toLowerCase()} record. For a question whose answer must populate more than one field, separate field names with commas.`}
                                     </p>
                                 </div>
                             )}
@@ -571,6 +573,8 @@ function EditQuestion() {
     );
 }
 
+// ASSUMPTION: a minimal loading/error placeholder — swap for whatever
+// your app's existing loading/error component convention is.
 function PageState({
     title,
     description,

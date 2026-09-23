@@ -47,6 +47,7 @@ const TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
     { value: "GEOPOINT", label: "GPS point" },
     { value: "SELECT_ONE", label: "Select one" },
     { value: "SELECT_MULTIPLE", label: "Select multiple" },
+    { value: "SELECT_HOUSEHOLD_MEMBER", label: "Select household member" },
     { value: "NOTE", label: "Note (no answer)" },
     { value: "CALCULATE", label: "Calculation" },
 ];
@@ -55,6 +56,8 @@ const TYPES_WITH_CHOICE_LIST: QuestionType[] = [
     "SELECT_ONE",
     "SELECT_MULTIPLE",
 ];
+
+const HOUSEHOLD_MEMBER_SELECT: QuestionType = "SELECT_HOUSEHOLD_MEMBER";
 
 // Matches the backend MappedEntity enum.
 const MAPPED_ENTITY_OPTIONS: { value: MappedEntity; label: string }[] = [
@@ -377,7 +380,9 @@ function CreateQuestion() {
                                         placeholder={
                                             form.type === "GEOPOINT"
                                                 ? "e.g. latitude,longitude"
-                                                : "e.g. firstName"
+                                                : form.type === HOUSEHOLD_MEMBER_SELECT
+                                                    ? "e.g. motherClientId"
+                                                    : "e.g. firstName"
                                         }
                                         disabled={isLoading}
                                     />
@@ -385,7 +390,9 @@ function CreateQuestion() {
                                     <p className="form-field__hint">
                                         {form.type === "GEOPOINT"
                                             ? `A comma-separated pair of field names on the ${form.mappedEntity.toLowerCase()} record — the captured point's latitude and longitude are written to these, in order.`
-                                            : `Exact field name on the ${form.mappedEntity.toLowerCase()} record. For a question whose answer must populate more than one field, separate field names with commas.`}
+                                            : form.type === HOUSEHOLD_MEMBER_SELECT
+                                                ? `Single field name on the ${form.mappedEntity.toLowerCase()} record (e.g. "motherClientId," "fatherClientId"). The app derives the sex/age filter for the picker from this name — keep it exact.`
+                                                : `Exact field name on the ${form.mappedEntity.toLowerCase()} record. For a question whose answer must populate more than one field, separate field names with commas.`}
                                     </p>
                                 </div>
                             )}
