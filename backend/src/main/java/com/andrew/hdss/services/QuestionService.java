@@ -11,6 +11,9 @@ import com.andrew.hdss.repositories.FormRepository;
 import com.andrew.hdss.repositories.QuestionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,7 @@ public class QuestionService {
     private final FormService formService;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "questions", key = "#formId")
     public List<QuestionDto> getQuestions(Long formId) {
         return questionRepository.findByFormIdOrderByOrderIndexAsc(formId).stream()
                 .map(QuestionDto::from)
@@ -36,6 +40,11 @@ public class QuestionService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "questions", allEntries = true)
+            }
+    )
     public QuestionDto addQuestion(Long formId, CreateQuestionRequest request) {
         Form form = findFormOrThrow(formId);
         formService.assertEditable(form);
@@ -62,6 +71,11 @@ public class QuestionService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "questions", allEntries = true)
+            }
+    )
     public QuestionDto updateQuestion(Long formId, Long questionId, UpdateQuestionRequest request) {
         Question question = findQuestionInForm(formId, questionId);
         formService.assertEditable(question.getForm());
@@ -82,6 +96,11 @@ public class QuestionService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "questions", allEntries = true)
+            }
+    )
     public void deleteQuestion(Long formId, Long questionId) {
         Question question = findQuestionInForm(formId, questionId);
         formService.assertEditable(question.getForm());
@@ -89,6 +108,11 @@ public class QuestionService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "questions", allEntries = true)
+            }
+    )
     public List<QuestionDto> reorderQuestions(Long formId, ReorderQuestionsRequest request) {
         Form form = findFormOrThrow(formId);
         formService.assertEditable(form);
