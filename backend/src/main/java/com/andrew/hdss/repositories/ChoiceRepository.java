@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface ChoiceRepository extends JpaRepository<Choice, Long> {
     List<Choice> findByListName(String listName);
+    boolean existsByListNameAndName(String listName, String name);
+    boolean existsByListNameAndNameAndIdNot(String listName, String name, Long id);
 }
