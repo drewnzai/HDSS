@@ -13,6 +13,9 @@ import FormManagement from "./pages/admin/form/management/FormManagement"
 import QuestionManagement from "./pages/admin/question/management/QuestionManagement"
 import CreateQuestion from "./pages/admin/question/create/CreateQuestion"
 import EditQuestion from "./pages/admin/question/edit/EditQuestion"
+import CreateChoice from "./pages/admin/choice/create/CreateChoice"
+import ChoiceListLookup from "./pages/admin/choice/lookup/ChoiceListLookup"
+import ChoiceManagement from "./pages/admin/choice/management/ChoiceManagement"
 
 function App() {
 
@@ -36,6 +39,9 @@ function App() {
           <Route path="/admin/forms/:formId/questions" element={<QuestionManagement />} />
           < Route path="/admin/forms/:formId/questions/create" element={<CreateQuestion />} />
           < Route path="/admin/forms/:formId/questions/:questionId/edit" element={<EditQuestion />} />
+          <Route path="/admin/choices" element={<ChoiceListLookup />} />
+          <Route path="/admin/choices/:listName" element={<ChoiceManagement />} />
+          <Route path="/admin/choices/:listName/create" element={<CreateChoice />} />
         </Route>
       </Route>
     </Routes>
