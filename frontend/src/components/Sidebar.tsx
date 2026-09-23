@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   MapPin,
   NotepadText,
+  SquareCheck,
   Users,
   X,
 } from "lucide-react";
@@ -57,6 +58,11 @@ const adminNav: NavItem[] = [
     label: "Forms",
     to: "/admin/forms",
     icon: NotepadText
+  },
+  {
+    label: "Choices",
+    to: "/admin/choices",
+    icon: SquareCheck
   }
 ];
 
