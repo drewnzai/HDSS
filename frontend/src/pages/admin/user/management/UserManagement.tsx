@@ -8,10 +8,7 @@ import PageContainer from "../../../../components/PageContainer";
 import type { UserSummary } from "../../../../models/UserSummary";
 import { useDeleteUserMutation, useGetUsersQuery } from "../../../../redux/UserApi";
 import "./user-management.css";
-
-interface LocationState {
-    flash?: string;
-}
+import type { LocationState } from "../../../LocationState";
 
 function UserManagement() {
     const navigate = useNavigate();

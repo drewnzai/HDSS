@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import DataTable, { type DataTableColumn } from "../../../../components/data/DataTable";
 import PageContainer from "../../../../components/PageContainer";
 import type { QuestionDto } from "../../../../models/QuestionDto";
@@ -6,10 +6,32 @@ import { useGetFormByIdQuery } from "../../../../redux/FormApi";
 import { useGetQuestionsByFormQuery, useDeleteQuestionMutation } from "../../../../redux/QuestionApi";
 import { Edit2, Trash2 } from "lucide-react";
 import "./question-management.css"
+import { useEffect, useState } from "react";
+import type { LocationState } from "../../../LocationState";
 
 function QuestionManagement() {
     const { formId } = useParams<{ formId: string }>();
     const numericFormId = Number(formId);
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [flash, setFlash] = useState<string | null>(
+            (location.state as LocationState | null)?.flash ?? null
+        );
+
+        useEffect(() => {
+                if (!flash) return;
+        
+                const timer = setTimeout(() => setFlash(null), 4000);
+        
+                navigate(location.pathname, {
+                    replace: true,
+                    state: {},
+                });
+        
+                return () => clearTimeout(timer);
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+            }, [flash]);
 
     const {
         data: form,
@@ -156,8 +178,6 @@ function QuestionManagement() {
         },
     ];
 
-    // No `order` field on Question in this schema — list as returned
-    // by the API (id order / insertion order).
     const questionList = questions ?? [];
 
     return (
@@ -190,6 +210,16 @@ function QuestionManagement() {
                         Add question
                     </Link>
                 </header>
+
+                {flash && (
+                    <div
+                        className="flash flash--success"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        {flash}
+                    </div>
+                )}
 
                 {error ? (
                     <div className="question-management__state">
