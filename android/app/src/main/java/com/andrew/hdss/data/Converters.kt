@@ -2,6 +2,9 @@ package com.andrew.hdss.data
 
 import androidx.room.TypeConverter
 import com.andrew.hdss.data.models.Visit
+import com.andrew.hdss.data.models.enums.FormCategory
+import com.andrew.hdss.data.models.enums.FormStatus
+import com.andrew.hdss.data.models.enums.FormTarget
 import com.andrew.hdss.data.models.enums.HouseholdStatus
 import com.andrew.hdss.data.models.enums.LocationType
 import com.andrew.hdss.data.models.enums.MembershipEndType
