@@ -13,8 +13,8 @@ import java.time.LocalDateTime
     tableName = "forms"
 )
 data class Form(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey
+    val id: Long,
 
     @ColumnInfo(name = "name")
     val name: String,
