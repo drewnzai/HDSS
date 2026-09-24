@@ -1,0 +1,82 @@
+.flash {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 0.6rem;
+
+    padding: 0.7rem 0.85rem;
+
+    border: 1px solid var(--color-outline);
+    border-radius: 0.45rem;
+
+    font-size: 0.8rem;
+    font-weight: 550;
+    line-height: 1.45;
+
+    animation: flash-enter 180ms ease-out;
+}
+
+.flash__icon {
+    flex: 0 0 auto;
+}
+
+.flash--success {
+    border-color: color-mix(in srgb,
+            var(--color-success) 35%,
+            var(--color-outline));
+
+    background: color-mix(in srgb,
+            var(--color-success) 9%,
+            var(--color-surface));
+
+    color: var(--color-success);
+}
+
+.flash--warning {
+    border-color: color-mix(in srgb,
+            var(--color-warning) 35%,
+            var(--color-outline));
+
+    background: color-mix(in srgb,
+            var(--color-warning) 10%,
+            var(--color-surface));
+
+    color: var(--color-warning);
+}
+
+.flash--error {
+    border-color: color-mix(in srgb,
+            var(--color-error) 35%,
+            var(--color-outline));
+
+    background: color-mix(in srgb,
+            var(--color-error) 8%,
+            var(--color-surface));
+
+    color: var(--color-error);
+}
+
+@keyframes flash-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 480px) {
+    .flash {
+        padding: 0.65rem 0.75rem;
+        font-size: 0.78rem;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .flash {
+        animation: none;
+    }
+}

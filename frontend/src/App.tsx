@@ -16,6 +16,7 @@ import EditQuestion from "./pages/admin/question/edit/EditQuestion"
 import CreateChoice from "./pages/admin/choice/create/CreateChoice"
 import ChoiceListLookup from "./pages/admin/choice/lookup/ChoiceListLookup"
 import ChoiceManagement from "./pages/admin/choice/management/ChoiceManagement"
+import "./App.css";
 
 function App() {
 
