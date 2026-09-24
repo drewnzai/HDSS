@@ -28,10 +28,6 @@ public class Visit {
     @JoinColumn(name = "household_id")
     private Household household;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "individual_id")
-    private Individual individual;
-
     @Column(nullable = false)
     private LocalDateTime visitDate;
 

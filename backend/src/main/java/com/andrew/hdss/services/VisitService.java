@@ -54,12 +54,6 @@ public class VisitService {
             visit.setHousehold(household);
         }
 
-        if (request.individualId() != null) {
-            Individual individual = individualRepository.findById(request.individualId())
-                    .orElseThrow(() -> new EntityNotFoundException("Individual not found: " + request.individualId()));
-            visit.setIndividual(individual);
-        }
-
         return VisitDto.from(visitRepository.save(visit));
     }
 

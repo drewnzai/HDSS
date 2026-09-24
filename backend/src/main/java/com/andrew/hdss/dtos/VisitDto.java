@@ -12,8 +12,6 @@ public record VisitDto(
         Long householdId,
         Long individualId,
         LocalDateTime visitDate,
-        Long conductedById,
-        String conductedByName,
         VisitStatus status
 ) {
     public static VisitDto from(Visit visit) {
@@ -23,8 +21,6 @@ public record VisitDto(
                 visit.getHousehold() != null ? visit.getHousehold().getId() : null,
                 visit.getIndividual() != null ? visit.getIndividual().getId() : null,
                 visit.getVisitDate(),
-                visit.getConductedBy().getId(),
-                visit.getConductedBy().getFirstName() + " " + visit.getConductedBy().getLastName(),
                 visit.getStatus()
         );
     }

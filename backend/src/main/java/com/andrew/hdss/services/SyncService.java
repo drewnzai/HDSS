@@ -90,7 +90,7 @@ public class SyncService {
         for (VisitPushDto dto : request.visits()) {
             try {
                 UpsertResult<Visit> result =
-                        upsertVisit(dto, householdsByClientId, individualsByClientId, currentUser);
+                        upsertVisit(dto, householdsByClientId, currentUser);
                 visitsByClientId.put(dto.clientId(), result.entity());
                 visitResults.add(result.wasNew()
                         ? SyncItemResult.created(dto.clientId(), result.entity().getId())
@@ -291,7 +291,6 @@ public class SyncService {
     private UpsertResult<Visit> upsertVisit(
             VisitPushDto dto,
             Map<String, Household> householdsByClientId,
-            Map<String, Individual> individualsByClientId,
             User currentUser
     ) {
         if (dto.householdClientId() == null && dto.individualClientId() == null) {
@@ -316,9 +315,6 @@ public class SyncService {
 
             if (dto.householdClientId() != null) {
                 visit.setHousehold(resolveHousehold(dto.householdClientId(), householdsByClientId));
-            }
-            if (dto.individualClientId() != null) {
-                visit.setIndividual(resolveIndividual(dto.individualClientId(), individualsByClientId));
             }
         }
 
