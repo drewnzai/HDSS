@@ -1,51 +1,16 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { Download, Database, MapPin, Users, Activity } from "lucide-react";
 import { selectFirstName } from "../../redux/AuthSlice";
 import { useAppSelector } from "../../redux/hooks";
 import "./home.css"
-
-interface LocationState {
-    flash?: string;
-    flashType?: "success" | "danger";
-}
+import Flash from "../../components/flash/Flash";
 
 function Home() {
     const firstName = useAppSelector(selectFirstName);
-    const location = useLocation();
-    const navigate = useNavigate();
 
-    const state = location.state as LocationState | null;
-    const [flash, setFlash] = useState<string | null>(state?.flash ?? null);
-    const [flashType] = useState<"success" | "danger">(
-        state?.flashType ?? "success"
-    );
-
-    useEffect(() => {
-        if (!flash) return;
-
-        const timer = setTimeout(() => setFlash(null), 4000);
-
-        navigate(location.pathname, {
-            replace: true,
-            state: {},
-        });
-
-        return () => clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [flash]);
 
     return (
         <div className="home-page">
-            {flash && (
-                <div
-                    className={`flash flash--${flashType} `}
-                    role={flashType === "danger" ? "alert" : "status"}
-                >
-                    {flash}
-                </div>
-            )}
-
+            <Flash />
             <section className="home-hero">
                 <div className="home-hero__eyebrow">
                     Health & Demographics Surveillance System

@@ -211,6 +211,7 @@ function CreateQuestion() {
             navigate(`/admin/forms/${formId}/questions`, {
                 state: {
                     flash: `Question "${created.label}" created successfully.`,
+                    flashType: "success"
                 },
             });
         } catch {

@@ -82,6 +82,7 @@ function CreateChoice() {
             navigate(`/admin/choices/${listName}`, {
                 state: {
                     flash: `Choice "${label}" added to "${decodedListName}."`,
+                    flashType: "success"
                 },
             });
         } catch {

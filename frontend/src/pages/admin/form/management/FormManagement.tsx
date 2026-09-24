@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import DataTable, {
     type DataTableColumn,
@@ -10,30 +10,12 @@ import type { FormDto } from "../../../../models/FormDto";
 import { useGetAllFormsQuery } from "../../../../redux/FormApi";
 
 import "./form-management.css";
-import type { LocationState } from "../../../LocationState";
+import Flash from "../../../../components/flash/Flash";
 
 function FormManagement() {
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
     const navigate = useNavigate();
-    const location = useLocation();
-    const [flash, setFlash] = useState<string | null>(
-        (location.state as LocationState | null)?.flash ?? null
-    );
-
-    useEffect(() => {
-        if (!flash) return;
-
-        const timer = setTimeout(() => setFlash(null), 4000);
-
-        navigate(location.pathname, {
-            replace: true,
-            state: {},
-        });
-
-        return () => clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [flash]);
 
     const {
         data,
@@ -152,15 +134,7 @@ function FormManagement() {
                     </Link>
                 </header>
 
-                {flash && (
-                    <div
-                        className="flash flash--success"
-                        role="status"
-                        aria-live="polite"
-                    >
-                        {flash}
-                    </div>
-                )}
+                <Flash />
 
                 {error ? (
                     <div className="form-management__state">

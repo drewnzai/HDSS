@@ -118,6 +118,7 @@ function CreateForm() {
             navigate("/admin/forms", {
                 state: {
                     flash: message ?? "Form created successfully.",
+                    flashType: "success"
                 },
             });
         } catch {

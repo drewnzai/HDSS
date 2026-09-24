@@ -259,6 +259,7 @@ function EditQuestion() {
             navigate(`/admin/forms/${formId}/questions`, {
                 state: {
                     flash: `Question "${updated.label}" updated successfully.`,
+                    flashType: "success"
                 },
             });
         } catch {

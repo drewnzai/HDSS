@@ -74,7 +74,10 @@ function CreateUser() {
 
             navigate("/admin/users", {
                 replace: true,
-                state: { flash: message },
+                state: { 
+                    flash: message,
+                    flashType: "success"
+                 },
             });
         } catch {
             // RTK Query error state is displayed below.

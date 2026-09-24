@@ -8,7 +8,7 @@ import PageContainer from "../../../../components/PageContainer";
 import type { UserSummary } from "../../../../models/UserSummary";
 import { useDeleteUserMutation, useGetUsersQuery } from "../../../../redux/UserApi";
 import "./user-management.css";
-import type { LocationState } from "../../../LocationState";
+import Flash from "../../../../components/flash/Flash";
 
 function UserManagement() {
     const navigate = useNavigate();
@@ -21,7 +21,7 @@ function UserManagement() {
         useState<UserSummary | null>(null);
 
     const [flash, setFlash] = useState<string | null>(
-        (location.state as LocationState | null)?.flash ?? null
+        null
     );
 
     const [deleteUser, { isLoading: isDeleting, error: deleteError }] =
@@ -156,6 +156,8 @@ function UserManagement() {
                             Create user
                         </Link>
                     </div>
+
+                    <Flash/>
 
                     {flash && (
                         <div
