@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import DataTable, { type DataTableColumn } from "../../../../components/data/DataTable";
 import PageContainer from "../../../../components/PageContainer";
 import type { ChoiceDto } from "../../../../models/ChoiceDto";
-import { useGetChoicesByListNameQuery, useDeleteChoiceMutation } from "../../../../redux/choiceApi";
+import { useGetChoicesByListNameQuery, useDeleteChoiceMutation } from "../../../../redux/ChoiceApi";
 import "./choice-management.css";
 
 function ChoiceManagement() {

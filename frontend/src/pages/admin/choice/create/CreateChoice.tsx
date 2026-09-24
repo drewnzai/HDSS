@@ -2,7 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FormPage from "../../../../components/form-page/FormPage";
 import type { CreateChoiceRequest } from "../../../../models/CreateChoiceRequest";
-import { useCreateChoiceMutation } from "../../../../redux/choiceApi";
+import { useCreateChoiceMutation } from "../../../../redux/ChoiceApi";
 import "./create-choice.css";
 
 interface ChoiceFormState {

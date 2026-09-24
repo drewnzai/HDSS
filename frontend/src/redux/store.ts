@@ -5,7 +5,7 @@ import authReducer from "./AuthSlice";
 import { locationApi } from "./LocationApi";
 import { formApi } from "./FormApi";
 import { questionApi } from "./QuestionApi";
-import { choiceApi } from "./choiceApi";
+import { choiceApi } from "./ChoiceApi";
 
 export const store = configureStore({
     reducer: {
