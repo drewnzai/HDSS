@@ -7,6 +7,7 @@ import type { QuestionType } from "../../../../models/types/QuestionTypes";
 import type { UpdateQuestionRequest } from "../../../../models/UpdateQuestionRequest";
 import { useGetQuestionsByFormQuery, useUpdateQuestionMutation } from "../../../../redux/QuestionApi";
 import "./edit-question.css";
+import { useGetMappableFieldsQuery } from "../../../../redux/MappedFieldApi";
 
 interface QuestionFormState {
     name: string;
@@ -21,6 +22,7 @@ interface QuestionFormState {
     choiceListName: string;
     mappedEntity: MappedEntity;
     mappedField: string;
+    mappedFieldSecondary: string;
 }
 
 const emptyForm: QuestionFormState = {
@@ -36,8 +38,10 @@ const emptyForm: QuestionFormState = {
     choiceListName: "",
     mappedEntity: "NONE",
     mappedField: "",
+    mappedFieldSecondary: "",
 };
 
+// ODK/XLSForm-aligned types, matching the Question domain model.
 const TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
     { value: "TEXT", label: "Text" },
     { value: "INTEGER", label: "Integer" },
@@ -75,6 +79,9 @@ function EditQuestion() {
     const numericFormId = Number(formId);
     const numericQuestionId = Number(questionId);
 
+    // No getQuestionById endpoint exists yet — reuse the per-form list
+    // query (already cached from QuestionManagement in the common case)
+    // and pick the one being edited out of it.
     const {
         data: questions,
         isLoading: isQuestionLoading,
@@ -93,8 +100,16 @@ function EditQuestion() {
         null
     );
 
+    // Prefill once, when the question first becomes available — never
+    // again afterwards, so an in-flight refetch (e.g. after another
+    // edit elsewhere) doesn't clobber what the user is currently typing.
     useEffect(() => {
         if (existingQuestion && !isPrefilled) {
+            const isGeopoint = existingQuestion.type === "GEOPOINT";
+            const [primaryField, secondaryField] = isGeopoint
+                ? existingQuestion.mappedField.split(",").map((f) => f.trim())
+                : [existingQuestion.mappedField, ""];
+
             setForm({
                 name: existingQuestion.name,
                 label: existingQuestion.label,
@@ -107,7 +122,8 @@ function EditQuestion() {
                 calculation: existingQuestion.calculation,
                 choiceListName: existingQuestion.choiceListName,
                 mappedEntity: existingQuestion.mappedEntity,
-                mappedField: existingQuestion.mappedField,
+                mappedField: primaryField ?? "",
+                mappedFieldSecondary: secondaryField ?? "",
             });
             setIsPrefilled(true);
         }
@@ -129,10 +145,19 @@ function EditQuestion() {
                 ? (event.target as HTMLInputElement).checked
                 : undefined;
 
-        setForm((current) => ({
-            ...current,
-            [name]: type === "checkbox" ? checked : value,
-        }));
+        setForm((current) => {
+            const next = {
+                ...current,
+                [name]: type === "checkbox" ? checked : value,
+            };
+
+            if (name === "mappedEntity" || name === "type") {
+                next.mappedField = "";
+                next.mappedFieldSecondary = "";
+            }
+
+            return next;
+        });
 
         if (validationError) {
             setValidationError(null);
@@ -142,6 +167,11 @@ function EditQuestion() {
     const requiresChoiceList = TYPES_WITH_CHOICE_LIST.includes(form.type);
     const isCalculation = form.type === "CALCULATE";
     const isMapped = form.mappedEntity !== "NONE";
+
+    const {
+        data: mappableFields = [],
+        isFetching: isLoadingFields,
+    } = useGetMappableFieldsQuery(form.mappedEntity, { skip: !isMapped });
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -173,7 +203,7 @@ function EditQuestion() {
             return;
         }
 
-        if (isMapped && !form.mappedField.trim()) {
+        if (isMapped && form.type !== "GEOPOINT" && !form.mappedField.trim()) {
             setValidationError(
                 "Mapped field is required when a target record is selected."
             );
@@ -181,18 +211,26 @@ function EditQuestion() {
         }
 
         if (isMapped && form.type === "GEOPOINT") {
-            const fieldCount = form.mappedField
-                .split(",")
-                .map((f) => f.trim())
-                .filter(Boolean).length;
-
-            if (fieldCount !== 2) {
+            if (!form.mappedField || !form.mappedFieldSecondary) {
                 setValidationError(
-                    "A GEOPOINT question must map to exactly two comma-separated fields (latitude,longitude)."
+                    "Both a latitude field and a longitude field are required for a GEOPOINT question."
+                );
+                return;
+            }
+
+            if (form.mappedField === form.mappedFieldSecondary) {
+                setValidationError(
+                    "Latitude and longitude must map to two different fields."
                 );
                 return;
             }
         }
+
+        const mappedField = !isMapped
+            ? ""
+            : form.type === "GEOPOINT"
+                ? `${form.mappedField},${form.mappedFieldSecondary}`
+                : form.mappedField;
 
         const body: UpdateQuestionRequest = {
             name,
@@ -208,7 +246,7 @@ function EditQuestion() {
                 ? form.choiceListName.trim()
                 : "",
             mappedEntity: form.mappedEntity,
-            mappedField: isMapped ? form.mappedField.trim() : "",
+            mappedField,
         };
 
         try {
@@ -410,40 +448,121 @@ function EditQuestion() {
                                 </p>
                             </div>
 
-                            {isMapped && (
+                            {isMapped && form.type === "GEOPOINT" && (
+                                <>
+                                    <div className="form-field">
+                                        <label
+                                            className="form-field__label"
+                                            htmlFor="mappedField"
+                                        >
+                                            Latitude field
+                                        </label>
+
+                                        <select
+                                            id="mappedField"
+                                            name="mappedField"
+                                            className="form-field__input"
+                                            value={form.mappedField}
+                                            onChange={handleChange}
+                                            disabled={isSaving || isLoadingFields}
+                                        >
+                                            <option value="">
+                                                {isLoadingFields
+                                                    ? "Loading fields…"
+                                                    : "Select a field…"}
+                                            </option>
+                                            {mappableFields.map((option) => (
+                                                <option
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="form-field">
+                                        <label
+                                            className="form-field__label"
+                                            htmlFor="mappedFieldSecondary"
+                                        >
+                                            Longitude field
+                                        </label>
+
+                                        <select
+                                            id="mappedFieldSecondary"
+                                            name="mappedFieldSecondary"
+                                            className="form-field__input"
+                                            value={form.mappedFieldSecondary}
+                                            onChange={handleChange}
+                                            disabled={isSaving || isLoadingFields}
+                                        >
+                                            <option value="">
+                                                {isLoadingFields
+                                                    ? "Loading fields…"
+                                                    : "Select a field…"}
+                                            </option>
+                                            {mappableFields.map((option) => (
+                                                <option
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        <p className="form-field__hint">
+                                            The captured point's latitude and
+                                            longitude are written to these two
+                                            fields.
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+
+                            {isMapped && form.type !== "GEOPOINT" && (
                                 <div className="form-field">
                                     <label
                                         className="form-field__label"
                                         htmlFor="mappedField"
                                     >
                                         Mapped field
-                                        {form.type === "GEOPOINT" ? "s" : ""}
                                     </label>
 
-                                    <input
+                                    <select
                                         id="mappedField"
                                         name="mappedField"
-                                        type="text"
                                         className="form-field__input"
                                         value={form.mappedField}
                                         onChange={handleChange}
-                                        placeholder={
-                                            form.type === "GEOPOINT"
-                                                ? "e.g. latitude,longitude"
-                                                : form.type === HOUSEHOLD_MEMBER_SELECT
-                                                    ? "e.g. motherClientId"
-                                                    : "e.g. firstName"
-                                        }
-                                        disabled={isSaving}
-                                    />
+                                        disabled={isSaving || isLoadingFields}
+                                    >
+                                        <option value="">
+                                            {isLoadingFields
+                                                ? "Loading fields…"
+                                                : "Select a field…"}
+                                        </option>
+                                        {mappableFields.map((option) => (
+                                            <option
+                                                key={option.value}
+                                                value={option.value}
+                                            >
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
 
-                                    <p className="form-field__hint">
-                                        {form.type === "GEOPOINT"
-                                            ? `A comma-separated pair of field names on the ${form.mappedEntity.toLowerCase()} record — the captured point's latitude and longitude are written to these, in order.`
-                                            : form.type === HOUSEHOLD_MEMBER_SELECT
-                                                ? `Single field name on the ${form.mappedEntity.toLowerCase()} record (e.g. "motherClientId," "fatherClientId"). The app derives the sex/age filter for the picker from this name — keep it exact.`
-                                                : `Exact field name on the ${form.mappedEntity.toLowerCase()} record. For a question whose answer must populate more than one field, separate field names with commas.`}
-                                    </p>
+                                    {form.type === HOUSEHOLD_MEMBER_SELECT && (
+                                        <p className="form-field__hint">
+                                            The app derives the sex/age
+                                            filter for the household-member
+                                            picker from which field is
+                                            chosen here (e.g. Mother →
+                                            female, Father → male).
+                                        </p>
+                                    )}
                                 </div>
                             )}
 
