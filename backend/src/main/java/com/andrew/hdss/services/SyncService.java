@@ -293,8 +293,8 @@ public class SyncService {
             Map<String, Household> householdsByClientId,
             User currentUser
     ) {
-        if (dto.householdClientId() == null && dto.individualClientId() == null) {
-            throw new IllegalArgumentException("A visit must reference a household, an individual, or both");
+        if (dto.householdClientId() == null) {
+            throw new IllegalArgumentException("A visit must reference a household");
         }
 
         Visit visit = visitRepository.findByClientId(dto.clientId()).orElseGet(Visit::new);
