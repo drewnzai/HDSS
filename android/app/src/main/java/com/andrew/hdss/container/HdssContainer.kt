@@ -10,6 +10,8 @@ import com.andrew.hdss.network.AuthInterceptor
 import com.andrew.hdss.network.services.LocationApiRepository
 import com.andrew.hdss.network.services.LocationApiService
 import com.andrew.hdss.network.TokenAuthenticator
+import com.andrew.hdss.network.services.FormApiRepository
+import com.andrew.hdss.network.services.FormApiService
 import com.andrew.hdss.network.services.HouseholdApiRepository
 import com.andrew.hdss.network.services.HouseholdApiService
 import com.andrew.hdss.network.services.IndividualApiRepository
@@ -127,6 +129,19 @@ class HdssContainer(private val context: Context) {
             membershipDao = database.membershipDao(),
             householdDao = database.householdDao(),
             individualDao = database.individualDao(),
+            database = database,
+            json = json
+        )
+    }
+
+    private val formApiRepository: FormApiRepository by lazy {
+        apiRetrofit.create(FormApiRepository::class.java)
+    }
+
+    val formApiService: FormApiService by lazy {
+        FormApiService(
+            formApiRepository = formApiRepository,
+            formDao = database.formDao(),
             database = database,
             json = json
         )
