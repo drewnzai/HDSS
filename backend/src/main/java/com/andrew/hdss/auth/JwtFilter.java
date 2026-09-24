@@ -1,6 +1,9 @@
 package com.andrew.hdss.auth;
 
 import com.andrew.hdss.utils.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,18 +36,36 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String jwt = parseJwt(request);
-        if (jwt != null && jwtUtil.validateJwtToken(jwt)) {
-            String username = jwtUtil.getUsernameFromJwtToken(jwt);
+        try {
+            if (jwt != null && jwtUtil.validateJwtToken(jwt)) {
+                String username = jwtUtil.getUsernameFromJwtToken(jwt);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
+            filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException e) {
+
+            response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "JWT token has expired"
+            );
+
+        } catch (MalformedJwtException |
+                 UnsupportedJwtException |
+                 SecurityException |
+                 IllegalArgumentException e) {
+
+            response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid JWT token"
+            );
         }
-
-        filterChain.doFilter(request, response);
     }
 
     private String parseJwt(HttpServletRequest request) {

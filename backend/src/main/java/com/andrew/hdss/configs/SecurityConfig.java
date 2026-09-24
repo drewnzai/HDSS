@@ -1,6 +1,8 @@
 package com.andrew.hdss.configs;
 
+import com.andrew.hdss.auth.JwtAuthenticationEntryPoint;
 import com.andrew.hdss.auth.JwtFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -22,30 +25,72 @@ public class SecurityConfig {
 
     private final AuthenticationProvider authenticationProvider;
     private final JwtFilter jwtFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            CorsConfigurationSource corsConfigurationSource
+    ) throws Exception {
 
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource))
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(request -> request.requestMatchers("/api/auth/**").permitAll()
+
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.sendError(
+                                    HttpServletResponse.SC_FORBIDDEN,
+                                    "Forbidden"
+                            );
+                        })
+                )
+
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/api/users").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,"/api/users/{username}").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/users/add").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/users/delete").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/locations").hasRole("ADMIN")
-                        .requestMatchers("/api/locations/import").hasRole("ADMIN")
-                        .requestMatchers("/api/forms").hasRole("ADMIN")
-                        .requestMatchers("/api/forms/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
-                .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
-                .authenticationProvider(authenticationProvider).addFilterBefore(
-                        jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+                        .requestMatchers(HttpMethod.GET, "/api/users")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/users/{username}")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/users/add")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/delete")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/locations")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers("/api/locations/import")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers("/api/forms")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers("/api/forms/**")
+                        .hasRole("ADMIN")
+
+                        .anyRequest().authenticated()
+                )
+
+                .sessionManagement(manager ->
+                        manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                .authenticationProvider(authenticationProvider)
+
+                .addFilterBefore(
+                        jwtFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
-
 }

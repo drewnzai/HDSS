@@ -116,22 +116,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler({
-            MalformedJwtException.class,
-            ExpiredJwtException.class,
-            UnsupportedJwtException.class
-    })
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleMalformedJwt(Exception e, HttpServletRequest request){
-        return new ApiError(
-                "Malformed JWT",
-                400,
-                "Malformed JWT",
-                request.getRequestURI(),
-                Instant.now()
-        );
-    }
-
     @ExceptionHandler(FormLockedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleEditedFormManipulation(FormLockedException ex, HttpServletRequest req) {
