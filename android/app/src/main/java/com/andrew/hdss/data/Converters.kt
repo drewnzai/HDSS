@@ -10,6 +10,7 @@ import com.andrew.hdss.data.models.enums.RelationshipToHead
 import com.andrew.hdss.data.models.enums.Sex
 import com.andrew.hdss.data.models.enums.VisitStatus
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Converters {
 
@@ -60,4 +61,36 @@ class Converters {
 
     @TypeConverter
     fun toVisitStates(value: String?): VisitStatus? = value?.let{ VisitStatus.valueOf(it) }
+
+    @TypeConverter
+    fun fromFormCategory(value: FormCategory): String =
+        value.name
+
+    @TypeConverter
+    fun toFormCategory(value: String): FormCategory =
+        FormCategory.valueOf(value)
+
+    @TypeConverter
+    fun fromFormTarget(value: FormTarget): String =
+        value.name
+
+    @TypeConverter
+    fun toFormTarget(value: String): FormTarget =
+        FormTarget.valueOf(value)
+
+    @TypeConverter
+    fun fromFormStatus(value: FormStatus): String =
+        value.name
+
+    @TypeConverter
+    fun toFormStatus(value: String): FormStatus =
+        FormStatus.valueOf(value)
+
+    @TypeConverter
+    fun fromLocalDateTime(value: LocalDateTime?): String? =
+        value?.toString()
+
+    @TypeConverter
+    fun toLocalDateTime(value: String?): LocalDateTime? =
+        value?.let(LocalDateTime::parse)
 }

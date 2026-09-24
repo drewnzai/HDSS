@@ -21,7 +21,6 @@ import java.time.LocalDateTime
 data class Visit(
     @PrimaryKey
     val clientId: String,
-    val serverId: Long?,
     val householdClientId: Long,
     val visitDate: LocalDateTime?,
     val status: VisitStatus
