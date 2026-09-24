@@ -16,22 +16,22 @@ function QuestionManagement() {
     const navigate = useNavigate();
     const location = useLocation();
     const [flash, setFlash] = useState<string | null>(
-            (location.state as LocationState | null)?.flash ?? null
-        );
+        (location.state as LocationState | null)?.flash ?? null
+    );
 
-        useEffect(() => {
-                if (!flash) return;
-        
-                const timer = setTimeout(() => setFlash(null), 4000);
-        
-                navigate(location.pathname, {
-                    replace: true,
-                    state: {},
-                });
-        
-                return () => clearTimeout(timer);
-                // eslint-disable-next-line react-hooks/exhaustive-deps
-            }, [flash]);
+    useEffect(() => {
+        if (!flash) return;
+
+        const timer = setTimeout(() => setFlash(null), 4000);
+
+        navigate(location.pathname, {
+            replace: true,
+            state: {},
+        });
+
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash]);
 
     const {
         data: form,

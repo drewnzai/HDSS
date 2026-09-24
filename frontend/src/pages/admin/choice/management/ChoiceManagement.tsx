@@ -1,13 +1,34 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import DataTable, { type DataTableColumn } from "../../../../components/data/DataTable";
 import PageContainer from "../../../../components/PageContainer";
 import type { ChoiceDto } from "../../../../models/ChoiceDto";
 import { useGetChoicesByListNameQuery, useDeleteChoiceMutation } from "../../../../redux/ChoiceApi";
 import "./choice-management.css";
+import { useState, useEffect } from "react";
+import type { LocationState } from "../../../LocationState";
 
 function ChoiceManagement() {
     const { listName } = useParams<{ listName: string }>();
     const decodedListName = listName ? decodeURIComponent(listName) : "";
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [flash, setFlash] = useState<string | null>(
+        (location.state as LocationState | null)?.flash ?? null
+    );
+
+    useEffect(() => {
+        if (!flash) return;
+
+        const timer = setTimeout(() => setFlash(null), 4000);
+
+        navigate(location.pathname, {
+            replace: true,
+            state: {},
+        });
+
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash]);
 
     const {
         data: choices,
@@ -123,6 +144,16 @@ function ChoiceManagement() {
                         Add choice
                     </Link>
                 </header>
+
+                {flash && (
+                    <div
+                        className="flash flash--success"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        {flash}
+                    </div>
+                )}
 
                 {error ? (
                     <div className="choice-management__state">
