@@ -14,6 +14,7 @@ import androidx.work.Data
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.andrew.hdss.network.SyncResult
+import com.andrew.hdss.network.services.FormApiService
 import com.andrew.hdss.network.services.HouseholdApiService
 import com.andrew.hdss.network.services.IndividualApiService
 import com.andrew.hdss.network.services.LocationApiService
@@ -37,7 +38,8 @@ class DownloadDatabaseWorker(
     private val locationApiService: LocationApiService,
     private val individualApiService: IndividualApiService,
     private val householdApiService: HouseholdApiService,
-    private val membershipApiService: MembershipApiService
+    private val membershipApiService: MembershipApiService,
+    private val formApiService: FormApiService
 ) : CoroutineWorker(appContext, workerParams) {
 
     private data class DownloadStep(
@@ -49,20 +51,24 @@ class DownloadDatabaseWorker(
 
     private val steps: List<DownloadStep> = listOf(
         DownloadStep(label = "Locations") {
-            _ ->
+                _ ->
             locationApiService.fetchLocations()
-                                          },
+        },
         DownloadStep(label = "Individuals") {
-            onProgress ->
+                onProgress ->
             individualApiService.fetchIndividuals(onProgress)
-                                            },
+        },
         DownloadStep(label = "Households") {
-            onProgress ->
+                onProgress ->
             householdApiService.fetchHouseholds(onProgress)
-                                           },
+        },
         DownloadStep(label = "Memberships") {
             onProgress ->
             membershipApiService.fetchMemberships(onProgress)
+        },
+        DownloadStep(label = "Forms"){
+            onProgress ->
+            formApiService.fetchForms(onProgress)
         }
     )
 
