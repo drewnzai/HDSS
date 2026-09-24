@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -306,7 +307,7 @@ public class SyncService {
         // Membership not overwriting clientId/startDate/startType on a
         // correction update.
         visit.setStatus(dto.status());
-        visit.setUpdatedAt(Instant.now());
+        visit.setUpdatedAt(LocalDateTime.now());
 
         if (isNew) {
             visit.setClientId(dto.clientId());

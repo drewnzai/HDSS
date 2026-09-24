@@ -11,7 +11,7 @@ public record VisitDto(
         String clientId,
         Long householdId,
         Long individualId,
-        Instant visitDate,
+        LocalDateTime visitDate,
         Long conductedById,
         String conductedByName,
         VisitStatus status
