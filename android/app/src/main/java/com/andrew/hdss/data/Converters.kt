@@ -1,12 +1,14 @@
 package com.andrew.hdss.data
 
 import androidx.room.TypeConverter
+import com.andrew.hdss.data.models.Visit
 import com.andrew.hdss.data.models.enums.HouseholdStatus
 import com.andrew.hdss.data.models.enums.LocationType
 import com.andrew.hdss.data.models.enums.MembershipEndType
 import com.andrew.hdss.data.models.enums.MembershipStartType
 import com.andrew.hdss.data.models.enums.RelationshipToHead
 import com.andrew.hdss.data.models.enums.Sex
+import com.andrew.hdss.data.models.enums.VisitStatus
 import java.time.LocalDate
 
 class Converters {
@@ -52,4 +54,10 @@ class Converters {
 
     @TypeConverter
     fun toLocationType(value: String?): LocationType? = value?.let { LocationType.valueOf(it) }
+
+    @TypeConverter
+    fun fromVisitStatus(value: VisitStatus?): String? = value?.name
+
+    @TypeConverter
+    fun toVisitStates(value: String?): VisitStatus? = value?.let{ VisitStatus.valueOf(it) }
 }
