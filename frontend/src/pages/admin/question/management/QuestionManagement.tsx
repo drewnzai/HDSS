@@ -155,7 +155,7 @@ function QuestionManagement() {
         },
         {
             key: "actions",
-            header: "Actions",
+            header: "",
             render: (question) => (
                 <div className="question-management__actions">
                     <Link
