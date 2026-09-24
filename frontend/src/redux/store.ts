@@ -6,6 +6,7 @@ import { locationApi } from "./LocationApi";
 import { formApi } from "./FormApi";
 import { questionApi } from "./QuestionApi";
 import { choiceApi } from "./ChoiceApi";
+import { mappedFieldApi } from "./MappedFieldApi";
 
 export const store = configureStore({
     reducer: {
@@ -15,10 +16,11 @@ export const store = configureStore({
         [formApi.reducerPath]: formApi.reducer,
         [questionApi.reducerPath]: questionApi.reducer,
         [choiceApi.reducerPath]: choiceApi.reducer,
+        [mappedFieldApi.reducerPath]: mappedFieldApi.reducer,
         auth: authReducer
     },
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(authApi.middleware, userApi.middleware, locationApi.middleware, formApi.middleware, questionApi.middleware, choiceApi.middleware)
+        getDefaultMiddleware().concat(authApi.middleware, userApi.middleware, locationApi.middleware, formApi.middleware, questionApi.middleware, choiceApi.middleware, mappedFieldApi.middleware)
 });
 
 export type RootState = ReturnType<typeof store.getState>;
