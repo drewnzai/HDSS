@@ -10,6 +10,8 @@ import com.andrew.hdss.network.AuthInterceptor
 import com.andrew.hdss.network.services.LocationApiRepository
 import com.andrew.hdss.network.services.LocationApiService
 import com.andrew.hdss.network.TokenAuthenticator
+import com.andrew.hdss.network.services.ChoiceApiRepository
+import com.andrew.hdss.network.services.ChoiceApiService
 import com.andrew.hdss.network.services.FormApiRepository
 import com.andrew.hdss.network.services.FormApiService
 import com.andrew.hdss.network.services.HouseholdApiRepository
@@ -158,6 +160,19 @@ class HdssContainer(private val context: Context) {
             questionApiRepository = questionApiRepository,
             formDao = database.formDao(),
             questionDao = database.questionDao(),
+            database = database,
+            json = json
+        )
+    }
+
+    private val choiceApiRepository: ChoiceApiRepository by lazy {
+        apiRetrofit.create(ChoiceApiRepository::class.java)
+    }
+
+    val choiceApiService: ChoiceApiService by lazy {
+        ChoiceApiService(
+            choiceApiRepository = choiceApiRepository,
+            choiceDao = database.choiceDao(),
             database = database,
             json = json
         )
