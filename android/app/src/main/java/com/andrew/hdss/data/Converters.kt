@@ -3,6 +3,7 @@ package com.andrew.hdss.data
 import androidx.room.TypeConverter
 import com.andrew.hdss.data.models.Visit
 import com.andrew.hdss.data.models.enums.FormCategory
+import com.andrew.hdss.data.models.enums.FormResponseStatus
 import com.andrew.hdss.data.models.enums.FormStatus
 import com.andrew.hdss.data.models.enums.FormTarget
 import com.andrew.hdss.data.models.enums.HouseholdStatus
@@ -96,18 +97,32 @@ class Converters {
         value?.toString()
 
     @TypeConverter
+    fun fromLocalDateTime(value: LocalDateTime): String =
+        value.toString()
+
+    @TypeConverter
     fun toLocalDateTime(value: String?): LocalDateTime? =
         value?.let(LocalDateTime::parse)
 
     @TypeConverter
-    fun fromQuestionType(value: QuestionType): String = value.toString()
+    fun toLocalDateTime(value: String): LocalDateTime =
+        LocalDateTime.parse(value)
+
+    @TypeConverter
+    fun fromQuestionType(value: QuestionType): String = value.name
 
     @TypeConverter
     fun toQuestionType(value: String): QuestionType = QuestionType.valueOf(value)
 
     @TypeConverter
-    fun fromMappedEntity(value: MappedEntity): String = value.toString()
+    fun fromMappedEntity(value: MappedEntity): String = value.name
 
     @TypeConverter
     fun toMappedEntity(value: String): MappedEntity = MappedEntity.valueOf(value)
+
+    @TypeConverter
+    fun fromFormResponseStatus(value: FormResponseStatus) = value.name
+
+    @TypeConverter
+    fun toFormResponseStatus(value: String) = FormResponseStatus.valueOf(value)
 }
