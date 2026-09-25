@@ -30,7 +30,8 @@ data class Visit(
     val householdClientId: String,
     val individualClientId: String,
     val visitDate: LocalDateTime?,
-    val status: VisitStatus
+    val status: VisitStatus,
+    val synced: Boolean = false
 )
 
 fun List<Visit>.toPushDtos(): List<VisitPushDto>{

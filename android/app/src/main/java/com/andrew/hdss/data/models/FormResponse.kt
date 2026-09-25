@@ -32,7 +32,8 @@ data class FormResponse(
     val formVersion: Int,
     val status: FormResponseStatus,
     val startedAt: LocalDateTime,
-    val completedAt: LocalDateTime
+    val completedAt: LocalDateTime,
+    val synced: Boolean = false
 )
 
 fun List<FormResponse>.toPushDtos(): List<FormResponsePushDto>{
