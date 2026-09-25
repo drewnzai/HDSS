@@ -4,7 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.andrew.hdss.data.models.Form
+import com.andrew.hdss.data.models.relations.FormWithQuestions
 
 @Dao
 interface FormDao {
@@ -20,4 +22,8 @@ interface FormDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(forms: List<Form>)
+
+    @Transaction
+    @Query("SELECT * FROM forms WHERE id = :formId")
+    suspend fun getFormWithQuestions(formId: Long): FormWithQuestions?
 }
