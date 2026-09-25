@@ -7,8 +7,10 @@ import com.andrew.hdss.data.models.enums.FormStatus
 import com.andrew.hdss.data.models.enums.FormTarget
 import com.andrew.hdss.data.models.enums.HouseholdStatus
 import com.andrew.hdss.data.models.enums.LocationType
+import com.andrew.hdss.data.models.enums.MappedEntity
 import com.andrew.hdss.data.models.enums.MembershipEndType
 import com.andrew.hdss.data.models.enums.MembershipStartType
+import com.andrew.hdss.data.models.enums.QuestionType
 import com.andrew.hdss.data.models.enums.RelationshipToHead
 import com.andrew.hdss.data.models.enums.Sex
 import com.andrew.hdss.data.models.enums.VisitStatus
@@ -96,4 +98,16 @@ class Converters {
     @TypeConverter
     fun toLocalDateTime(value: String?): LocalDateTime? =
         value?.let(LocalDateTime::parse)
+
+    @TypeConverter
+    fun fromQuestionType(value: QuestionType): String = value.toString()
+
+    @TypeConverter
+    fun toQuestionType(value: String): QuestionType = QuestionType.valueOf(value)
+
+    @TypeConverter
+    fun fromMappedEntity(value: MappedEntity): String = value.toString()
+
+    @TypeConverter
+    fun toMappedEntity(value: String): MappedEntity = MappedEntity.valueOf(value)
 }
