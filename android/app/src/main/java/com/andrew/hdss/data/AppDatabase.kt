@@ -14,6 +14,7 @@ import com.andrew.hdss.data.daos.LocationDao
 import com.andrew.hdss.data.daos.MembershipDao
 import com.andrew.hdss.data.daos.QuestionDao
 import com.andrew.hdss.data.daos.VisitDao
+import com.andrew.hdss.data.models.Answer
 import com.andrew.hdss.data.models.Choice
 import com.andrew.hdss.data.models.Form
 import com.andrew.hdss.data.models.FormResponse
@@ -34,7 +35,8 @@ import com.andrew.hdss.data.models.Visit
         Form::class,
         Question::class,
         Choice::class,
-        FormResponse::class
+        FormResponse::class,
+        Answer::class
     ],
     version = 1,
     exportSchema = true
