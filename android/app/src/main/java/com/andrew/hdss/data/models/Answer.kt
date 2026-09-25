@@ -3,6 +3,7 @@ package com.andrew.hdss.data.models
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.andrew.hdss.data.dtos.AnswerPushDto
 
 @Entity(
     tableName = "answers",
@@ -26,5 +27,18 @@ data class Answer(
     val id: String,
     val formResponseId: String,
     val questionId: Long,
-    val value: String
+    val value: String,
+    val synced: Boolean = false
 )
+
+fun List<Answer>.toPushDtos(): List<AnswerPushDto>{
+    return map{
+        answer ->
+        AnswerPushDto(
+            clientId =answer.id,
+            formResponseClientId = answer.formResponseId,
+            questionId = answer.questionId,
+            value = answer.value
+        )
+    }
+}
