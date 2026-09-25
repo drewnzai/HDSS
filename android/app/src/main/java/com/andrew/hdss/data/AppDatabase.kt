@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.andrew.hdss.data.daos.AnswerDao
 import com.andrew.hdss.data.daos.ChoiceDao
 import com.andrew.hdss.data.daos.FormDao
 import com.andrew.hdss.data.daos.FormResponseDao
@@ -53,6 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun formDao(): FormDao
     abstract fun formResponseDao(): FormResponseDao
     abstract fun questionDao(): QuestionDao
+    abstract fun answerDao(): AnswerDao
 
     companion object {
         private const val DATABASE_NAME = "hdss.db"
