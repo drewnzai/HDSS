@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.andrew.hdss.data.daos.ChoiceDao
 import com.andrew.hdss.data.daos.FormDao
 import com.andrew.hdss.data.daos.HouseholdDao
 import com.andrew.hdss.data.daos.IndividualDao
@@ -39,6 +40,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun individualDao(): IndividualDao
     abstract fun householdDao(): HouseholdDao
     abstract fun membershipDao(): MembershipDao
+
+    abstract fun choiceDao(): ChoiceDao
 
     abstract fun formDao(): FormDao
 
