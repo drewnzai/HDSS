@@ -12,8 +12,10 @@ import com.andrew.hdss.data.daos.IndividualDao
 import com.andrew.hdss.data.daos.LocationDao
 import com.andrew.hdss.data.daos.MembershipDao
 import com.andrew.hdss.data.daos.QuestionDao
+import com.andrew.hdss.data.daos.VisitDao
 import com.andrew.hdss.data.models.Choice
 import com.andrew.hdss.data.models.Form
+import com.andrew.hdss.data.models.FormResponse
 import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.Individual
 import com.andrew.hdss.data.models.Membership
@@ -30,7 +32,8 @@ import com.andrew.hdss.data.models.Visit
         Visit::class,
         Form::class,
         Question::class,
-        Choice::class
+        Choice::class,
+        FormResponse::class
     ],
     version = 1,
     exportSchema = true
@@ -42,11 +45,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun individualDao(): IndividualDao
     abstract fun householdDao(): HouseholdDao
     abstract fun membershipDao(): MembershipDao
-
+    abstract fun visitDao(): VisitDao
     abstract fun choiceDao(): ChoiceDao
-
     abstract fun formDao(): FormDao
-
     abstract fun questionDao(): QuestionDao
 
     companion object {
