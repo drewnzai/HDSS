@@ -30,7 +30,7 @@ class ChoiceApiService(
     private val json: Json
 ) {
     suspend fun getChoices(
-        onProgress: (suspend (downloaded: Int, total: Int) -> Unit)?
+        onProgress: (suspend (downloaded: Int, total: Int) -> Unit)? = null
     ): SyncResult{
         val listNames = mutableListOf<String>()
         val choiceDtos = mutableListOf<ChoiceDto>()
