@@ -12,4 +12,7 @@ interface ChoiceDao {
 
     @Query("SELECT * FROM choices")
     suspend fun getAll(): List<Choice>
+
+    @Query("SELECT * FROM choices WHERE listName = :listName")
+    suspend fun getAllByListName(listName: String): List<Choice>
 }
