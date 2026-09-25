@@ -12,6 +12,9 @@ interface FormDao {
     @Query("SELECT * FROM forms ORDER BY name")
     suspend fun getAll(): List<Form>
 
+    @Query("SELECT id FROM forms ORDER BY id ASC")
+    suspend fun getAllIds(): List<Long>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(form: Form): Long
 
