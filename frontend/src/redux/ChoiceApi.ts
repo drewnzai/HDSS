@@ -17,8 +17,14 @@ interface UpdateChoiceArgs {
 export const choiceApi = createApi({
     reducerPath: "choiceApi",
     baseQuery: baseQueryWithReauth,
-    tagTypes: ["Choice"],
+    tagTypes: ["Choice", "ChoiceListName"],
     endpoints: (builder) => ({
+
+        getListNames: builder.query<string[], void>({
+            query: () => "choices/list-names",
+            providesTags: [{ type: "ChoiceListName", id: "LIST" }],
+        }),
+
         getChoicesByListName: builder.query<ChoiceDto[], string>({
             query: (listName) => `choices/list/${encodeURIComponent(listName)}`,
             providesTags: (result, _error, listName) =>
@@ -38,7 +44,10 @@ export const choiceApi = createApi({
             }),
             invalidatesTags: (result) =>
                 result
-                    ? [{ type: "Choice", id: `LIST-${result.listName}` }]
+                    ? [
+                        { type: "Choice", id: `LIST-${result.listName}` },
+                        { type: "ChoiceListName", id: "LIST" },
+                    ]
                     : [],
         }),
 
@@ -63,12 +72,14 @@ export const choiceApi = createApi({
             invalidatesTags: (_result, _error, { choiceId, listName }) => [
                 { type: "Choice", id: choiceId },
                 { type: "Choice", id: `LIST-${listName}` },
+                { type: "ChoiceListName", id: "LIST" },
             ],
         }),
     }),
 });
 
 export const {
+    useGetListNamesQuery,
     useGetChoicesByListNameQuery,
     useCreateChoiceMutation,
     useUpdateChoiceMutation,

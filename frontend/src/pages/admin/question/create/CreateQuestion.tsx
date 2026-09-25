@@ -1,12 +1,14 @@
-import { useState,type ChangeEvent, type  FormEvent } from "react";
+import { useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FormPage from "../../../../components/form-page/FormPage";
 import type { CreateQuestionRequest } from "../../../../models/CreateQuestionRequest";
 import type { MappedEntity } from "../../../../models/types/MappedEntity";
 import type { QuestionType } from "../../../../models/types/QuestionTypes";
+import { useGetListNamesQuery } from "../../../../redux/ChoiceApi";
+import { useGetMappableFieldsQuery } from "../../../../redux/MappedFieldApi";
 import { useCreateQuestionMutation } from "../../../../redux/QuestionApi";
 import "./create-question.css";
-import { useGetMappableFieldsQuery } from "../../../../redux/MappedFieldApi";
 
 interface QuestionFormState {
     name: string;
@@ -63,8 +65,14 @@ const TYPES_WITH_CHOICE_LIST: QuestionType[] = [
     "SELECT_MULTIPLE",
 ];
 
+// SELECT_HOUSEHOLD_MEMBER's options come from already-synced Individual
+// records in the current household, not from Choice rows — no
+// choiceListName applies to it, and its sex/adult-age filter is
+// resolved in the Android app from mappedField's name (e.g.
+// "motherClientId" -> FEMALE, "fatherClientId" -> MALE), not stored here.
 const HOUSEHOLD_MEMBER_SELECT: QuestionType = "SELECT_HOUSEHOLD_MEMBER";
 
+// Matches the backend MappedEntity enum.
 const MAPPED_ENTITY_OPTIONS: { value: MappedEntity; label: string }[] = [
     { value: "NONE", label: "None — not mapped to a record field" },
     { value: "HOUSEHOLD", label: "Household" },
@@ -104,6 +112,9 @@ function CreateQuestion() {
                 [name]: type === "checkbox" ? checked : value,
             };
 
+            // A field selected under the old entity/type may not exist
+            // under the new one — clear rather than carry over a stale,
+            // now-invalid mappedField.
             if (name === "mappedEntity" || name === "type") {
                 next.mappedField = "";
                 next.mappedFieldSecondary = "";
@@ -125,6 +136,11 @@ function CreateQuestion() {
         data: mappableFields = [],
         isFetching: isLoadingFields,
     } = useGetMappableFieldsQuery(form.mappedEntity, { skip: !isMapped });
+
+    const {
+        data: listNames = [],
+        isFetching: isLoadingListNames,
+    } = useGetListNamesQuery(undefined, { skip: !requiresChoiceList });
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -211,7 +227,6 @@ function CreateQuestion() {
             navigate(`/admin/forms/${formId}/questions`, {
                 state: {
                     flash: `Question "${created.label}" created successfully.`,
-                    flashType: "success"
                 },
             });
         } catch {
@@ -337,20 +352,31 @@ function CreateQuestion() {
                                         Choice list
                                     </label>
 
-                                    <input
+                                    <select
                                         id="choiceListName"
                                         name="choiceListName"
-                                        type="text"
                                         className="form-field__input"
                                         value={form.choiceListName}
                                         onChange={handleChange}
-                                        placeholder="e.g. sex"
-                                        disabled={isLoading}
-                                    />
+                                        disabled={isLoading || isLoadingListNames}
+                                    >
+                                        <option value="">
+                                            {isLoadingListNames
+                                                ? "Loading lists…"
+                                                : "Select a list…"}
+                                        </option>
+                                        {listNames.map((name) => (
+                                            <option key={name} value={name}>
+                                                {name}
+                                            </option>
+                                        ))}
+                                    </select>
 
                                     <p className="form-field__hint">
                                         Name of the shared choice list this
-                                        question draws its options from.
+                                        question draws its options from. To
+                                        add a new list, create its choices
+                                        first from the Choice lists page.
                                     </p>
                                 </div>
                             )}
