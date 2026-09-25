@@ -15,13 +15,20 @@ import java.time.LocalDateTime
             parentColumns = ["clientId"],
             childColumns = ["householdClientId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Individual::class,
+            parentColumns = ["clientId"],
+            childColumns = ["individualClientId"],
+            onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class Visit(
     @PrimaryKey
-    val clientId: String,
-    val householdClientId: Long,
+    val id: String,
+    val householdClientId: String,
+    val individualClientId: String,
     val visitDate: LocalDateTime?,
     val status: VisitStatus
 )
@@ -29,8 +36,9 @@ data class Visit(
 fun List<Visit>.toPushDtos(): List<VisitPushDto>{
     return map { visit ->
         VisitPushDto(
-            clientId = visit.clientId,
-            householdClientId = visit.householdClientId.toString(),
+            clientId = visit.id,
+            householdClientId = visit.householdClientId,
+            individualClientId = visit.individualClientId,
             visitDate = visit.visitDate.toString(),
             status = visit.status
         )

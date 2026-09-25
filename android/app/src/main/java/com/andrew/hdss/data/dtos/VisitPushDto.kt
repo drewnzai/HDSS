@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 data class VisitPushDto(
     val clientId: String,
     val householdClientId: String,
+    val individualClientId: String,
     val visitDate: String,
     val status: VisitStatus
 )
