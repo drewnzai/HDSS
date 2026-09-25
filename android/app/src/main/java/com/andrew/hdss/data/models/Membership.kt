@@ -37,5 +37,6 @@ data class Membership(
     val startDate: LocalDate,
     val startType: MembershipStartType,
     val endDate: LocalDate?,
-    val endType: MembershipEndType?
+    val endType: MembershipEndType?,
+    val synced: Boolean = false
 )

@@ -36,5 +36,6 @@ data class Individual(
     val dateOfBirth: LocalDate?,
     val dobEstimated: Boolean,
     val motherClientId: String?,
-    val fatherClientId: String?
+    val fatherClientId: String?,
+    val synced: Boolean = false
 )

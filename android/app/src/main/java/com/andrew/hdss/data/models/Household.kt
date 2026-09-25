@@ -33,5 +33,6 @@ data class Household(
     val latitude: Double?,
     val longitude: Double?,
     val headIndividualClientId: String?,
-    val status: HouseholdStatus
+    val status: HouseholdStatus,
+    val synced: Boolean = false
 )
