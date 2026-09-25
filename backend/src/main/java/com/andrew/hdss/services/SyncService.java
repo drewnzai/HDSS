@@ -90,7 +90,7 @@ public class SyncService {
         for (VisitPushDto dto : request.visits()) {
             try {
                 UpsertResult<Visit> result =
-                        upsertVisit(dto, householdsByClientId, currentUser);
+                        upsertVisit(dto, householdsByClientId, individualsByClientId, currentUser);
                 visitsByClientId.put(dto.clientId(), result.entity());
                 visitResults.add(result.wasNew()
                         ? SyncItemResult.created(dto.clientId(), result.entity().getId())
@@ -291,10 +291,11 @@ public class SyncService {
     private UpsertResult<Visit> upsertVisit(
             VisitPushDto dto,
             Map<String, Household> householdsByClientId,
+            Map<String, Individual> individualsByClientId,
             User currentUser
     ) {
-        if (dto.householdClientId() == null) {
-            throw new IllegalArgumentException("A visit must reference a household");
+        if (dto.householdClientId() == null && dto.individualClientId() == null) {
+            throw new IllegalArgumentException("A visit must reference a household, an individual, or both");
         }
 
         Visit visit = visitRepository.findByClientId(dto.clientId()).orElseGet(Visit::new);
@@ -315,6 +316,10 @@ public class SyncService {
 
             if (dto.householdClientId() != null) {
                 visit.setHousehold(resolveHousehold(dto.householdClientId(), householdsByClientId));
+            }
+
+            if (dto.individualClientId() != null) {
+                visit.setIndividual(resolveIndividual(dto.individualClientId(), individualsByClientId));
             }
         }
 

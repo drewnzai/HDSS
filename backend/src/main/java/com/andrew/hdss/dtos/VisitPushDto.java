@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public record VisitPushDto(
         String clientId,
         String householdClientId,
+        String individualClientId,
         LocalDateTime visitDate,
         VisitStatus status
 ) {}

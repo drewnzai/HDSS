@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface VisitRepository extends JpaRepository<Visit, Long> {
     Optional<Visit> findByClientId(String clientId);
     List<Visit> findByHouseholdId(Long householdId);
+    List<Visit> findByIndividualId(Long individualId);
 }

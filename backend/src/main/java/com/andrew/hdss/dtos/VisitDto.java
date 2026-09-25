@@ -10,6 +10,7 @@ public record VisitDto(
         Long id,
         String clientId,
         Long householdId,
+        Long individualId,
         LocalDateTime visitDate,
         VisitStatus status
 ) {
@@ -18,6 +19,7 @@ public record VisitDto(
                 visit.getId(),
                 visit.getClientId(),
                 visit.getHousehold() != null ? visit.getHousehold().getId() : null,
+                visit.getIndividual() != null ? visit.getIndividual().getId() : null,
                 visit.getVisitDate(),
                 visit.getStatus()
         );

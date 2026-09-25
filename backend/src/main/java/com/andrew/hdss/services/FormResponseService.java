@@ -46,6 +46,12 @@ public class FormResponseService {
             );
         }
 
+        if (form.getTarget() == FormTarget.INDIVIDUAL && visit.getIndividual() == null) {
+            throw new IllegalArgumentException(
+                    "Form '" + form.getName() + "' requires an individual, but this visit has none"
+            );
+        }
+
         if (formResponseRepository.findByClientId(request.clientId()).isPresent()) {
             throw new IllegalArgumentException(
                     "A form response with clientId '" + request.clientId() + "' already exists"
