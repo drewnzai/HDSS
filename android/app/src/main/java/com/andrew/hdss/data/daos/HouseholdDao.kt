@@ -52,4 +52,10 @@ interface HouseholdDao {
 
     @Query("SELECT clientId, serverId FROM households WHERE serverId IN (:serverIds)")
     suspend fun getIdentifiersByServerIds(serverIds: List<Long>): List<HouseholdIdentifiers>
+
+    @Query("SELECT * FROM households WHERE synced = 0")
+    suspend fun getUnsynced(): List<Household>
+
+    @Query("UPDATE households SET synced = 1, serverId = :serverId WHERE clientId = :clientId")
+    suspend fun markSynced(clientId: String, serverId: Long)
 }

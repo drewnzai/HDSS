@@ -47,4 +47,10 @@ interface IndividualDao {
 
     @Query("SELECT clientId, serverId FROM individuals WHERE serverId IN (:serverIds)")
     suspend fun getIdentifiersByServerIds(serverIds: List<Long>): List<IndividualIdentifiers>
+
+    @Query("SELECT * FROM individuals WHERE synced = 0")
+    suspend fun getUnsynced(): List<Individual>
+
+    @Query("UPDATE individuals SET synced = 1, serverId = :serverId WHERE clientId = :clientId")
+    suspend fun markSynced(clientId: String, serverId: Long)
 }

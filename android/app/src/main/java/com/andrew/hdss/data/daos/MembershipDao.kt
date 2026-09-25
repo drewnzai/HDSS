@@ -41,4 +41,10 @@ interface MembershipDao {
 
     @Query("SELECT * FROM memberships WHERE householdClientId = :householdClientId AND endDate IS NULL")
     fun getCurrentMembers(householdClientId: String): Flow<List<Membership>>
+
+    @Query("SELECT * FROM memberships WHERE synced = 0")
+    suspend fun getUnsynced(): List<Membership>
+
+    @Query("UPDATE memberships SET synced = 1, serverId = :serverId WHERE clientId = :clientId")
+    suspend fun markSynced(clientId: String, serverId: Long)
 }
