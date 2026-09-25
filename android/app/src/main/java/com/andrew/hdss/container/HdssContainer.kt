@@ -18,6 +18,8 @@ import com.andrew.hdss.network.services.IndividualApiRepository
 import com.andrew.hdss.network.services.IndividualApiService
 import com.andrew.hdss.network.services.MembershipApiRepository
 import com.andrew.hdss.network.services.MembershipApiService
+import com.andrew.hdss.network.services.QuestionApiRepository
+import com.andrew.hdss.network.services.QuestionApiService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -142,6 +144,20 @@ class HdssContainer(private val context: Context) {
         FormApiService(
             formApiRepository = formApiRepository,
             formDao = database.formDao(),
+            database = database,
+            json = json
+        )
+    }
+
+    private val questionApiRepository: QuestionApiRepository by lazy {
+        apiRetrofit.create(QuestionApiRepository::class.java)
+    }
+
+    val questionApiService: QuestionApiService by lazy {
+        QuestionApiService(
+            questionApiRepository = questionApiRepository,
+            formDao = database.formDao(),
+            questionDao = database.questionDao(),
             database = database,
             json = json
         )
