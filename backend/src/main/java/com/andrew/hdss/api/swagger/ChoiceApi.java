@@ -13,7 +13,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 public interface ChoiceApi {
-    @Operation(summary = "Get Choices by listName forms")
+    @Operation(summary = "Get listNames")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List names retrieved successfully"
+                    )
+            }
+    )
+    List<String> getListNames();
+
+    @Operation(summary = "Get Choices by listName")
     @ApiResponses(
             value = {
                     @ApiResponse(

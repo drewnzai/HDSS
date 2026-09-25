@@ -2,6 +2,7 @@ package com.andrew.hdss.repositories;
 
 import com.andrew.hdss.models.Choice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,4 +12,7 @@ public interface ChoiceRepository extends JpaRepository<Choice, Long> {
     List<Choice> findByListName(String listName);
     boolean existsByListNameAndName(String listName, String name);
     boolean existsByListNameAndNameAndIdNot(String listName, String name, Long id);
+
+    @Query("SELECT DISTINCT c.listName FROM Choice c ORDER BY c.listName")
+    List<String> findDistinctListNames();
 }

@@ -21,6 +21,11 @@ public class ChoiceController implements ChoiceApi {
 
     private final ChoiceService choiceService;
 
+    @GetMapping("/list-names")
+    public List<String> getListNames() {
+        return choiceService.getListNames();
+    }
+
     @GetMapping("/list/{listName}")
     public List<ChoiceDto> getByListName(@PathVariable String listName) {
         return choiceService.getByListName(listName);

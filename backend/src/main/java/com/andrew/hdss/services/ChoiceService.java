@@ -26,6 +26,11 @@ public class ChoiceService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<String> getListNames() {
+        return choiceRepository.findDistinctListNames();
+    }
+
     @Transactional
     public ChoiceDto create(CreateChoiceRequest request) {
         if (choiceRepository.existsByListNameAndName(request.listName(), request.name())) {
@@ -49,8 +54,6 @@ public class ChoiceService {
         Choice choice = choiceRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Choice not found: " + id));
 
-        // listName is locked (see UpdateChoiceRequest) — duplicate check
-        // stays scoped to the choice's existing list.
         boolean nameChanged = !choice.getName().equals(request.name());
         if (nameChanged && choiceRepository.existsByListNameAndNameAndIdNot(
                 choice.getListName(), request.name(), id)) {
