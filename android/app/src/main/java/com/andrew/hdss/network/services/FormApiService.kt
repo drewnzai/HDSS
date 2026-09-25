@@ -46,7 +46,7 @@ class FormApiService(
                 )
             } catch (e: Exception) {
                 Log.e("FormApiService", "Failed to fetch individuals page=$currentPage", e)
-                return SyncResult.NetworkError(e)
+                return SyncResult.Error(e)
             }
 
             if (!response.isSuccessful) {
@@ -54,7 +54,7 @@ class FormApiService(
             }
 
             val batch = response.body()
-                ?: return SyncResult.NetworkError(IllegalStateException("Empty response body"))
+                ?: return SyncResult.Error(IllegalStateException("Empty response body"))
 
             if (totalElements == null) {
                 totalElements = batch.totalElements?.toInt() ?: 0
@@ -99,6 +99,6 @@ class FormApiService(
         }
 
         return errorResponse?.let { SyncResult.Failure(it) }
-            ?: SyncResult.NetworkError(IllegalStateException("Unknown server error: HTTP ${code()}"))
+            ?: SyncResult.Error(IllegalStateException("Unknown server error: HTTP ${code()}"))
     }
 }

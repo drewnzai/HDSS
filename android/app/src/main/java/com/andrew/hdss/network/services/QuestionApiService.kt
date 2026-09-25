@@ -36,14 +36,14 @@ class QuestionApiService(
         val forms = formDao.getAllIds()
 
         if(forms == emptyList<Long>()){
-            return SyncResult.NetworkError(RuntimeException("No forms stored in the database"))
+            return SyncResult.Error(RuntimeException("No forms stored in the database"))
         }
 
         for(formId in forms){
             val response = try{
                 questionApiRepository.getAllQuestions(formId)
             }catch(e: Exception){
-                return SyncResult.NetworkError(e)
+                return SyncResult.Error(e)
             }
 
             if(!response.isSuccessful){
@@ -51,7 +51,7 @@ class QuestionApiService(
             }
 
             val dtos = response.body()
-                ?: return SyncResult.NetworkError(IllegalStateException("Empty response body"))
+                ?: return SyncResult.Error(IllegalStateException("Empty response body"))
 
             allDtos += dtos
         }
@@ -78,6 +78,6 @@ class QuestionApiService(
         return errorResponse?.let {
             SyncResult.Failure(it)
         }
-            ?: SyncResult.NetworkError(IllegalStateException("Unknown server error: HTTP ${code()}"))
+            ?: SyncResult.Error(IllegalStateException("Unknown server error: HTTP ${code()}"))
     }
 }

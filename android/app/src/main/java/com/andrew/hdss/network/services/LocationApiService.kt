@@ -48,7 +48,7 @@ class LocationApiService(
             locationApiRepository.getChildren(parentId = null)
         } catch (e: Exception) {
             Log.e("LocationApiService", "Failed to fetch root locations", e)
-            return SyncResult.NetworkError(e)
+            return SyncResult.Error(e)
         }
 
         if (!rootsResponse.isSuccessful) {
@@ -63,7 +63,7 @@ class LocationApiService(
                 locationApiRepository.getDescendants(root.id)
             } catch (e: Exception) {
                 Log.e("LocationApiService", "Failed to fetch descendants of location id=${root.id}", e)
-                return SyncResult.NetworkError(e)
+                return SyncResult.Error(e)
             }
 
             if (!descendantsResponse.isSuccessful) {
@@ -101,6 +101,6 @@ class LocationApiService(
         return errorResponse?.let {
             SyncResult.Failure(it)
         }
-            ?: SyncResult.NetworkError(IllegalStateException("Unknown server error: HTTP ${code()}"))
+            ?: SyncResult.Error(IllegalStateException("Unknown server error: HTTP ${code()}"))
     }
 }

@@ -95,7 +95,7 @@ class AuthViewModel(
                     )
                 }
 
-                is AuthResult.NetworkError -> {
+                is AuthResult.Error -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = "Could not contact the server"

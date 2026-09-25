@@ -159,7 +159,7 @@ class DownloadDatabaseWorker(
                         return Result.failure(buildData(stepStates))
                     }
 
-                    is SyncResult.NetworkError -> {
+                    is SyncResult.Error -> {
                         stepStates[index] = stepStates[index].copy(
                             status = "FAILURE",
                             message = "Could not contact the server"

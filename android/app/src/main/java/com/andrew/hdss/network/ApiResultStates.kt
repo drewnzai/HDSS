@@ -12,7 +12,7 @@ sealed interface AuthResult {
         val error: ErrorResponse
     ) : AuthResult
 
-    data class NetworkError(
+    data class Error(
         val exception: Throwable
     ) : AuthResult
 }
@@ -20,5 +20,5 @@ sealed interface AuthResult {
 sealed class SyncResult {
     data class Success(val count: Int) : SyncResult()
     data class Failure(val error: ErrorResponse) : SyncResult()
-    data class NetworkError(val throwable: Throwable) : SyncResult()
+    data class Error(val throwable: Throwable) : SyncResult()
 }

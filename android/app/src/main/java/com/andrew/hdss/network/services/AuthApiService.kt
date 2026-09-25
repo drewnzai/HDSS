@@ -37,7 +37,7 @@ class AuthApiService(
             handleAuthResponse(authApiRepository.login(loginRequest))
         } catch (e: Exception) {
             Log.e("AuthApiService", "Login request failed", e)
-            AuthResult.NetworkError(e)
+            AuthResult.Error(e)
         }
     }
 
@@ -46,7 +46,7 @@ class AuthApiService(
         val currentUsername = tokenDataStore.username.first()
 
         if (currentRefreshToken == null || currentUsername == null) {
-            return AuthResult.NetworkError(
+            return AuthResult.Error(
                 IllegalStateException("No stored session to refresh")
             )
         }
@@ -62,7 +62,7 @@ class AuthApiService(
             )
         } catch (e: Exception) {
             Log.e("AuthApiService", "Token refresh failed", e)
-            AuthResult.NetworkError(e)
+            AuthResult.Error(e)
         }
     }
 
@@ -82,7 +82,7 @@ class AuthApiService(
 
                 AuthResult.Success(loginResponse)
             } else {
-                AuthResult.NetworkError(
+                AuthResult.Error(
                     IllegalStateException("Server returned an empty response")
                 )
             }
@@ -101,7 +101,7 @@ class AuthApiService(
         return if (errorResponse != null) {
             AuthResult.Failure(errorResponse)
         } else {
-            AuthResult.NetworkError(
+            AuthResult.Error(
                 IllegalStateException("Unknown server error: HTTP ${response.code()}")
             )
         }
