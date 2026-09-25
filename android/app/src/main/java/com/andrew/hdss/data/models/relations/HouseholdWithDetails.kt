@@ -1,7 +1,10 @@
-package com.andrew.hdss.data.models
+package com.andrew.hdss.data.models.relations
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.andrew.hdss.data.models.Household
+import com.andrew.hdss.data.models.Individual
+import com.andrew.hdss.data.models.Location
 
 data class HouseholdWithDetails(
     @Embedded

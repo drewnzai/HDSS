@@ -7,7 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.andrew.hdss.data.models.Household
-import com.andrew.hdss.data.models.HouseholdWithDetails
+import com.andrew.hdss.data.models.relations.HouseholdWithDetails
 import com.andrew.hdss.data.utils.HouseholdIdentifiers
 import kotlinx.coroutines.flow.Flow
 
