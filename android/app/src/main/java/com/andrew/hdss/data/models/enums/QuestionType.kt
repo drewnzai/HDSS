@@ -1,0 +1,21 @@
+package com.andrew.hdss.data.models.enums
+
+enum class QuestionType {
+    TEXT,
+    INTEGER,
+    DECIMAL,
+    DATE,
+    TIME,
+    DATETIME,
+    SELECT_ONE,
+    SELECT_MULTIPLE,
+    SELECT_HOUSEHOLD_MEMBER,
+    NOTE,
+    GEOPOINT,
+    IMAGE,
+    AUDIO,
+    VIDEO,
+    BARCODE,
+    CALCULATE,
+    ACKNOWLEDGE
+}
