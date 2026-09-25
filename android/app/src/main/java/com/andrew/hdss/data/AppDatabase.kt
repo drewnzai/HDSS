@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.andrew.hdss.data.daos.ChoiceDao
 import com.andrew.hdss.data.daos.FormDao
+import com.andrew.hdss.data.daos.FormResponseDao
 import com.andrew.hdss.data.daos.HouseholdDao
 import com.andrew.hdss.data.daos.IndividualDao
 import com.andrew.hdss.data.daos.LocationDao
@@ -48,6 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun visitDao(): VisitDao
     abstract fun choiceDao(): ChoiceDao
     abstract fun formDao(): FormDao
+    abstract fun formResponseDao(): FormResponseDao
     abstract fun questionDao(): QuestionDao
 
     companion object {
