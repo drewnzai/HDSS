@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c329ee153b3378a1f0fad3d24d336195",
+    "identityHash": "3eefda4e2424c02bfb5d88f92e859107",
     "entities": [
       {
         "tableName": "locations",
@@ -70,7 +70,7 @@
       },
       {
         "tableName": "individuals",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `serverId` INTEGER, `extendedId` TEXT, `firstName` TEXT NOT NULL, `lastName` TEXT NOT NULL, `sex` TEXT NOT NULL, `dateOfBirth` TEXT, `dobEstimated` INTEGER NOT NULL, `motherClientId` TEXT, `fatherClientId` TEXT, PRIMARY KEY(`clientId`), FOREIGN KEY(`motherClientId`) REFERENCES `individuals`(`clientId`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`fatherClientId`) REFERENCES `individuals`(`clientId`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `serverId` INTEGER, `extendedId` TEXT, `firstName` TEXT NOT NULL, `lastName` TEXT NOT NULL, `sex` TEXT NOT NULL, `dateOfBirth` TEXT, `dobEstimated` INTEGER NOT NULL, `motherClientId` TEXT, `fatherClientId` TEXT, `synced` INTEGER NOT NULL, PRIMARY KEY(`clientId`), FOREIGN KEY(`motherClientId`) REFERENCES `individuals`(`clientId`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`fatherClientId`) REFERENCES `individuals`(`clientId`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "clientId",
@@ -126,6 +126,12 @@
             "fieldPath": "fatherClientId",
             "columnName": "fatherClientId",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "synced",
+            "columnName": "synced",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -190,7 +196,7 @@
       },
       {
         "tableName": "households",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `serverId` INTEGER, `householdCode` TEXT, `locationId` INTEGER, `latitude` REAL, `longitude` REAL, `headIndividualClientId` TEXT, `status` TEXT NOT NULL, PRIMARY KEY(`clientId`), FOREIGN KEY(`locationId`) REFERENCES `locations`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`headIndividualClientId`) REFERENCES `individuals`(`clientId`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `serverId` INTEGER, `householdCode` TEXT, `locationId` INTEGER, `latitude` REAL, `longitude` REAL, `headIndividualClientId` TEXT, `status` TEXT NOT NULL, `synced` INTEGER NOT NULL, PRIMARY KEY(`clientId`), FOREIGN KEY(`locationId`) REFERENCES `locations`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`headIndividualClientId`) REFERENCES `individuals`(`clientId`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "clientId",
@@ -232,6 +238,12 @@
             "fieldPath": "status",
             "columnName": "status",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "synced",
+            "columnName": "synced",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -297,7 +309,7 @@
       },
       {
         "tableName": "memberships",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `serverId` INTEGER, `individualClientId` TEXT NOT NULL, `householdClientId` TEXT NOT NULL, `relationshipToHead` TEXT NOT NULL, `startDate` TEXT NOT NULL, `startType` TEXT NOT NULL, `endDate` TEXT, `endType` TEXT, PRIMARY KEY(`clientId`), FOREIGN KEY(`individualClientId`) REFERENCES `individuals`(`clientId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`householdClientId`) REFERENCES `households`(`clientId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `serverId` INTEGER, `individualClientId` TEXT NOT NULL, `householdClientId` TEXT NOT NULL, `relationshipToHead` TEXT NOT NULL, `startDate` TEXT NOT NULL, `startType` TEXT NOT NULL, `endDate` TEXT, `endType` TEXT, `synced` INTEGER NOT NULL, PRIMARY KEY(`clientId`), FOREIGN KEY(`individualClientId`) REFERENCES `individuals`(`clientId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`householdClientId`) REFERENCES `households`(`clientId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "clientId",
@@ -349,6 +361,12 @@
             "fieldPath": "endType",
             "columnName": "endType",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "synced",
+            "columnName": "synced",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -641,11 +659,53 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "choices",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `listName` TEXT NOT NULL, `name` TEXT NOT NULL, `label` TEXT NOT NULL, `orderIndex` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "listName",
+            "columnName": "listName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orderIndex",
+            "columnName": "orderIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c329ee153b3378a1f0fad3d24d336195')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3eefda4e2424c02bfb5d88f92e859107')"
     ]
   }
 }
