@@ -25,7 +25,9 @@ function App() {
       <Route path="/login" element={<Login />} />
 
       <Route element={<ProtectedRoute />}>
+      <Route element={<Layout/>} >
         <Route path="/" element={<Home />} />
+      </Route>
       </Route>
 
       <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
