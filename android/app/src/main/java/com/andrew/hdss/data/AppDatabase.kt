@@ -10,11 +10,13 @@ import com.andrew.hdss.data.daos.HouseholdDao
 import com.andrew.hdss.data.daos.IndividualDao
 import com.andrew.hdss.data.daos.LocationDao
 import com.andrew.hdss.data.daos.MembershipDao
+import com.andrew.hdss.data.daos.QuestionDao
 import com.andrew.hdss.data.models.Form
 import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.Individual
 import com.andrew.hdss.data.models.Membership
 import com.andrew.hdss.data.models.Location
+import com.andrew.hdss.data.models.Question
 import com.andrew.hdss.data.models.Visit
 
 @Database(
@@ -24,7 +26,8 @@ import com.andrew.hdss.data.models.Visit
         Household::class,
         Membership::class,
         Visit::class,
-        Form::class
+        Form::class,
+        Question::class
     ],
     version = 1,
     exportSchema = true
@@ -38,6 +41,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun membershipDao(): MembershipDao
 
     abstract fun formDao(): FormDao
+
+    abstract fun questionDao(): QuestionDao
 
     companion object {
         private const val DATABASE_NAME = "hdss.db"
