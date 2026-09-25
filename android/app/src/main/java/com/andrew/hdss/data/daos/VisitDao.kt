@@ -21,5 +21,5 @@ interface VisitDao {
     suspend fun getUnsynced(): List<Visit>
 
     @Query("UPDATE visits SET synced = 1 WHERE id = :id")
-    suspend fun markSynced(id: String, serverId: Long)
+    suspend fun markSynced(id: String)
 }
