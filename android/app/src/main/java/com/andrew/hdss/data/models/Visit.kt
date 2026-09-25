@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.andrew.hdss.data.models.enums.VisitStatus
-import com.andrew.hdss.dtos.VisitPushDto
+import com.andrew.hdss.data.dtos.VisitPushDto
 import java.time.LocalDateTime
 
 @Entity(

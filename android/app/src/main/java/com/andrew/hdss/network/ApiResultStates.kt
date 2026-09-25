@@ -1,7 +1,7 @@
 package com.andrew.hdss.network
 
-import com.andrew.hdss.dtos.ErrorResponse
-import com.andrew.hdss.dtos.LoginResponse
+import com.andrew.hdss.data.dtos.ErrorResponse
+import com.andrew.hdss.data.dtos.LoginResponse
 
 sealed interface AuthResult {
     data class Success(

@@ -1,4 +1,4 @@
-package com.andrew.hdss.dtos
+package com.andrew.hdss.data.dtos
 
 import android.util.Log
 import com.andrew.hdss.data.daos.HouseholdDao
@@ -9,7 +9,6 @@ import com.andrew.hdss.data.models.enums.MembershipStartType
 import com.andrew.hdss.data.models.enums.RelationshipToHead
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Serializable
 data class MembershipDto(

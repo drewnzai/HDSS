@@ -1,4 +1,4 @@
-package com.andrew.hdss.dtos
+package com.andrew.hdss.data.dtos
 
 import android.util.Log
 import com.andrew.hdss.data.models.Location

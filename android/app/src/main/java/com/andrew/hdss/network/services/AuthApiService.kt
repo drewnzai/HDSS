@@ -2,10 +2,10 @@ package com.andrew.hdss.network.services
 
 import android.util.Log
 import com.andrew.hdss.datastore.TokenDataStore
-import com.andrew.hdss.dtos.ErrorResponse
-import com.andrew.hdss.dtos.LoginRequest
-import com.andrew.hdss.dtos.LoginResponse
-import com.andrew.hdss.dtos.RefreshTokenRequest
+import com.andrew.hdss.data.dtos.ErrorResponse
+import com.andrew.hdss.data.dtos.LoginRequest
+import com.andrew.hdss.data.dtos.LoginResponse
+import com.andrew.hdss.data.dtos.RefreshTokenRequest
 import com.andrew.hdss.network.AuthResult
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json

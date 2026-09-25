@@ -1,4 +1,4 @@
-package com.andrew.hdss.dtos
+package com.andrew.hdss.data.dtos
 
 import kotlinx.serialization.Serializable
 import kotlin.time.ExperimentalTime

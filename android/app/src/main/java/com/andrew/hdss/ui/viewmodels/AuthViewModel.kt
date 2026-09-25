@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.andrew.hdss.HdssApplication
-import com.andrew.hdss.dtos.LoginRequest
-import com.andrew.hdss.dtos.LoginResponse
+import com.andrew.hdss.data.dtos.LoginRequest
+import com.andrew.hdss.data.dtos.LoginResponse
 import com.andrew.hdss.network.services.AuthApiService
 import com.andrew.hdss.network.AuthResult
 import kotlinx.coroutines.flow.MutableStateFlow
