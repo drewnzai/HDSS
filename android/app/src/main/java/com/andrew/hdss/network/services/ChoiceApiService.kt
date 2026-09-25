@@ -81,7 +81,7 @@ class ChoiceApiService(
         val rawBody = errorBody()?.string()
 
         Log.e(
-            "FormApiService",
+            "ChoiceApiService",
             "Request failed: HTTP ${code()} ${message()} — url=${raw().request.url} body=$rawBody"
         )
 
@@ -89,7 +89,7 @@ class ChoiceApiService(
             try {
                 json.decodeFromString<ErrorResponse>(it)
             } catch (e: Exception) {
-                Log.w("FormApiService", "Error body did not match ErrorResponse shape", e)
+                Log.w("ChoiceApiService", "Error body did not match ErrorResponse shape", e)
                 null
             }
         }
