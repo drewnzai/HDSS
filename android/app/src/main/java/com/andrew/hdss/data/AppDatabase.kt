@@ -12,6 +12,7 @@ import com.andrew.hdss.data.daos.IndividualDao
 import com.andrew.hdss.data.daos.LocationDao
 import com.andrew.hdss.data.daos.MembershipDao
 import com.andrew.hdss.data.daos.QuestionDao
+import com.andrew.hdss.data.models.Choice
 import com.andrew.hdss.data.models.Form
 import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.Individual
@@ -28,7 +29,8 @@ import com.andrew.hdss.data.models.Visit
         Membership::class,
         Visit::class,
         Form::class,
-        Question::class
+        Question::class,
+        Choice::class
     ],
     version = 1,
     exportSchema = true
