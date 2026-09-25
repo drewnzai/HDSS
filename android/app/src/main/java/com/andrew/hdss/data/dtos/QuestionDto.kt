@@ -29,6 +29,7 @@ fun List<QuestionDto>.toEntities(): List<Question>{
         questionDto ->
         Question(
             id = questionDto.id,
+            formId = questionDto.formId,
             name = questionDto.name,
             label = questionDto.label,
             hint = questionDto.hint,
