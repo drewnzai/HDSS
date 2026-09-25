@@ -13,6 +13,7 @@ import {
 import { NavLink } from "react-router-dom";
 import { selectRole, selectFirstName } from "../redux/AuthSlice";
 import { useAppSelector } from "../redux/hooks";
+import ThemeToggle from "./theme/ThemeToggle";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -170,6 +171,7 @@ function Sidebar({
         </nav>
 
         <div className="sidebar__footer">
+          <ThemeToggle />
           <div className="sidebar__user">
             <div className="sidebar__avatar">
               {firstName?.charAt(0).toUpperCase() ?? "U"}
