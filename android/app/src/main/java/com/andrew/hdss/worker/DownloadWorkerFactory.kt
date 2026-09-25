@@ -24,7 +24,8 @@ class DownloadWorkerFactory(
                 householdApiService = container.householdApiService,
                 membershipApiService = container.membershipApiService,
                 formApiService = container.formApiService,
-                questionApiService = container.questionApiService
+                questionApiService = container.questionApiService,
+                choiceApiService = container.choiceApiService
             )
             else -> null
         }

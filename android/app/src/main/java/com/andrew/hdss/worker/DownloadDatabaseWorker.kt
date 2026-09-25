@@ -14,6 +14,7 @@ import androidx.work.Data
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.andrew.hdss.network.SyncResult
+import com.andrew.hdss.network.services.ChoiceApiService
 import com.andrew.hdss.network.services.FormApiService
 import com.andrew.hdss.network.services.HouseholdApiService
 import com.andrew.hdss.network.services.IndividualApiService
@@ -41,7 +42,8 @@ class DownloadDatabaseWorker(
     private val householdApiService: HouseholdApiService,
     private val membershipApiService: MembershipApiService,
     private val formApiService: FormApiService,
-    private val questionApiService: QuestionApiService
+    private val questionApiService: QuestionApiService,
+    private val choiceApiService: ChoiceApiService
 ) : CoroutineWorker(appContext, workerParams) {
 
     private data class DownloadStep(
@@ -75,6 +77,10 @@ class DownloadDatabaseWorker(
         DownloadStep(label = "Questions"){
             _ ->
             questionApiService.getQuestionsByFormId()
+        },
+        DownloadStep(label = "Choices"){
+            _ ->
+            choiceApiService.getChoices()
         }
     )
 
