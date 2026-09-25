@@ -205,6 +205,31 @@ cp application.properties.example src/main/resources/application.properties
 
 Then populate the required configuration values.
 
+#### Generate RSA Key Pair
+
+The backend requires an RSA public/private key pair. Generate the keys using OpenSSL and place them in the Spring Boot resources directory:
+
+```bash
+cd backend/src/main/resources
+openssl genrsa -out private.pem 4096
+openssl rsa -in private.pem -pubout -out public.pem
+```
+
+This creates:
+
+```text
+backend/
+└── src/
+    └── main/
+        └── resources/
+            ├── private.pem
+            └── public.pem
+```
+
+The **private key must be kept secret** and should not be committed to version control. The `public.pem` file can be shared where required for public-key verification.
+
+> If the project is being set up on Windows, run the same commands from PowerShell or Git Bash after installing OpenSSL.
+
 > Do not commit your local `application.properties` if it contains passwords, secrets, API keys, or other sensitive values.
 
 #### Start the Backend
