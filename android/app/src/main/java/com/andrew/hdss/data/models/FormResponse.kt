@@ -3,6 +3,7 @@ package com.andrew.hdss.data.models
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.andrew.hdss.data.dtos.FormResponsePushDto
 import com.andrew.hdss.data.models.enums.FormResponseStatus
 import java.time.LocalDateTime
 
@@ -31,5 +32,20 @@ data class FormResponse(
     val formVersion: Int,
     val status: FormResponseStatus,
     val startedAt: LocalDateTime,
-    val completedAt: LocalDateTime?
+    val completedAt: LocalDateTime
 )
+
+fun List<FormResponse>.toPushDtos(): List<FormResponsePushDto>{
+    return map{
+        formResponse ->
+        FormResponsePushDto(
+            clientId = formResponse.id,
+            visitClientId = formResponse.visitId,
+            formId = formResponse.formId,
+            formVersion = formResponse.formVersion,
+            status = formResponse.status,
+            startedAt = formResponse.startedAt.toString(),
+            completedAt = formResponse.completedAt.toString()
+        )
+    }
+}
