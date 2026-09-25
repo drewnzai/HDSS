@@ -19,6 +19,7 @@ import com.andrew.hdss.network.services.HouseholdApiService
 import com.andrew.hdss.network.services.IndividualApiService
 import com.andrew.hdss.network.services.LocationApiService
 import com.andrew.hdss.network.services.MembershipApiService
+import com.andrew.hdss.network.services.QuestionApiService
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -39,7 +40,8 @@ class DownloadDatabaseWorker(
     private val individualApiService: IndividualApiService,
     private val householdApiService: HouseholdApiService,
     private val membershipApiService: MembershipApiService,
-    private val formApiService: FormApiService
+    private val formApiService: FormApiService,
+    private val questionApiService: QuestionApiService
 ) : CoroutineWorker(appContext, workerParams) {
 
     private data class DownloadStep(
@@ -69,6 +71,10 @@ class DownloadDatabaseWorker(
         DownloadStep(label = "Forms"){
             onProgress ->
             formApiService.fetchForms(onProgress)
+        },
+        DownloadStep(label = "Questions"){
+            _ ->
+            questionApiService.getQuestionsByFormId()
         }
     )
 
