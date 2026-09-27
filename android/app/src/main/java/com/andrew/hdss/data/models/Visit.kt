@@ -27,8 +27,8 @@ import java.time.LocalDateTime
 data class Visit(
     @PrimaryKey
     val id: String,
-    val householdClientId: String,
-    val individualClientId: String,
+    val householdClientId: String?,
+    val individualClientId: String?,
     val visitDate: LocalDateTime?,
     val status: VisitStatus,
     val synced: Boolean = false
@@ -38,8 +38,8 @@ fun List<Visit>.toPushDtos(): List<VisitPushDto>{
     return map { visit ->
         VisitPushDto(
             clientId = visit.id,
-            householdClientId = visit.householdClientId,
-            individualClientId = visit.individualClientId,
+            householdClientId = visit.householdClientId ?: "",
+            individualClientId = visit.individualClientId ?: "",
             visitDate = visit.visitDate.toString(),
             status = visit.status
         )
