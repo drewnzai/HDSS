@@ -23,6 +23,9 @@ interface FormDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(form: Form): Long
 
+    @Query("SELECT * FROM forms WHERE name = :questionName")
+    suspend fun getByName(questionName: String): Form
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(forms: List<Form>)
 
