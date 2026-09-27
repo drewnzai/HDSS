@@ -8,7 +8,7 @@ import com.andrew.hdss.data.models.FormResponse
 @Dao
 interface FormResponseDao {
     @Insert
-    suspend fun insert(formResponseDao: FormResponseDao)
+    suspend fun insert(formResponse: FormResponse)
 
     @Query("SELECT * FROM form_responses WHERE synced = 0")
     suspend fun getUnsynced(): List<FormResponse>
