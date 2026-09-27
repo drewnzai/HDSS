@@ -15,6 +15,9 @@ interface QuestionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(questions: List<Question>)
 
+    @Query("SELECT * FROM questions WHERE id = :id")
+    suspend fun getById(id: Long): Question
+
     @Query("SELECT * FROM questions WHERE formId = :formId ORDER BY orderIndex")
     suspend fun getByFormId(formId: Long): List<Question>
 }

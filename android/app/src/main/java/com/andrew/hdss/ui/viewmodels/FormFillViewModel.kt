@@ -78,9 +78,7 @@ class FormFillViewModel(
     }
 
     private suspend fun loadForm() {
-        val forms = formDao.getAll() // ASSUMPTION: no getById exists yet either — filtering in memory
-        val form = forms.firstOrNull { it.id == formId }
-            ?: run { _uiState.update { it.copy(constraintError = "Form not found: $formId") }; return }
+        val form = formDao.getById(formId)
 
         val questions = questionDao.getByFormId(formId)
         val listNames = questions.mapNotNull { it.choiceListName }.distinct()
