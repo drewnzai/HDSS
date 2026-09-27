@@ -33,9 +33,6 @@ class BaselineFlowViewModel(
     private val visitDao: VisitDao
 ) : ViewModel() {
 
-    // Generated once, upfront, per your decision that clientId
-    // generation belongs in the ViewModel layer — reused consistently
-    // across the Visit and both forms.
     val householdClientId: String = UUID.randomUUID().toString()
     private val individualClientId: String = UUID.randomUUID().toString()
     private val membershipClientId: String = UUID.randomUUID().toString()
@@ -97,14 +94,9 @@ class BaselineFlowViewModel(
 
     fun onHeadFormComplete() {
         viewModelScope.launch {
-            // FLAG (unchanged from before): VisitDao still has no getById,
-            // so this reconstructs the row by hand instead of reading it
-            // back and copying it — fragile if Visit ever gains a field
-            // this doesn't know about. Add VisitDao.getById(id) to fix
-            // properly.
+            val visit = visitDao.getById(visitId)
             visitDao.update(
-                Visit(
-                    id = visitId,
+                visit.copy(
                     householdClientId = householdClientId,
                     individualClientId = null,
                     visitDate = LocalDateTime.now(),

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.andrew.hdss.data.models.Form
 import com.andrew.hdss.data.models.Visit
 
 @Dao
@@ -16,6 +17,9 @@ interface VisitDao {
 
     @Update
     suspend fun update(visit: Visit)
+
+    @Query("SELECT * FROM visits WHERE id = :visitId")
+    suspend fun getById(visitId: String): Visit
 
     @Query("SELECT * FROM visits WHERE synced = 0")
     suspend fun getUnsynced(): List<Visit>
