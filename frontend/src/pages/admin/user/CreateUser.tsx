@@ -1,8 +1,8 @@
-import { useState } from "react";
 import type {
-    ChangeEvent,
-    FormEvent,
+  ChangeEvent,
+  FormEvent,
 } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormPage from "../../../components/form-page/FormPage";
 import { useCreateUserMutation } from "../../../redux/UserApi";

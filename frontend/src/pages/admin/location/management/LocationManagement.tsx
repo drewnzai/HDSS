@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 
 
-import "./location-management.css";
-import type { LocationDto } from "../../../../models/Location";
+import Flash from "../../../../components/flash/Flash";
 import LocationExplorer from "../../../../components/location-explorer/LocationExplorer";
 import PageContainer from "../../../../components/PageContainer";
-import Flash from "../../../../components/flash/Flash";
+import type { LocationDto } from "../../../../models/Location";
+import "./location-management.css";
 
 function LocationManagement() {
     const navigate = useNavigate();

@@ -2,15 +2,15 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import DataTable, {
-    type DataTableColumn,
+  type DataTableColumn,
 } from "../../../../components/data/DataTable";
 import DataTablePagination from "../../../../components/data/DataTablePagination";
 import PageContainer from "../../../../components/PageContainer";
 import type { FormDto } from "../../../../models/FormDto";
 import { useGetAllFormsQuery } from "../../../../redux/FormApi";
 
-import "./form-management.css";
 import Flash from "../../../../components/flash/Flash";
+import "./form-management.css";
 
 function FormManagement() {
     const [page, setPage] = useState(0);

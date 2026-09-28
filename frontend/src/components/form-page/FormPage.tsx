@@ -1,6 +1,6 @@
-import type { FormEvent, ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
-import PageContainer from "../PageContainer"
+import type { FormEvent, ReactNode } from "react";
+import PageContainer from "../PageContainer";
 import "./form-page.css";
 
 export interface FormPageSection {

@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import { selectRole, selectFirstName } from "../redux/AuthSlice";
+import { selectFirstName, selectRole } from "../redux/AuthSlice";
 import { useAppSelector } from "../redux/hooks";
 import ThemeToggle from "./theme/ThemeToggle";
 

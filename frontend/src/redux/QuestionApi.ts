@@ -1,8 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "./AuthApi";
-import type { QuestionDto } from "../models/QuestionDto";
 import type { CreateQuestionRequest } from "../models/CreateQuestionRequest";
+import type { QuestionDto } from "../models/QuestionDto";
 import type { UpdateQuestionRequest } from "../models/UpdateQuestionRequest";
+import { baseQueryWithReauth } from "./AuthApi";
 
 interface CreateQuestionArgs {
     formId: number;

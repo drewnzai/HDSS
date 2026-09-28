@@ -1,8 +1,8 @@
-import { Download, Database, MapPin, Users, Activity } from "lucide-react";
+import { Activity, Database, Download, MapPin, Users } from "lucide-react";
+import Flash from "../../components/flash/Flash";
 import { selectFirstName } from "../../redux/AuthSlice";
 import { useAppSelector } from "../../redux/hooks";
-import "./home.css"
-import Flash from "../../components/flash/Flash";
+import "./home.css";
 
 function Home() {
     const firstName = useAppSelector(selectFirstName);

@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Plus, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Plus } from "lucide-react";
 import { useState } from "react";
 import { type LocationDto, childTypeOf, LOCATION_TYPE_LABELS } from "../../models/Location";
 import { useGetChildrenQuery } from "../../redux/LocationApi";

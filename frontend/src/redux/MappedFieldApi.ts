@@ -1,7 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "./AuthApi";
 import type { MappableFieldDto } from "../models/MappableFieldDto";
 import type { MappedEntity } from "../models/types/MappedEntity";
+import { baseQueryWithReauth } from "./AuthApi";
 
 export const mappedFieldApi = createApi({
     reducerPath: "mappedFieldApi",

@@ -1,9 +1,9 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "./AuthApi";
-import type { PagedResponse } from "../models/PagedResponse";
-import type { UserSummary } from "../models/UserSummary";
 import type { CreateUserRequest } from "../models/CreateUserRequest";
+import type { PagedResponse } from "../models/PagedResponse";
 import type { PageParams } from "../models/PageParams";
+import type { UserSummary } from "../models/UserSummary";
+import { baseQueryWithReauth } from "./AuthApi";
 
 
 export const userApi = createApi({

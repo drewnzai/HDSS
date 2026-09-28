@@ -1,12 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { authApi } from "./AuthApi";
-import { userApi } from "./UserApi";
 import authReducer from "./AuthSlice";
-import { locationApi } from "./LocationApi";
-import { formApi } from "./FormApi";
-import { questionApi } from "./QuestionApi";
 import { choiceApi } from "./ChoiceApi";
+import { formApi } from "./FormApi";
+import { locationApi } from "./LocationApi";
 import { mappedFieldApi } from "./MappedFieldApi";
+import { questionApi } from "./QuestionApi";
+import { userApi } from "./UserApi";
 
 export const store = configureStore({
     reducer: {

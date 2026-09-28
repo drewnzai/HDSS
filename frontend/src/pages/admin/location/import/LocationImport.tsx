@@ -1,11 +1,10 @@
-import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./location-import.css";
 import FormPage from "../../../../components/form-page/FormPage";
 import { type LocationType, LOCATION_TYPE_LABELS } from "../../../../models/Location";
-import { useImportLocationsMutation } from "../../../../redux/LocationApi";
 import type { LocationImportResult } from "../../../../models/LocationImportResult";
+import { useImportLocationsMutation } from "../../../../redux/LocationApi";
 import "./location-import.css";
 
 function LocationImport() {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLoginMutation } from '../../redux/AuthApi';
-import "./Login.css"
+import "./Login.css";
 
 function Login() {
   const [username, setUsername] = useState('');

@@ -1,14 +1,14 @@
+import { Eye, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Eye, Trash2 } from "lucide-react";
 import ConfirmDialog from "../../../../components/confirm-dialog/ConfirmDialog";
 import DataTable, { type DataTableColumn } from "../../../../components/data/DataTable";
 import DataTablePagination from "../../../../components/data/DataTablePagination";
+import Flash from "../../../../components/flash/Flash";
 import PageContainer from "../../../../components/PageContainer";
 import type { UserSummary } from "../../../../models/UserSummary";
 import { useDeleteUserMutation, useGetUsersQuery } from "../../../../redux/UserApi";
 import "./user-management.css";
-import Flash from "../../../../components/flash/Flash";
 
 function UserManagement() {
     const navigate = useNavigate();

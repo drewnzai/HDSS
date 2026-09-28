@@ -1,10 +1,10 @@
-import { useParams, Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import DataTable, { type DataTableColumn } from "../../../../components/data/DataTable";
+import Flash from "../../../../components/flash/Flash";
 import PageContainer from "../../../../components/PageContainer";
 import type { ChoiceDto } from "../../../../models/ChoiceDto";
-import { useGetChoicesByListNameQuery, useDeleteChoiceMutation } from "../../../../redux/ChoiceApi";
+import { useDeleteChoiceMutation, useGetChoicesByListNameQuery } from "../../../../redux/ChoiceApi";
 import "./choice-management.css";
-import Flash from "../../../../components/flash/Flash";
 
 function ChoiceManagement() {
     const { listName } = useParams<{ listName: string }>();

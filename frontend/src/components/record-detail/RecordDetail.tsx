@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
+import type { ReactNode } from "react";
 import PageContainer from "../PageContainer";
-import "./record-detail.css"
+import "./record-detail.css";
 
 export interface RecordDetailField {
     label: string;

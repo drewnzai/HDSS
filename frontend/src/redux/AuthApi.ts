@@ -1,9 +1,9 @@
 import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
-import type { LoginResponse } from "../models/LoginResponse";
 import type { LoginRequest } from "../models/LoginRequest";
+import type { LoginResponse } from "../models/LoginResponse";
 import type { RefreshTokenRequest } from "../models/RefreshTokenRequest";
-import type { RootState } from "./store";
 import { logout, setCredentials } from "./AuthSlice";
+import type { RootState } from "./store";
 
 const BASE_URL = "http://localhost:8080/api/";
 

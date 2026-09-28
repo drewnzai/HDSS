@@ -1,8 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "./AuthApi";
 import type { CreateLocationRequest } from "../models/CreateLocationRequest";
 import type { LocationDto } from "../models/Location";
 import type { LocationImportResult } from "../models/LocationImportResult";
+import { baseQueryWithReauth } from "./AuthApi";
 
 export const locationApi = createApi({
     reducerPath: "locationApi",

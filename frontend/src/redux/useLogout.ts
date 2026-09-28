@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { logout } from "./AuthSlice";
 import { authApi } from "./AuthApi";
+import { logout } from "./AuthSlice";
 import { useAppDispatch } from "./hooks";
 
 export function useLogout() {

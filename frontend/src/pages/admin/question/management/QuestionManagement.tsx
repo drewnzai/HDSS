@@ -1,14 +1,12 @@
-import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
+import { Edit2, Trash2 } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import DataTable, { type DataTableColumn } from "../../../../components/data/DataTable";
+import Flash from "../../../../components/flash/Flash";
 import PageContainer from "../../../../components/PageContainer";
 import type { QuestionDto } from "../../../../models/QuestionDto";
 import { useGetFormByIdQuery } from "../../../../redux/FormApi";
-import { useGetQuestionsByFormQuery, useDeleteQuestionMutation } from "../../../../redux/QuestionApi";
-import { Edit2, Trash2 } from "lucide-react";
-import "./question-management.css"
-import { useEffect, useState } from "react";
-import type { LocationState } from "../../../LocationState";
-import Flash from "../../../../components/flash/Flash";
+import { useDeleteQuestionMutation, useGetQuestionsByFormQuery } from "../../../../redux/QuestionApi";
+import "./question-management.css";
 
 function QuestionManagement() {
     const { formId } = useParams<{ formId: string }>();

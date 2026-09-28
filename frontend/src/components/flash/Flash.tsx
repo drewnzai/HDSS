@@ -1,12 +1,12 @@
-import {
-    AlertTriangle,
-    CheckCircle2,
-    CircleAlert,
-    Info,
-} from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CircleAlert,
+  Info,
+} from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export type FlashType = "success" | "warning" | "error" | "info";
 

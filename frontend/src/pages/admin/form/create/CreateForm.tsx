@@ -1,14 +1,14 @@
-import { useState } from "react";
 import type {
-    ChangeEvent,
-    FormEvent,
+  ChangeEvent,
+  FormEvent,
 } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import "./create-form.css";
 import FormPage from "../../../../components/form-page/FormPage";
-import { useCreateFormMutation } from "../../../../redux/FormApi";
 import type { FormCategory, FormTarget } from "../../../../models/types/FormTypes";
+import { useCreateFormMutation } from "../../../../redux/FormApi";
+import "./create-form.css";
 
 interface FormState {
     name: string;
