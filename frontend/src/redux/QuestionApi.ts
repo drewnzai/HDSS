@@ -15,6 +15,10 @@ interface UpdateQuestionArgs {
     body: UpdateQuestionRequest;
 }
 
+interface ReorderQuestionsRequest {
+    questionIdsInOrder: number[];
+}
+
 export const questionApi = createApi({
     reducerPath: "questionApi",
     baseQuery: baseQueryWithReauth,
@@ -67,6 +71,20 @@ export const questionApi = createApi({
                 { type: "Question", id: "LIST" },
             ],
         }),
+
+        reorderQuestions: builder.mutation<
+            QuestionDto[],
+            {
+                formId: number;
+                body: ReorderQuestionsRequest;
+            }
+        >({
+            query: ({ formId, body }) => ({
+                url: `/forms/${formId}/questions/reorder`,
+                method: "PUT",
+                body,
+            }),
+        }),
     }),
 });
 
@@ -75,4 +93,5 @@ export const {
     useCreateQuestionMutation,
     useUpdateQuestionMutation,
     useDeleteQuestionMutation,
+    useReorderQuestionsMutation
 } = questionApi;
