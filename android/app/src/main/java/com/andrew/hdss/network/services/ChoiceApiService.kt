@@ -14,7 +14,7 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 
 interface ChoiceApiRepository{
-    @GET("choices/list/{listName")
+    @GET("choices/list/{listName}")
     suspend fun getChoicesByListName(
         @Path("listName") listName: String
     ): Response<List<ChoiceDto>>
