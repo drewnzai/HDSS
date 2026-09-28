@@ -29,7 +29,11 @@ sealed class ExprValue {
     fun asNumber(): Double = when (this) {
         is Num -> value
         is DateVal -> value.toEpochDay().toDouble()
-        is Str -> value.trim().toDoubleOrNull() ?: Double.NaN
+        is Str -> value.trim().let { s ->
+            s.toDoubleOrNull()
+                ?: runCatching { LocalDate.parse(s).toEpochDay().toDouble() }.getOrNull()
+                ?: Double.NaN
+        }
         is Bool -> if (value) 1.0 else 0.0
     }
 }
