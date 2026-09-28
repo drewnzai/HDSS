@@ -41,7 +41,11 @@ import kotlin.collections.filter
 data class FormFillContext(
     val locationId: Long? = null,
     val entityClientIds: Map<MappedEntity, String> = emptyMap(),
-    val foreignKeys: Map<String, String> = emptyMap()
+    val foreignKeys: Map<String, String> = emptyMap(),
+    // Values the app generates itself and never asks as questions, keyed
+    // by entity then field, e.g. HOUSEHOLD -> {"householdCode": "EM-0000001"}.
+    // These win over an answer mapped to the same field.
+    val generatedFields: Map<MappedEntity, Map<String, String>> = emptyMap()
 )
 
 data class FormFillUiState(
@@ -250,19 +254,23 @@ class FormFillViewModel(
 
                 val bags = AnswerEntityMapper.buildFieldBags(state.relevantQuestions, state.answers)
 
-                bags[MappedEntity.HOUSEHOLD]?.let { fields ->
+                val fieldsByEntity = (bags.keys + context.generatedFields.keys).associateWith { entity ->
+                    (bags[entity] ?: emptyMap()) + (context.generatedFields[entity] ?: emptyMap())
+                }
+
+                fieldsByEntity[MappedEntity.HOUSEHOLD]?.let { fields ->
                     val clientId = context.entityClientIds.getValue(MappedEntity.HOUSEHOLD)
                     val locationId = context.locationId
                         ?: throw IllegalStateException("locationId is required to build a Household")
                     householdDao.insert(AnswerEntityMapper.buildHousehold(clientId, locationId, fields))
                 }
 
-                bags[MappedEntity.INDIVIDUAL]?.let { fields ->
+                fieldsByEntity[MappedEntity.INDIVIDUAL]?.let { fields ->
                     val clientId = context.entityClientIds.getValue(MappedEntity.INDIVIDUAL)
                     individualDao.insert(AnswerEntityMapper.buildIndividual(clientId, fields))
                 }
 
-                bags[MappedEntity.MEMBERSHIP]?.let { fields ->
+                fieldsByEntity[MappedEntity.MEMBERSHIP]?.let { fields ->
                     val clientId = context.entityClientIds.getValue(MappedEntity.MEMBERSHIP)
                     val individualClientId = context.entityClientIds[MappedEntity.INDIVIDUAL]
                         ?: context.foreignKeys.getValue("individualClientId")

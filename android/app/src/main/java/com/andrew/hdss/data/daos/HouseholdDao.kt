@@ -58,4 +58,11 @@ interface HouseholdDao {
 
     @Query("UPDATE households SET synced = 1, serverId = :serverId WHERE clientId = :clientId")
     suspend fun markSynced(clientId: String, serverId: Long)
+
+    @Query("""
+    SELECT COALESCE(MAX(CAST(SUBSTR(householdCode, -7) AS INTEGER)), 0)
+    FROM households
+    WHERE householdCode GLOB :prefix || '-[0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+""")
+    suspend fun getMaxCodeNumber(prefix: String): Int
 }

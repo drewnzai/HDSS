@@ -1,6 +1,8 @@
 package com.andrew.hdss.ui.screens
 
+import android.Manifest
 import android.annotation.SuppressLint
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,6 +24,7 @@ import com.andrew.hdss.data.models.enums.QuestionType
 import com.andrew.hdss.ui.viewmodels.FormFillContext
 import com.andrew.hdss.ui.viewmodels.FormFillViewModel
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -276,32 +279,43 @@ private fun GeopointCapture(
     onValueChange: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val fusedLocationClient = remember {
+        LocationServices.getFusedLocationProviderClient(context)
+    }
     var isCapturing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            isCapturing = true
-            fusedLocationClient.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null)
-                .addOnSuccessListener { location ->
-                    isCapturing = false
-                    if (location != null) {
-                        // Space-separated, matching ODK's own geopoint
-                        // format — the mapper splits on space.
-                        onValueChange("${location.latitude} ${location.longitude}")
-                    } else {
-                        error = "Could not determine location. Try again outdoors."
-                    }
+    fun capture() {
+        isCapturing = true
+        error = null
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener { location ->
+                isCapturing = false
+                if (location != null) {
+                    // Space-separated, matching ODK's own geopoint format —
+                    // the mapper splits on space.
+                    onValueChange("${location.latitude} ${location.longitude}")
+                } else {
+                    error = "Could not determine location. Try again outdoors."
                 }
-                .addOnFailureListener {
-                    isCapturing = false
-                    error = "Location capture failed: ${it.message}"
-                }
-        } else {
-            error = "Location permission is required."
+            }
+            .addOnFailureListener {
+                isCapturing = false
+                error = "Location capture failed: ${it.message}"
+            }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        when {
+            results[Manifest.permission.ACCESS_FINE_LOCATION] == true -> capture()
+
+            results[Manifest.permission.ACCESS_COARSE_LOCATION] == true ->
+                error = "Precise location is needed for household GPS. " +
+                        "Choose \"Precise\" when asked, or enable it in the app's settings."
+
+            else -> error = "Location permission is required."
         }
     }
 
@@ -311,10 +325,20 @@ private fun GeopointCapture(
         } else {
             Text("Not captured yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+
         Spacer(Modifier.height(8.dp))
+
         Button(
-            onClick = { permissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) },
+            onClick = {
+                permissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            },
             enabled = !isCapturing
         ) {
             Text(if (isCapturing) "Capturing…" else "Capture location")
