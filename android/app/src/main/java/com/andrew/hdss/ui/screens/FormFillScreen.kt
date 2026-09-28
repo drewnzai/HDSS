@@ -1,6 +1,7 @@
 package com.andrew.hdss.ui.screens
 
 import android.annotation.SuppressLint
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +21,7 @@ import com.andrew.hdss.data.models.Question
 import com.andrew.hdss.data.models.enums.QuestionType
 import com.andrew.hdss.ui.viewmodels.FormFillContext
 import com.andrew.hdss.ui.viewmodels.FormFillViewModel
+import com.google.android.gms.location.LocationServices
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -273,12 +275,12 @@ private fun GeopointCapture(
     onValueChange: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val fusedLocationClient = remember { com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context) }
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var isCapturing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
     val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+        ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
             isCapturing = true
