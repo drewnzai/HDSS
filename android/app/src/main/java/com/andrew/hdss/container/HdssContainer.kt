@@ -4,12 +4,10 @@ import android.content.Context
 import com.andrew.hdss.BuildConfig
 import com.andrew.hdss.data.AppDatabase
 import com.andrew.hdss.datastore.TokenDataStore
+import com.andrew.hdss.network.AuthInterceptor
+import com.andrew.hdss.network.TokenAuthenticator
 import com.andrew.hdss.network.services.AuthApiRepository
 import com.andrew.hdss.network.services.AuthApiService
-import com.andrew.hdss.network.AuthInterceptor
-import com.andrew.hdss.network.services.LocationApiRepository
-import com.andrew.hdss.network.services.LocationApiService
-import com.andrew.hdss.network.TokenAuthenticator
 import com.andrew.hdss.network.services.ChoiceApiRepository
 import com.andrew.hdss.network.services.ChoiceApiService
 import com.andrew.hdss.network.services.FormApiRepository
@@ -18,6 +16,8 @@ import com.andrew.hdss.network.services.HouseholdApiRepository
 import com.andrew.hdss.network.services.HouseholdApiService
 import com.andrew.hdss.network.services.IndividualApiRepository
 import com.andrew.hdss.network.services.IndividualApiService
+import com.andrew.hdss.network.services.LocationApiRepository
+import com.andrew.hdss.network.services.LocationApiService
 import com.andrew.hdss.network.services.MembershipApiRepository
 import com.andrew.hdss.network.services.MembershipApiService
 import com.andrew.hdss.network.services.QuestionApiRepository

@@ -8,11 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.ui.NavGraph
-import com.andrew.hdss.ui.viewmodels.AuthViewModel
-import com.andrew.hdss.ui.screens.LoginScreen
 import com.andrew.hdss.ui.theme.AndroidTheme
 
 class MainActivity : ComponentActivity() {

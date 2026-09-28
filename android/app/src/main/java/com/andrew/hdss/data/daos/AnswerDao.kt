@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.andrew.hdss.data.models.Answer
-import com.andrew.hdss.data.models.FormResponse
 
 @Dao
 interface AnswerDao {

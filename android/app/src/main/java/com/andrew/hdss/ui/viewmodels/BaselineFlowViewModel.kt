@@ -1,18 +1,18 @@
 package com.andrew.hdss.ui.viewmodels
 
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.andrew.hdss.HdssApplication
 import com.andrew.hdss.data.daos.FormDao
+import com.andrew.hdss.data.daos.HouseholdDao
+import com.andrew.hdss.data.daos.LocationDao
 import com.andrew.hdss.data.daos.VisitDao
 import com.andrew.hdss.data.models.Visit
 import com.andrew.hdss.data.models.enums.MappedEntity
 import com.andrew.hdss.data.models.enums.VisitStatus
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.andrew.hdss.data.daos.HouseholdDao
-import com.andrew.hdss.data.daos.LocationDao
 import com.andrew.hdss.util.HouseholdCodeGenerator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

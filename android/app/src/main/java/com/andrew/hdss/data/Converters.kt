@@ -1,7 +1,6 @@
 package com.andrew.hdss.data
 
 import androidx.room.TypeConverter
-import com.andrew.hdss.data.models.Visit
 import com.andrew.hdss.data.models.enums.FormCategory
 import com.andrew.hdss.data.models.enums.FormResponseStatus
 import com.andrew.hdss.data.models.enums.FormStatus

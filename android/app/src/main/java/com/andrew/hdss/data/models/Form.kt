@@ -1,9 +1,8 @@
 package com.andrew.hdss.data.models
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-
-import androidx.room.ColumnInfo
 import com.andrew.hdss.data.models.enums.FormCategory
 import com.andrew.hdss.data.models.enums.FormStatus
 import com.andrew.hdss.data.models.enums.FormTarget

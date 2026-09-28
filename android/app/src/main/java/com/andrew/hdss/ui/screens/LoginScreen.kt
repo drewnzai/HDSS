@@ -35,7 +35,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.andrew.hdss.ui.viewmodels.AuthViewModel
-import com.andrew.hdss.ui.viewmodels.LoginUiState
 
 @Composable
 fun LoginScreen(
