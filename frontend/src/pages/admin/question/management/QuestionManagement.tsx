@@ -65,6 +65,14 @@ function QuestionManagement() {
                 formId: numericFormId,
                 questionId: question.id,
             }).unwrap();
+
+            navigate(location.pathname, {
+                replace: true,
+                state: {
+                    flash: "Question deleted successfully.",
+                    flashType: "success",
+                },
+            });
         } catch {
             // API error surfaced via the error state below on next fetch.
         }
