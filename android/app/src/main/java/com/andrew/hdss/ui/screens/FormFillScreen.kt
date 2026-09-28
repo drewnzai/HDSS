@@ -2,6 +2,9 @@ package com.andrew.hdss.ui.screens
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -284,10 +287,15 @@ private fun GeopointCapture(
     }
     var isCapturing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    // Set after a refusal. Android stops showing the prompt after
+    // repeated refusals, so from then on Settings is the only way to
+    // grant it.
+    var showSettings by remember { mutableStateOf(false) }
 
     fun capture() {
         isCapturing = true
         error = null
+        showSettings = false
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
             .addOnSuccessListener { location ->
                 isCapturing = false
@@ -296,7 +304,7 @@ private fun GeopointCapture(
                     // the mapper splits on space.
                     onValueChange("${location.latitude} ${location.longitude}")
                 } else {
-                    error = "Could not determine location. Try again outdoors."
+                    error = "Could not determine location. Check that location is turned on, then try again outdoors."
                 }
             }
             .addOnFailureListener {
@@ -311,15 +319,21 @@ private fun GeopointCapture(
         when {
             results[Manifest.permission.ACCESS_FINE_LOCATION] == true -> capture()
 
-            results[Manifest.permission.ACCESS_COARSE_LOCATION] == true ->
+            results[Manifest.permission.ACCESS_COARSE_LOCATION] == true -> {
                 error = "Precise location is needed for household GPS. " +
                         "Choose \"Precise\" when asked, or enable it in the app's settings."
+                showSettings = true
+            }
 
-            else -> error = "Location permission is required."
+            else -> {
+                error = "Location permission is required. " +
+                        "If the prompt doesn't appear, turn it on in the app's settings."
+                showSettings = true
+            }
         }
     }
 
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (currentValue != null) {
             Text("Captured: $currentValue")
         } else {
@@ -327,8 +341,6 @@ private fun GeopointCapture(
         }
 
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-
-        Spacer(Modifier.height(8.dp))
 
         Button(
             onClick = {
@@ -342,6 +354,21 @@ private fun GeopointCapture(
             enabled = !isCapturing
         ) {
             Text(if (isCapturing) "Capturing…" else "Capture location")
+        }
+
+        if (showSettings) {
+            OutlinedButton(
+                onClick = {
+                    context.startActivity(
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts("package", context.packageName, null)
+                        )
+                    )
+                }
+            ) {
+                Text("Open settings")
+            }
         }
     }
 }
