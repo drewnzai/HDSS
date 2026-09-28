@@ -36,6 +36,7 @@ fun FormFillScreen(
     onComplete: () -> Unit,
     onCancel: () -> Unit,
     viewModel: FormFillViewModel = viewModel(
+        key = "form-$formId",
         factory = FormFillViewModel.factory(formId, visitId, context)
     )
 ) {
