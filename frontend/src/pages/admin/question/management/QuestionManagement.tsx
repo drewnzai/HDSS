@@ -1,15 +1,25 @@
-import { Edit2, Trash2 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
-import DataTable, { type DataTableColumn } from "../../../../components/data/DataTable";
+import type { DragEndEvent } from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
+import { Save } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Flash from "../../../../components/flash/Flash";
 import PageContainer from "../../../../components/PageContainer";
+import { SortableQuestionTable } from "../../../../components/question/SortableQuestionTable";
 import type { QuestionDto } from "../../../../models/QuestionDto";
 import { useGetFormByIdQuery } from "../../../../redux/FormApi";
-import { useDeleteQuestionMutation, useGetQuestionsByFormQuery } from "../../../../redux/QuestionApi";
+import { useDeleteQuestionMutation, useGetQuestionsByFormQuery, useReorderQuestionsMutation } from "../../../../redux/QuestionApi";
 import "./question-management.css";
 
 function QuestionManagement() {
     const { formId } = useParams<{ formId: string }>();
+    const [orderedQuestions, setOrderedQuestions] = useState<QuestionDto[]>(
+        []
+    );
+    const [orderDirty, setOrderDirty] = useState(false);
+
+    const navigate = useNavigate();
+
     const numericFormId = Number(formId);
 
     const {
@@ -28,6 +38,15 @@ function QuestionManagement() {
     } = useGetQuestionsByFormQuery(numericFormId, {
         skip: Number.isNaN(numericFormId),
     });
+
+    const [
+        reorderQuestions,
+        { isLoading: isReordering },
+    ] = useReorderQuestionsMutation();
+
+    useEffect(() => {
+        setOrderedQuestions(questions ?? []);
+    }, [questions]);
 
     const [deleteQuestion, { isLoading: isDeleting }] =
         useDeleteQuestionMutation();
@@ -51,113 +70,59 @@ function QuestionManagement() {
         }
     };
 
-    const columns: DataTableColumn<QuestionDto>[] = [
-        {
-            key: "name",
-            header: "Name",
-            render: (question) => (
-                <span className="question-management__name">
-                    {question.name}
-                </span>
-            ),
-        },
-        {
-            key: "label",
-            header: "Label",
-            render: (question) => question.label,
-        },
-        {
-            key: "type",
-            header: "Type",
-            render: (question) => (
-                <span className="question-management__type">
-                    {question.type}
-                </span>
-            ),
-        },
-        {
-            key: "required",
-            header: "Required",
-            render: (question) => {
-                if (question.required) {
-                    return (
-                        <span className="status-badge status-badge--success">
-                            Required
-                        </span>
-                    );
-                }
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
 
-                return (
-                    <span className="status-badge status-badge--muted">
-                        Optional
-                    </span>
-                );
-            },
-        },
-        {
-            key: "choiceListName",
-            header: "Choice list",
-            render: (question) => question.choiceListName || "—",
-        },
-        {
-            key: "mappedEntity",
-            header: "Maps to",
-            render: (question) => {
-                if (question.mappedEntity === "NONE") {
-                    return (
-                        <span className="status-badge status-badge--muted">
-                            Not mapped
-                        </span>
-                    );
-                }
+        if (!over || active.id === over.id) {
+            return;
+        }
 
-                // mappedField may be a comma-separated list of field
-                // names (e.g. a GEOPOINT question mapping to
-                // "latitude,longitude") — render each one qualified by
-                // the entity, joined for readability.
-                const fields = question.mappedField
-                    .split(",")
-                    .map((f) => f.trim())
-                    .filter(Boolean);
+        setOrderedQuestions((current) => {
+            const oldIndex = current.findIndex(
+                (question) => question.id === active.id
+            );
 
-                return (
-                    <span className="question-management__mapped">
-                        {fields
-                            .map(
-                                (field) =>
-                                    `${question.mappedEntity}.${field}`
-                            )
-                            .join(", ")}
-                    </span>
-                );
-            },
-        },
-        {
-            key: "actions",
-            header: "",
-            render: (question) => (
-                <div className="question-management__actions">
-                    <Link
-                        to={`/admin/forms/${formId}/questions/${question.id}/edit`}
-                        className="question-management__edit"
-                    >
-                        <Edit2 size={17} aria-hidden="true" />
-                    </Link>
+            const newIndex = current.findIndex(
+                (question) => question.id === over.id
+            );
 
-                    <button
-                        type="button"
-                        className="question-management__delete"
-                        onClick={() => handleDelete(question)}
-                        disabled={isDeleting}
-                    >
-                        <Trash2 size={17} aria-hidden="true" />
-                    </button>
-                </div>
-            ),
-        },
-    ];
+            return arrayMove(current, oldIndex, newIndex);
+        });
 
-    const questionList = questions ?? [];
+        setOrderDirty(true);
+    };
+
+    const handleSaveOrder = async () => {
+        try {
+            const reordered = await reorderQuestions({
+                formId: numericFormId,
+                body: {
+                    questionIdsInOrder: orderedQuestions.map(
+                        (question) => question.id
+                    ),
+                },
+            }).unwrap();
+
+            setOrderedQuestions(reordered);
+            setOrderDirty(false);
+
+            navigate(location.pathname, {
+                replace: true,
+                state: {
+                    flash: "Question order saved successfully.",
+                    flashType: "success",
+                },
+            });
+        } catch {
+            navigate(location.pathname, {
+                replace: true,
+                state: {
+                    flash: "Unable to save the question order. Please try again.",
+                    flashType: "error",
+                },
+            });
+        }
+    };
 
     return (
         <PageContainer size="wide">
@@ -182,12 +147,29 @@ function QuestionManagement() {
                         </p>
                     </div>
 
-                    <Link
-                        to={`/admin/forms/${formId}/questions/create`}
-                        className="question-management__create"
-                    >
-                        Add question
-                    </Link>
+                    <div className="question-management__header-actions">
+                        {orderDirty && (
+                            <button
+                                type="button"
+                                className="question-management__save-order"
+                                onClick={handleSaveOrder}
+                                disabled={isReordering}
+                            >
+                                <Save size={17} aria-hidden="true" />
+
+                                {isReordering
+                                    ? "Saving…"
+                                    : "Save order"}
+                            </button>
+                        )}
+
+                        <Link
+                            to={`/admin/forms/${formId}/questions/create`}
+                            className="question-management__create"
+                        >
+                            Add question
+                        </Link>
+                    </div>
                 </header>
 
                 <Flash />
@@ -212,14 +194,23 @@ function QuestionManagement() {
                     </div>
                 ) : (
                     <section className="question-management__table-section">
-                        <DataTable<QuestionDto>
-                            columns={columns}
-                            data={questionList}
-                            getRowKey={(question) => question.id}
-                            isLoading={isLoading || isFetching}
-                            emptyMessage="No questions have been added to this form yet."
-                            loadingMessage="Loading questions"
-                        />
+                        {isLoading || isFetching ? (
+                            <div className="question-management__loading">
+                                Loading questions…
+                            </div>
+                        ) : orderedQuestions.length === 0 ? (
+                            <div className="question-management__empty">
+                                No questions have been added to this form yet.
+                            </div>
+                        ) : (
+                            <SortableQuestionTable
+                                questions={orderedQuestions}
+                                formId={formId!}
+                                onReorder={handleDragEnd}
+                                onDelete={handleDelete}
+                                isDeleting={isDeleting}
+                            />
+                        )}
                     </section>
                 )}
             </div>
