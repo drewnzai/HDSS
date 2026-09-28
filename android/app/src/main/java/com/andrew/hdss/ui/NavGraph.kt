@@ -15,10 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.network.AuthResult
+import com.andrew.hdss.ui.screens.BaselineFlowScreen
 import com.andrew.hdss.ui.screens.DownloadDatabaseScreen
 import com.andrew.hdss.ui.screens.HomeScreen
 import com.andrew.hdss.ui.screens.LoginScreen
@@ -33,6 +36,10 @@ object Routes {
     const val LOGIN = "login"
     const val HOME = "home"
     const val DOWNLOAD_DATABASE = "download_database"
+    const val BASELINE_LOCATION_ARG = "locationId"
+    const val BASELINE = "baseline/{$BASELINE_LOCATION_ARG}"
+
+    fun baseline(locationId: Long) = "baseline/$locationId"
 }
 
 @Composable
@@ -84,12 +91,32 @@ fun NavGraph(
                         }
                     }
                 },
-                onNavigateToDownload = {navController.navigate(Routes.DOWNLOAD_DATABASE)}
+                onNavigateToDownload = { navController.navigate(Routes.DOWNLOAD_DATABASE) },
+                onStartBaseline = { locationId ->
+                    navController.navigate(Routes.baseline(locationId))
+                }
             )
         }
 
         composable(Routes.DOWNLOAD_DATABASE) {
             DownloadDatabaseScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Routes.BASELINE,
+            arguments = listOf(
+                navArgument(Routes.BASELINE_LOCATION_ARG) { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            val locationId = backStackEntry.arguments
+                ?.getLong(Routes.BASELINE_LOCATION_ARG)
+                ?: return@composable
+
+            BaselineFlowScreen(
+                locationId = locationId,
+                onComplete = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
         }
     }
 }
