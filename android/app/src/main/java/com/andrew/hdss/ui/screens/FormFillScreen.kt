@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.andrew.hdss.data.models.Choice
@@ -30,7 +33,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -240,40 +243,80 @@ private fun QuestionInput(
 @Composable
 private fun FormDatePicker(
     value: LocalDate?,
-    onValueChange: (LocalDate) -> Unit
+    onValueChange: (LocalDate) -> Unit,
+    maxDate: LocalDate = LocalDate.now()   // today is the cutoff
 ) {
     var showDialog by remember { mutableStateOf(false) }
+    val maxDateMillis = remember(maxDate) { maxDate.toUtcMillis() }
 
-    OutlinedTextField(
-        value = value?.toString() ?: "",
-        onValueChange = {},
-        readOnly = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { showDialog = true }
-    )
+    // A read-only TextField swallows taps, so a clickable modifier on it
+    // never fires. A transparent box laid over it takes the tap instead.
+    Box {
+        OutlinedTextField(
+            value = value?.toString() ?: "",
+            onValueChange = {},
+            readOnly = true,
+            placeholder = { Text("Select a date") },
+            trailingIcon = {
+                Icon(Icons.Outlined.DateRange, contentDescription = null)
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable(
+                    onClickLabel = "Choose date",
+                    role = Role.Button
+                ) { showDialog = true }
+        )
+    }
 
     if (showDialog) {
         val state = rememberDatePickerState(
             initialSelectedDateMillis = value
-                ?.atStartOfDay(ZoneId.systemDefault())
-                ?.toInstant()
-                ?.toEpochMilli()
+                ?.takeIf { it.year in 1900..maxDate.year }
+                ?.toUtcMillis(),
+            yearRange = 1900..maxDate.year,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long) =
+                    utcTimeMillis <= maxDateMillis
+
+                override fun isSelectableYear(year: Int) =
+                    year <= maxDate.year
+            }
         )
+
         DatePickerDialog(
             onDismissRequest = { showDialog = false },
             confirmButton = {
-                TextButton(onClick = {
-                    state.selectedDateMillis?.let { millis ->
-                        onValueChange(Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate())
+                TextButton(
+                    enabled = state.selectedDateMillis != null,
+                    onClick = {
+                        state.selectedDateMillis?.let { millis ->
+                            onValueChange(
+                                Instant.ofEpochMilli(millis)
+                                    .atZone(ZoneOffset.UTC)
+                                    .toLocalDate()
+                            )
+                        }
+                        showDialog = false
                     }
-                    showDialog = false
-                }) { Text("OK") }
+                ) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { showDialog = false }) { Text("Cancel") } }
-        ) { DatePicker(state = state) }
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = state)
+        }
     }
 }
+
+// The DatePicker represents a calendar day as UTC midnight, so convert with
+// ZoneOffset.UTC in both directions, never the device zone.
+private fun LocalDate.toUtcMillis(): Long =
+    atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
 @SuppressLint("MissingPermission")
 @Composable
