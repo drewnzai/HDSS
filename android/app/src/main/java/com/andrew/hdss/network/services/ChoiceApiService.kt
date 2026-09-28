@@ -14,12 +14,12 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 
 interface ChoiceApiRepository{
-    @GET("/choices/list/{listName")
+    @GET("choices/list/{listName")
     suspend fun getChoicesByListName(
         @Path("listName") listName: String
     ): Response<List<ChoiceDto>>
 
-    @GET("/choices/list-names")
+    @GET("choices/list-names")
     suspend fun getListNames(): Response<List<String>>
 }
 
