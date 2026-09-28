@@ -97,16 +97,8 @@ class Converters {
         value?.toString()
 
     @TypeConverter
-    fun fromLocalDateTime(value: LocalDateTime): String =
-        value.toString()
-
-    @TypeConverter
     fun toLocalDateTime(value: String?): LocalDateTime? =
         value?.let(LocalDateTime::parse)
-
-    @TypeConverter
-    fun toLocalDateTime(value: String): LocalDateTime =
-        LocalDateTime.parse(value)
 
     @TypeConverter
     fun fromQuestionType(value: QuestionType): String = value.name
