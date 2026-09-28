@@ -50,7 +50,7 @@ class BaselineFlowViewModel(
                 visitDao.insert(
                     Visit(
                         id = visitId,
-                        householdClientId = householdClientId,
+                        householdClientId = null,
                         individualClientId = null,
                         visitDate = LocalDateTime.now(),
                         status = VisitStatus.IN_PROGRESS,
