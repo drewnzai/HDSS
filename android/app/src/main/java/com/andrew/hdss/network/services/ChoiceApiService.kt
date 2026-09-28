@@ -50,8 +50,8 @@ class ChoiceApiService(
 
         listNames += listNamesResponseBody
 
-        for(listName in listNames){
-
+        listNames.forEachIndexed {
+            index, listName ->
             val choicesResponse = try {
                 choiceApiRepository.getChoicesByListName(listName = listName)
             }catch (e: Exception){
@@ -66,6 +66,7 @@ class ChoiceApiService(
                 ?: return SyncResult.Error(IllegalStateException("Empty body"))
 
             choiceDtos += choicesResponseBody
+            onProgress?.invoke(index + 1, listNames.size)
         }
 
         val choices = choiceDtos.toEntities()
