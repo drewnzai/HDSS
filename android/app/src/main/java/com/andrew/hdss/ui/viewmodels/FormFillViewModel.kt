@@ -1,5 +1,6 @@
 package com.andrew.hdss.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
@@ -25,6 +26,7 @@ import com.andrew.hdss.data.models.enums.MappedEntity
 import com.andrew.hdss.data.models.enums.QuestionType
 import com.andrew.hdss.data.models.enums.Sex
 import com.andrew.hdss.util.AnswerEntityMapper
+import com.andrew.hdss.util.ExprValue
 import com.andrew.hdss.util.ExpressionEvaluator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -113,30 +115,41 @@ class FormFillViewModel(
     private fun answersAsStrings(answers: Map<Long, String>, questions: List<Question>): Map<String, String?> =
         questions.associate { q -> q.name to answers[q.id] }
 
+    private fun safeEval(
+        expression: String,
+        context: Map<String, String?>,
+        selfValue: String? = null
+    ): ExprValue? = try {
+        evaluator.evaluate(expression, context, selfValue)
+    } catch (e: Exception) {
+        Log.w("FormFill", "Could not evaluate '$expression': ${e.message}")
+        null
+    }
+
     private fun recomputeRelevant(questions: List<Question>, answers: Map<Long, String>): List<Question> {
-        val answerContext = answersAsStrings(answers, questions)
+        val ctx = answersAsStrings(answers, questions)
         return questions.filter { q ->
-            q.relevant.isNullOrBlank() || evaluator.evaluate(q.relevant, answerContext).asBoolean()
+            // A broken relevant expression fails open: the question is shown
+            // rather than silently hidden from the enumerator.
+            q.relevant.isNullOrBlank() || (safeEval(q.relevant, ctx)?.asBoolean() ?: true)
         }
     }
 
-    // Computes CALCULATE questions, but only assigns a value when that
-    // question's OWN relevant condition currently holds — a
-    // non-relevant CALCULATE question must not leave a stale value
-    // sitting in `answers`, or the mapper's mutual-exclusivity guard
-    // (skip unanswered/non-relevant) would be defeated by a leftover
-    // value from an earlier state.
     private fun recomputeCalculations(questions: List<Question>, answers: Map<Long, String>): Map<Long, String> {
         val updated = answers.toMutableMap()
         questions.filter { it.type == QuestionType.CALCULATE }.forEach { q ->
-            val answerContext = answersAsStrings(updated, questions)
-            val isRelevant = q.relevant.isNullOrBlank() ||
-                    evaluator.evaluate(q.relevant, answerContext).asBoolean()
+            val ctx = answersAsStrings(updated, questions)
+            val isRelevant = q.relevant.isNullOrBlank() || (safeEval(q.relevant, ctx)?.asBoolean() ?: true)
             val calc = q.calculation
-            if (isRelevant && !calc.isNullOrBlank()) {
-                updated[q.id] = evaluator.evaluate(calc, answerContext).asString()
-            } else {
+
+            // No result means "nothing to record yet" (an input isn't answered,
+            // or the expression is broken). Remove any stale value instead of
+            // storing "".
+            val result = if (isRelevant && !calc.isNullOrBlank()) safeEval(calc, ctx)?.asString() else null
+            if (result.isNullOrBlank()) {
                 updated.remove(q.id)
+            } else {
+                updated[q.id] = result
             }
         }
         return updated
@@ -198,8 +211,8 @@ class FormFillViewModel(
         val constraint = current.constraint
         val value = state.answers[current.id]
         if (!constraint.isNullOrBlank() && !value.isNullOrBlank()) {
-            val answerContext = answersAsStrings(state.answers, state.allQuestions)
-            val satisfied = evaluator.evaluate(constraint, answerContext, selfValue = value).asBoolean()
+            val ctx = answersAsStrings(state.answers, state.allQuestions)
+            val satisfied = safeEval(constraint, ctx, selfValue = value)?.asBoolean() ?: true
             if (!satisfied) {
                 _uiState.update { it.copy(constraintError = current.constraintMessage ?: "Invalid value.") }
                 return

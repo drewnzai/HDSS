@@ -10,7 +10,11 @@ sealed class ExprValue {
 
     fun asString(): String = when (this) {
         is Str -> value
-        is Num -> if (value == value.toLong().toDouble()) value.toLong().toString() else value.toString()
+        is Num -> when {
+            value.isNaN() -> ""
+            value == value.toLong().toDouble() -> value.toLong().toString()
+            else -> value.toString()
+        }
         is Bool -> value.toString()
         is DateVal -> value.toString() // ISO-8601 yyyy-MM-dd
     }
@@ -25,8 +29,7 @@ sealed class ExprValue {
     fun asNumber(): Double = when (this) {
         is Num -> value
         is DateVal -> value.toEpochDay().toDouble()
-        is Str -> value.toDoubleOrNull()
-            ?: throw ExpressionException("Cannot convert '$value' to a number")
+        is Str -> value.trim().toDoubleOrNull() ?: Double.NaN
         is Bool -> if (value) 1.0 else 0.0
     }
 }
@@ -316,7 +319,11 @@ class ExpressionEvaluator {
         val args = node.args.map { evalNode(it, answers, selfValue) }
         return when (node.fnName) {
             "today" -> ExprValue.DateVal(LocalDate.now())
-            "date" -> ExprValue.DateVal(LocalDate.ofEpochDay(args[0].asNumber().toLong()))
+            "date" -> {
+                val days = args[0].asNumber()
+                if (days.isNaN()) ExprValue.Str("")
+                else ExprValue.DateVal(LocalDate.ofEpochDay(days.toLong()))
+            }
             "decimal-date-time" -> ExprValue.Num(
                 (args[0] as? ExprValue.DateVal)?.value?.toEpochDay()?.toDouble()
                     ?: throw ExpressionException("decimal-date-time() requires a date argument")

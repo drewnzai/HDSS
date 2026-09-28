@@ -23,7 +23,7 @@ object AnswerEntityMapper {
         val bags = mutableMapOf<MappedEntity, MutableMap<String, String>>()
         for (q in visibleQuestions) {
             if (q.mappedEntity == MappedEntity.NONE) continue
-            val value = answers[q.id] ?: continue // mutual-exclusivity guard: skip unanswered/non-relevant
+            val value = answers[q.id]?.takeIf { it.isNotBlank() } ?: continue
             val fieldNames = q.mappedField?.split(",")?.map { it.trim() } ?: continue
             val bag = bags.getOrPut(q.mappedEntity) { mutableMapOf() }
             if (fieldNames.size == 2) {
