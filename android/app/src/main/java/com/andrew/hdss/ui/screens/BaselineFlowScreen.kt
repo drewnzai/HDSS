@@ -1,5 +1,6 @@
 package com.andrew.hdss.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -19,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.andrew.hdss.ui.viewmodels.BaselineFlowStep
 import com.andrew.hdss.ui.viewmodels.BaselineFlowViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun BaselineFlowScreen(
@@ -28,6 +31,18 @@ fun BaselineFlowScreen(
     viewModel: BaselineFlowViewModel = viewModel(factory = BaselineFlowViewModel.factory(locationId))
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+
+    val handleCancel: () -> Unit = {
+        scope.launch {
+            viewModel.abandon()
+            onCancel()
+        }
+    }
+
+    BackHandler(enabled = uiState.step != BaselineFlowStep.DONE) {
+        handleCancel()
+    }
 
     when (uiState.step) {
         BaselineFlowStep.LOADING -> LoadingState()
@@ -46,7 +61,7 @@ fun BaselineFlowScreen(
                     context = viewModel.householdFormContext,
                     title = "Household registration",
                     onComplete = viewModel::onHouseholdFormComplete,
-                    onCancel = onCancel
+                    onCancel = handleCancel
                 )
             }
         }
@@ -60,7 +75,7 @@ fun BaselineFlowScreen(
                     context = viewModel.headFormContext,
                     title = "Register head of household",
                     onComplete = viewModel::onHeadFormComplete,
-                    onCancel = viewModel::onHouseholdFormComplete
+                    onCancel = handleCancel
                 )
             }
         }
