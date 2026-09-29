@@ -13,6 +13,6 @@ interface FormResponseDao {
     @Query("SELECT * FROM form_responses WHERE synced = 0")
     suspend fun getUnsynced(): List<FormResponse>
 
-    @Query("UPDATE form_responses SET synced = 1 WHERE id = :id")
-    suspend fun markSynced(id: String)
+    @Query("UPDATE form_responses SET synced = 1 WHERE id IN (:ids)")
+    suspend fun markSynced(ids: List<String>)
 }
