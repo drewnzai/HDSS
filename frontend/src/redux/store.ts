@@ -7,6 +7,7 @@ import { locationApi } from "./LocationApi";
 import { mappedFieldApi } from "./MappedFieldApi";
 import { questionApi } from "./QuestionApi";
 import { userApi } from "./UserApi";
+import { downloadApkApi } from "./DownloadApkApi";
 
 export const store = configureStore({
     reducer: {
@@ -17,10 +18,11 @@ export const store = configureStore({
         [questionApi.reducerPath]: questionApi.reducer,
         [choiceApi.reducerPath]: choiceApi.reducer,
         [mappedFieldApi.reducerPath]: mappedFieldApi.reducer,
+        [downloadApkApi.reducerPath]: downloadApkApi.reducer,
         auth: authReducer
     },
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(authApi.middleware, userApi.middleware, locationApi.middleware, formApi.middleware, questionApi.middleware, choiceApi.middleware, mappedFieldApi.middleware)
+        getDefaultMiddleware().concat(authApi.middleware, userApi.middleware, locationApi.middleware, formApi.middleware, questionApi.middleware, choiceApi.middleware, mappedFieldApi.middleware, downloadApkApi.middleware)
 });
 
 export type RootState = ReturnType<typeof store.getState>;
