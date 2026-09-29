@@ -51,6 +51,6 @@ fun List<Membership>.toPushDtos(): List<MembershipPushDto> = map {
         startDate = it.startDate.toString(),
         startType = it.startType,
         endDate = it.endDate?.toString(),
-        endType = it.endType?.let { type -> type }
+        endType = it.endType
     )
 }
