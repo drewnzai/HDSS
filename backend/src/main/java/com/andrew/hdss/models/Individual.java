@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Table(name = "individuals")
 public class Individual extends SyncableEntity {
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true)
     private String extendedId;
 
     @Column(nullable = false)
