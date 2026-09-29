@@ -22,6 +22,8 @@ import com.andrew.hdss.network.services.MembershipApiRepository
 import com.andrew.hdss.network.services.MembershipApiService
 import com.andrew.hdss.network.services.QuestionApiRepository
 import com.andrew.hdss.network.services.QuestionApiService
+import com.andrew.hdss.network.services.SyncApiRepository
+import com.andrew.hdss.network.services.SyncPushService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -175,6 +177,16 @@ class HdssContainer(private val context: Context) {
             choiceDao = database.choiceDao(),
             database = database,
             json = json
+        )
+    }
+
+    private val syncApiRepository: SyncApiRepository by lazy {
+        apiRetrofit.create(SyncApiRepository::class.java)
+    }
+
+    val syncPushService: SyncPushService by lazy {
+        SyncPushService(
+            api = syncApiRepository
         )
     }
 }
