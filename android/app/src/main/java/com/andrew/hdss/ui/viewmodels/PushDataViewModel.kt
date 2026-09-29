@@ -12,6 +12,7 @@ import com.andrew.hdss.data.AppDatabase
 import com.andrew.hdss.data.daos.AnswerDao
 import com.andrew.hdss.data.daos.FormResponseDao
 import com.andrew.hdss.data.daos.HouseholdDao
+import com.andrew.hdss.data.daos.IncompleteBaselineRow
 import com.andrew.hdss.data.daos.IndividualDao
 import com.andrew.hdss.data.daos.MembershipDao
 import com.andrew.hdss.data.daos.VisitDao
@@ -65,7 +66,10 @@ data class PushUiState(
     val selectedVisitId: String? = null,
     val isPushing: Boolean = false,
     val error: String? = null,
-    val report: PushReport? = null
+    val report: PushReport? = null,
+    val incompleteBaselines: List<IncompleteBaselineRow> = emptyList(),
+    val discardingClientId: String? = null,
+    val discardError: String? = null
 )
 
 class PushDataViewModel(
@@ -83,7 +87,7 @@ class PushDataViewModel(
     val uiState: StateFlow<PushUiState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch { reloadBundles() }
+        viewModelScope.launch { refreshAll() }
     }
 
     fun select(visitId: String) {
@@ -121,28 +125,12 @@ class PushDataViewModel(
                             )
                         }
                     }
-                    reloadBundles()
+                    refreshAll()
                     _uiState.update { it.copy(isPushing = false) }
                 }
             }
         }
     }
-
-    private suspend fun reloadBundles() {
-        val bundles = visitDao.getByStatus(VisitStatus.COMPLETED)
-            .map { buildBundle(it) }
-            .filter { it.hasPending }
-
-        _uiState.update { state ->
-            state.copy(
-                isLoading = false,
-                bundles = bundles,
-                selectedVisitId = state.selectedVisitId
-                    ?.takeIf { id -> bundles.any { it.visit.id == id } }
-            )
-        }
-    }
-
     private suspend fun buildBundle(visit: Visit): VisitBundle {
         val household = visit.householdClientId
             ?.let { householdDao.getByClientId(it) }
@@ -248,6 +236,48 @@ class PushDataViewModel(
         }
 
         return PushReport(pushed, failures)
+    }
+
+    private suspend fun refreshAll() {
+        val bundles = visitDao.getByStatus(VisitStatus.COMPLETED)
+            .map { buildBundle(it) }
+            .filter { it.hasPending }
+
+        val incomplete = householdDao.getIncompleteBaselines()
+
+        _uiState.update { state ->
+            state.copy(
+                isLoading = false,
+                bundles = bundles,
+                selectedVisitId = state.selectedVisitId
+                    ?.takeIf { id -> bundles.any { it.visit.id == id } },
+                incompleteBaselines = incomplete
+            )
+        }
+    }
+
+    fun discardIncompleteBaseline(clientId: String) {
+        if (_uiState.value.discardingClientId != null) return // one at a time
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(discardingClientId = clientId, discardError = null) }
+            try {
+                // Cascades: household -> visit -> form_responses -> answers.
+                householdDao.deleteByClientId(clientId)
+                refreshAll()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to discard incomplete baseline $clientId", e)
+                _uiState.update {
+                    it.copy(discardError = "Couldn't remove this record: ${e.message}")
+                }
+            } finally {
+                _uiState.update { it.copy(discardingClientId = null) }
+            }
+        }
+    }
+
+    fun dismissDiscardError() {
+        _uiState.update { it.copy(discardError = null) }
     }
 
     companion object {

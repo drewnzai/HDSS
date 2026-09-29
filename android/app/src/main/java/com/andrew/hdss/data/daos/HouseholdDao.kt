@@ -11,6 +11,11 @@ import com.andrew.hdss.data.models.relations.HouseholdWithDetails
 import com.andrew.hdss.data.utils.HouseholdIdentifiers
 import kotlinx.coroutines.flow.Flow
 
+data class IncompleteBaselineRow(
+    val clientId: String,
+    val householdCode: String?,
+    val locationName: String?
+)
 @Dao
 interface HouseholdDao {
 
@@ -65,4 +70,17 @@ interface HouseholdDao {
     WHERE householdCode GLOB :prefix || '-[0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
 """)
     suspend fun getMaxCodeNumber(prefix: String): Int
+
+    @Query("""
+    SELECT h.clientId AS clientId, h.householdCode AS householdCode, l.name AS locationName
+    FROM households h
+    LEFT JOIN locations l ON l.id = h.locationId
+    WHERE h.synced = 0
+    AND NOT EXISTS (
+        SELECT 1 FROM memberships m
+        WHERE m.householdClientId = h.clientId
+        AND m.relationshipToHead = 'HEAD'
+    )
+""")
+    suspend fun getIncompleteBaselines(): List<IncompleteBaselineRow>
 }
