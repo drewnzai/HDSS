@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.andrew.hdss.data.dtos.IndividualPushDto
 import com.andrew.hdss.data.models.enums.Sex
 import java.time.LocalDate
 
@@ -39,3 +40,17 @@ data class Individual(
     val fatherClientId: String?,
     val synced: Boolean = false
 )
+
+fun List<Individual>.toPushDtos(): List<IndividualPushDto> = map {
+    IndividualPushDto(
+        clientId = it.clientId,
+        extendedId = it.extendedId,
+        firstName = it.firstName,
+        lastName = it.lastName,
+        sex = it.sex,
+        dateOfBirth = it.dateOfBirth?.toString(),
+        dobEstimated = it.dobEstimated,
+        motherClientId = it.motherClientId,
+        fatherClientId = it.fatherClientId
+    )
+}
