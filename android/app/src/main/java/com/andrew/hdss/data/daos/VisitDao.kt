@@ -15,6 +15,9 @@ interface VisitDao {
     )
     suspend fun insert(visit: Visit);
 
+    @Query("DELETE FROM visits WHERE id = :id")
+    suspend fun deleteById(id: String)
+
     @Update
     suspend fun update(visit: Visit)
 
