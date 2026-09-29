@@ -25,6 +25,7 @@ import com.andrew.hdss.ui.screens.BaselineFlowScreen
 import com.andrew.hdss.ui.screens.DownloadDatabaseScreen
 import com.andrew.hdss.ui.screens.HomeScreen
 import com.andrew.hdss.ui.screens.LoginScreen
+import com.andrew.hdss.ui.screens.PushDataScreen
 import com.andrew.hdss.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -36,6 +37,7 @@ object Routes {
     const val LOGIN = "login"
     const val HOME = "home"
     const val DOWNLOAD_DATABASE = "download_database"
+    const val PUSH_DATA = "push_data"
     const val BASELINE_LOCATION_ARG = "locationId"
     const val BASELINE = "baseline/{$BASELINE_LOCATION_ARG}"
 
@@ -92,6 +94,7 @@ fun NavGraph(
                     }
                 },
                 onNavigateToDownload = { navController.navigate(Routes.DOWNLOAD_DATABASE) },
+                onNavigateToPush = { navController.navigate(Routes.PUSH_DATA) },
                 onStartBaseline = { locationId ->
                     navController.navigate(Routes.baseline(locationId))
                 }
@@ -100,6 +103,10 @@ fun NavGraph(
 
         composable(Routes.DOWNLOAD_DATABASE) {
             DownloadDatabaseScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.PUSH_DATA) {
+            PushDataScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(

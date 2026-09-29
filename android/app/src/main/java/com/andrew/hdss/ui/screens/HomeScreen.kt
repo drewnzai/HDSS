@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.LocationOff
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.MoreVert
@@ -88,6 +89,7 @@ fun HomeScreen(
     firstName: String,
     onLogout: () -> Unit,
     onNavigateToDownload: () -> Unit,
+    onNavigateToPush: () -> Unit,
     onStartBaseline: (locationId: Long) -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
@@ -106,6 +108,7 @@ fun HomeScreen(
         topBar = {
             HomeTopBar(
                 onNavigateToDownload = onNavigateToDownload,
+                onNavigateToPush = onNavigateToPush,
                 onLogout = onLogout
             )
         }
@@ -188,6 +191,7 @@ fun HomeScreen(
 @Composable
 private fun HomeTopBar(
     onNavigateToDownload: () -> Unit,
+    onNavigateToPush: () -> Unit,
     onLogout: () -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -208,6 +212,13 @@ private fun HomeTopBar(
                 Icon(
                     imageVector = Icons.Outlined.CloudDownload,
                     contentDescription = "Download database"
+                )
+            }
+
+            IconButton(onClick = onNavigateToPush) {
+                Icon(
+                    imageVector = Icons.Outlined.CloudUpload,
+                    contentDescription = "Push data"
                 )
             }
 
