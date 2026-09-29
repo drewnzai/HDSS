@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.andrew.hdss.data.models.Visit
+import com.andrew.hdss.data.models.enums.VisitStatus
 
 @Dao
 interface VisitDao {
@@ -13,6 +14,9 @@ interface VisitDao {
         onConflict = OnConflictStrategy.REPLACE
     )
     suspend fun insert(visit: Visit);
+
+    @Query("DELETE FROM visits WHERE id = :id")
+    suspend fun deleteById(id: String)
 
     @Update
     suspend fun update(visit: Visit)
@@ -25,4 +29,7 @@ interface VisitDao {
 
     @Query("UPDATE visits SET synced = 1 WHERE id = :id")
     suspend fun markSynced(id: String)
+
+    @Query("SELECT * FROM visits WHERE status = :status ORDER BY visitDate DESC")
+    suspend fun getByStatus(status: VisitStatus): List<Visit>
 }

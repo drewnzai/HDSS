@@ -38,9 +38,9 @@ fun List<Visit>.toPushDtos(): List<VisitPushDto>{
     return map { visit ->
         VisitPushDto(
             clientId = visit.id,
-            householdClientId = visit.householdClientId ?: "",
-            individualClientId = visit.individualClientId ?: "",
-            visitDate = visit.visitDate.toString(),
+            householdClientId = visit.householdClientId,
+            individualClientId = visit.individualClientId,
+            visitDate = visit.visitDate?.toString(),
             status = visit.status
         )
     }

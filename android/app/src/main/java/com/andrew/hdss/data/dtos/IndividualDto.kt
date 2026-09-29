@@ -10,7 +10,7 @@ import java.time.LocalDate
 data class IndividualDto(
     val id: Long,
     val clientId: String,
-    val extendedId: String,
+    val extendedId: String?,
     val firstName: String,
     val lastName: String,
     val sex: Sex,

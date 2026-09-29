@@ -16,6 +16,9 @@ interface AnswerDao {
     @Query("SELECT * FROM answers WHERE synced = 0")
     suspend fun getUnsynced(): List<Answer>
 
-    @Query("UPDATE answers SET synced = 1 WHERE id = :id")
-    suspend fun markSynced(id: String)
+    @Query("SELECT * FROM answers WHERE formResponseId IN (:formResponseIds)")
+    suspend fun getByFormResponseIds(formResponseIds: List<String>): List<Answer>
+
+    @Query("UPDATE answers SET synced = 1 WHERE id IN (:ids)")
+    suspend fun markSynced(ids: List<String>)
 }

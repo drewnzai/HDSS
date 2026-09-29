@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.andrew.hdss.data.dtos.HouseholdPushDto
 import com.andrew.hdss.data.models.enums.HouseholdStatus
 
 @Entity(
@@ -36,3 +37,7 @@ data class Household(
     val status: HouseholdStatus,
     val synced: Boolean = false
 )
+
+fun List<Household>.toPushDtos(): List<HouseholdPushDto> = map {
+    HouseholdPushDto(it.clientId, it.householdCode, it.locationId, it.latitude, it.longitude)
+}

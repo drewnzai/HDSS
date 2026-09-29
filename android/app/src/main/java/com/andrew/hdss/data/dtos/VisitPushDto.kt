@@ -6,8 +6,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class VisitPushDto(
     val clientId: String,
-    val householdClientId: String,
-    val individualClientId: String,
-    val visitDate: String,
+    val householdClientId: String?,
+    val individualClientId: String?,
+    val visitDate: String?,
     val status: VisitStatus
 )

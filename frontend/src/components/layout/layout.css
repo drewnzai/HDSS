@@ -279,7 +279,7 @@ body {
 
     .app-content,
     .app-shell--collapsed .app-content {
-        margin-left: 0;
+        margin-left: 1rem;
         padding-block: 1.5rem;
     }
 

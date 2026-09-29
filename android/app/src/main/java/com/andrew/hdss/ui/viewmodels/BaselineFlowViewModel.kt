@@ -1,5 +1,6 @@
 package com.andrew.hdss.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
@@ -46,10 +47,8 @@ class BaselineFlowViewModel(
     // Set during init, before the first form is shown.
     private lateinit var householdCode: String
 
-    // The Visit can't reference the household yet: the household row
-    // doesn't exist until the household form is submitted, and that
-    // form's FormResponse needs the Visit first. It starts with no
-    // household and is linked in onHouseholdFormComplete().
+    private var householdCreated = false
+
     private var visit = Visit(
         id = visitId,
         householdClientId = null,
@@ -113,6 +112,7 @@ class BaselineFlowViewModel(
             try {
                 visit = visit.copy(householdClientId = householdClientId)
                 visitDao.update(visit)
+                householdCreated = true
                 _uiState.update { it.copy(step = BaselineFlowStep.HEAD_FORM) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(step = BaselineFlowStep.ERROR, errorMessage = e.message) }
@@ -153,6 +153,20 @@ class BaselineFlowViewModel(
         }
 
         return names.reversed()
+    }
+
+    suspend fun abandon(): Boolean {
+        return try {
+            if (householdCreated) {
+                householdDao.deleteByClientId(householdClientId)
+            } else {
+                visitDao.deleteById(visitId)
+            }
+            true
+        } catch (e: Exception) {
+            Log.e("BaselineFlowViewModel", "Failed to clean up abandoned baseline", e)
+            false
+        }
     }
 
     companion object {

@@ -3,9 +3,33 @@ import Flash from "../../components/flash/Flash";
 import { selectFirstName } from "../../redux/AuthSlice";
 import { useAppSelector } from "../../redux/hooks";
 import "./home.css";
+import { useDownloadApkMutation } from "../../redux/DownloadApkApi";
 
 function Home() {
     const firstName = useAppSelector(selectFirstName);
+
+    const [downloadApk, { isLoading: isDownloading }] =
+        useDownloadApkMutation();
+
+    const handleDownload = async () => {
+        try {
+            const blob = await downloadApk().unwrap();
+
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "hdss-android.apk";
+
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            URL.revokeObjectURL(url);
+        } catch {
+            // Handle the download failure here.
+        }
+    };
 
 
     return (
@@ -27,18 +51,26 @@ function Home() {
                     decision-making.
                 </p>
 
-                <a
+                <button
+                    type="button"
                     className="home-download"
-                    href="/api/mobile-app/download"
-                    download
+                    onClick={handleDownload}
+                    disabled={isDownloading}
                 >
                     <Download size={20} aria-hidden="true" />
 
                     <span>
-                        <strong>Download the Android App</strong>
-                        <small>Download the latest field data collection app</small>
+                        <strong>
+                            {isDownloading
+                                ? "Downloading..."
+                                : "Download the Android App"}
+                        </strong>
+
+                        <small>
+                            Download the latest field data collection app
+                        </small>
                     </span>
-                </a>
+                </button>
             </section>
 
             <section className="home-section">
@@ -47,7 +79,7 @@ function Home() {
                         About the system
                     </span>
 
-                    <h2>What is a HDSS?</h2>
+                    <h2>What is HDSS?</h2>
 
                     <p>
                         A Health and Demographics Surveillance System (HDSS)
@@ -132,14 +164,26 @@ function Home() {
                     </p>
                 </div>
 
-                <a
-                    className="btn btn--primary"
-                    href="/api/mobile-app/download"
-                    download
+                <button
+                    type="button"
+                    className="home-download"
+                    onClick={handleDownload}
+                    disabled={isDownloading}
                 >
-                    <Download size={18} aria-hidden="true" />
-                    Download App
-                </a>
+                    <Download size={20} aria-hidden="true" />
+
+                    <span>
+                        <strong>
+                            {isDownloading
+                                ? "Downloading..."
+                                : "Download the Android App"}
+                        </strong>
+
+                        <small>
+                            Download the latest field data collection app
+                        </small>
+                    </span>
+                </button>
             </section>
         </div>
     );
