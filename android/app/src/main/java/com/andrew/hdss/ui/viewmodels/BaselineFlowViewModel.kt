@@ -155,16 +155,17 @@ class BaselineFlowViewModel(
         return names.reversed()
     }
 
-    suspend fun abandon() {
-        try {
+    suspend fun abandon(): Boolean {
+        return try {
             if (householdCreated) {
                 householdDao.deleteByClientId(householdClientId)
             } else {
                 visitDao.deleteById(visitId)
             }
+            true
         } catch (e: Exception) {
-            Log.e("BaselineFlowViewModel",
-                "Failed to clean up abandoned baseline", e)
+            Log.e("BaselineFlowViewModel", "Failed to clean up abandoned baseline", e)
+            false
         }
     }
 

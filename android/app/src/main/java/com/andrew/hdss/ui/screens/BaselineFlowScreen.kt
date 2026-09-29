@@ -6,14 +6,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -33,15 +38,72 @@ fun BaselineFlowScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
-    val handleCancel: () -> Unit = {
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var showCleanupFailedDialog by remember { mutableStateOf(false) }
+
+    fun proceedWithCancel() {
         scope.launch {
-            viewModel.abandon()
-            onCancel()
+            val cleanedUp = viewModel.abandon()
+            if (cleanedUp) {
+                onCancel()
+            } else {
+                showCleanupFailedDialog = true
+            }
+        }
+    }
+
+    val requestCancel: () -> Unit = {
+        if (uiState.step == BaselineFlowStep.LOADING || uiState.step == BaselineFlowStep.ERROR) {
+            proceedWithCancel()
+        } else {
+            showConfirmDialog = true
         }
     }
 
     BackHandler(enabled = uiState.step != BaselineFlowStep.DONE) {
-        handleCancel()
+        requestCancel()
+    }
+
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Discard this registration?") },
+            text = { Text("What's been entered so far will be deleted. This can't be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showConfirmDialog = false
+                    proceedWithCancel()
+                }) { Text("Discard") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) { Text("Keep going") }
+            }
+        )
+    }
+
+    if (showCleanupFailedDialog) {
+        AlertDialog(
+            onDismissRequest = { /* must choose an action below */ },
+            title = { Text("Couldn't fully clean up") },
+            text = {
+                Text(
+                    "Some data from this registration couldn't be removed from this device. " +
+                            "You can leave anyway, or try again."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showCleanupFailedDialog = false
+                    onCancel()
+                }) { Text("Leave anyway") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showCleanupFailedDialog = false
+                    proceedWithCancel()
+                }) { Text("Try again") }
+            }
+        )
     }
 
     when (uiState.step) {
@@ -49,7 +111,7 @@ fun BaselineFlowScreen(
 
         BaselineFlowStep.ERROR -> ErrorState(
             message = uiState.errorMessage ?: "Something went wrong.",
-            onCancel = onCancel
+            onCancel = requestCancel
         )
 
         BaselineFlowStep.HOUSEHOLD_FORM -> {
@@ -61,7 +123,7 @@ fun BaselineFlowScreen(
                     context = viewModel.householdFormContext,
                     title = "Household registration",
                     onComplete = viewModel::onHouseholdFormComplete,
-                    onCancel = handleCancel
+                    onCancel = requestCancel
                 )
             }
         }
@@ -75,7 +137,7 @@ fun BaselineFlowScreen(
                     context = viewModel.headFormContext,
                     title = "Register head of household",
                     onComplete = viewModel::onHeadFormComplete,
-                    onCancel = handleCancel
+                    onCancel = requestCancel
                 )
             }
         }
