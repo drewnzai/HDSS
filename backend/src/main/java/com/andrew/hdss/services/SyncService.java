@@ -190,18 +190,33 @@ public class SyncService {
         return new UpsertResult<>(saved, isNew);
     }
 
-    private void resolveParents(IndividualPushDto dto, Map<String, Individual> individualsByClientId) {
+    private void resolveParents(
+            IndividualPushDto dto,
+            Map<String, Individual> individualsByClientId
+    ) {
+        if (dto.motherClientId() == null && dto.fatherClientId() == null) {
+            return;
+        }
+
         Individual individual = individualsByClientId.get(dto.clientId());
 
+        if (individual == null) {
+            throw new IllegalArgumentException(
+                    "Cannot resolve individual: " + dto.clientId()
+            );
+        }
+
         if (dto.motherClientId() != null) {
-            Individual mother = resolveIndividual(dto.motherClientId(), individualsByClientId);
-            individual.setMother(mother);
+            individual.setMother(
+                    resolveIndividual(dto.motherClientId(), individualsByClientId)
+            );
         }
+
         if (dto.fatherClientId() != null) {
-            Individual father = resolveIndividual(dto.fatherClientId(), individualsByClientId);
-            individual.setFather(father);
+            individual.setFather(
+                    resolveIndividual(dto.fatherClientId(), individualsByClientId)
+            );
         }
-        individualRepository.save(individual);
     }
 
     // ---------- Memberships ----------
