@@ -79,7 +79,7 @@ function Home() {
                         About the system
                     </span>
 
-                    <h2>What is a HDSS?</h2>
+                    <h2>What is HDSS?</h2>
 
                     <p>
                         A Health and Demographics Surveillance System (HDSS)
