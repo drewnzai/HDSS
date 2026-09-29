@@ -205,31 +205,6 @@ cp application.properties.example src/main/resources/application.properties
 
 Then populate the required configuration values.
 
-#### Generate RSA Key Pair
-
-The backend requires an RSA public/private key pair. Generate the keys using OpenSSL and place them in the Spring Boot resources directory:
-
-```bash
-cd backend/src/main/resources
-openssl genrsa -out private.pem 4096
-openssl rsa -in private.pem -pubout -out public.pem
-```
-
-This creates:
-
-```text
-backend/
-└── src/
-    └── main/
-        └── resources/
-            ├── private.pem
-            └── public.pem
-```
-
-The **private key must be kept secret** and should not be committed to version control. The `public.pem` file can be shared where required for public-key verification.
-
-> If the project is being set up on Windows, run the same commands from PowerShell or Git Bash after installing OpenSSL.
-
 > Do not commit your local `application.properties` if it contains passwords, secrets, API keys, or other sensitive values.
 
 #### Start the Backend
@@ -297,6 +272,42 @@ Allow Android Studio to:
 3. Configure the required Android SDK components.
 
 Run the application using an Android emulator or a connected physical Android device.
+
+#### Building the APK for Download
+
+The HDSS backend can serve the Android application as a downloadable APK. Before the download endpoint can be used, the APK must first be built and placed in the backend's `downloads` directory.
+
+1. Open the `android` project in **Android Studio**.
+2. Build a **debug APK**. A debug APK is recommended for development and testing.
+3. Create a `downloads` directory at the root of the backend project:
+
+```text
+hdss/
+├── android/
+├── backend/
+│   └── downloads/
+└── frontend/
+```
+
+4. Copy the generated APK into the `backend/downloads/` directory.
+5. Rename the APK to exactly:
+
+```text
+hdss.apk
+```
+
+The resulting structure should be:
+
+```text
+backend/
+├── downloads/
+│   └── hdss.apk
+└── ...
+```
+
+The backend download service uses this file when serving the Android application for download.
+
+> **Note:** The `downloads` directory and `hdss.apk` should be present before using the Android application download endpoint. For development, a debug APK is sufficient. Do not use a debug APK for production distribution.
 
 #### Backend Connection
 
