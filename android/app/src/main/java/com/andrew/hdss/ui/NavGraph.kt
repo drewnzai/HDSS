@@ -38,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.network.AuthResult
+import com.andrew.hdss.ui.screens.AddIndividualScreen
 import com.andrew.hdss.ui.screens.BaselineFlowScreen
 import com.andrew.hdss.ui.screens.DownloadDatabaseScreen
 import com.andrew.hdss.ui.screens.HomeScreen
@@ -57,6 +58,11 @@ object Routes {
     const val PUSH_DATA = "push_data"
     const val BASELINE_LOCATION_ARG = "locationId"
     const val BASELINE = "baseline/{$BASELINE_LOCATION_ARG}"
+
+    const val ADD_INDIVIDUAL_ARG = "householdClientId"
+    const val ADD_INDIVIDUAL = "add_individual/{$ADD_INDIVIDUAL_ARG}"
+
+    fun addIndividual(householdClientId: String) = "add_individual/$householdClientId"
 
     fun baseline(locationId: Long) = "baseline/$locationId"
 }
@@ -114,6 +120,9 @@ fun NavGraph(
                 onNavigateToPush = { navController.navigate(Routes.PUSH_DATA) },
                 onStartBaseline = { locationId ->
                     navController.navigate(Routes.baseline(locationId))
+                },
+                onAddIndividual = { householdClientId ->
+                    navController.navigate(Routes.addIndividual(householdClientId))
                 }
             )
         }
@@ -138,6 +147,20 @@ fun NavGraph(
 
             BaselineFlowScreen(
                 locationId = locationId,
+                onComplete = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.ADD_INDIVIDUAL,
+            arguments = listOf(navArgument(Routes.ADD_INDIVIDUAL_ARG) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val householdClientId = backStackEntry.arguments?.getString(Routes.ADD_INDIVIDUAL_ARG)
+                ?: return@composable
+
+            AddIndividualScreen(
+                householdClientId = householdClientId,
                 onComplete = { navController.popBackStack() },
                 onCancel = { navController.popBackStack() }
             )

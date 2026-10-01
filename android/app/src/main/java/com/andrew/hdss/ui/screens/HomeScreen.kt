@@ -43,8 +43,10 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -64,6 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.Location
 import com.andrew.hdss.ui.viewmodels.HomeViewModel
 
@@ -76,7 +79,8 @@ private val SIDE_PANEL_WIDTH = 360.dp
 private data class BrowserState(
     val roots: List<Location>,
     val path: List<Location>,
-    val children: List<Location>
+    val children: List<Location>,
+    val households: List<Household> = emptyList()
 ) {
     val current: Location? get() = path.lastOrNull()
     val level: List<Location> get() = if (path.isEmpty()) roots else children
@@ -91,18 +95,28 @@ fun HomeScreen(
     onNavigateToDownload: () -> Unit,
     onNavigateToPush: () -> Unit,
     onStartBaseline: (locationId: Long) -> Unit,
+    onAddIndividual: (householdClientId: String) -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
     val roots by viewModel.roots.collectAsStateWithLifecycle()
     val selectedPath by viewModel.selectedPath.collectAsStateWithLifecycle()
     val children by viewModel.currentChildren.collectAsStateWithLifecycle()
+    val households by viewModel.householdsAtSelection.collectAsStateWithLifecycle()
 
-    val state = BrowserState(roots, selectedPath, children)
+    val state = BrowserState(roots, selectedPath, children, households)
 
     // Reset the search text whenever the user moves to a different level.
     var query by rememberSaveable(state.current?.id) { mutableStateOf("") }
 
+    var selectedHouseholdClientId by rememberSaveable(state.current?.id) {
+        mutableStateOf<String?>(null)
+    }
+
     val startBaseline: () -> Unit = { state.current?.let { onStartBaseline(it.id) } }
+    val addIndividual: () -> Unit = { selectedHouseholdClientId?.let(onAddIndividual) }
+    val selectHousehold: (String) -> Unit = { id ->
+        selectedHouseholdClientId = if (selectedHouseholdClientId == id) null else id
+    }
 
     Scaffold(
         topBar = {
@@ -148,7 +162,10 @@ fun HomeScreen(
                             onRootClick = viewModel::clearSelection,
                             onCrumbClick = viewModel::selectPathLocation,
                             onLocationSelected = viewModel::selectLocation,
-                            onStartBaseline = startBaseline
+                            onStartBaseline = startBaseline,
+                            selectedHouseholdClientId = selectedHouseholdClientId,
+                            onSelectHousehold = selectHousehold,
+                            onAddIndividual = addIndividual
                         )
                     }
 
@@ -157,7 +174,11 @@ fun HomeScreen(
                         onStartBaseline = startBaseline,
                         modifier = Modifier
                             .width(SIDE_PANEL_WIDTH)
-                            .padding(vertical = 16.dp)
+                            .padding(vertical = 16.dp),
+                        selectedHouseholdClientId = selectedHouseholdClientId,
+                        onSelectHousehold = selectHousehold,
+                        onAddIndividual = addIndividual,
+                        households = households
                     )
                 }
             } else {
@@ -179,7 +200,10 @@ fun HomeScreen(
                         onRootClick = viewModel::clearSelection,
                         onCrumbClick = viewModel::selectPathLocation,
                         onLocationSelected = viewModel::selectLocation,
-                        onStartBaseline = startBaseline
+                        onStartBaseline = startBaseline,
+                        selectedHouseholdClientId = selectedHouseholdClientId,
+                        onSelectHousehold = selectHousehold,
+                        onAddIndividual = addIndividual
                     )
                 }
             }
@@ -258,7 +282,10 @@ private fun LazyListScope.browserItems(
     onRootClick: () -> Unit,
     onCrumbClick: (Int) -> Unit,
     onLocationSelected: (Location) -> Unit,
-    onStartBaseline: () -> Unit
+    onStartBaseline: () -> Unit,
+    selectedHouseholdClientId: String?,
+    onSelectHousehold: (String) -> Unit,
+    onAddIndividual: () -> Unit
 ) {
     item(key = "greeting") {
         Greeting(firstName = firstName, state = state)
@@ -294,7 +321,14 @@ private fun LazyListScope.browserItems(
         state.isLeaf -> {
             if (showInlineReadyPanel) {
                 item(key = "ready") {
-                    ReadyPanel(path = state.path, onStartBaseline = onStartBaseline)
+                    ReadyPanel(
+                        path = state.path,
+                        households = state.households,
+                        selectedHouseholdClientId = selectedHouseholdClientId,
+                        onSelectHousehold = onSelectHousehold,
+                        onAddIndividual = onAddIndividual,
+                        onStartBaseline = onStartBaseline
+                    )
                 }
             }
         }
@@ -459,6 +493,10 @@ private fun LocationRow(
 @Composable
 private fun ReadyPanel(
     path: List<Location>,
+    households: List<Household>,
+    selectedHouseholdClientId: String?,
+    onSelectHousehold: (String) -> Unit,
+    onAddIndividual: () -> Unit,
     onStartBaseline: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -498,18 +536,86 @@ private fun ReadyPanel(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Text(
-                text = "Register the household and its head of household at this location.",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if (households.isNotEmpty()) {
+                Text(
+                    text = "Existing households",
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
 
-            Button(
-                onClick = onStartBaseline,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp)
-            ) {
-                Text("Start baseline")
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    households.forEach { household ->
+                        HouseholdOptionRow(
+                            household = household,
+                            selected = household.clientId == selectedHouseholdClientId,
+                            onClick = { onSelectHousehold(household.clientId) }
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = onAddIndividual,
+                    enabled = selectedHouseholdClientId != null,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                ) {
+                    Text("Add individual")
+                }
+
+                OutlinedButton(
+                    onClick = onStartBaseline,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                ) {
+                    Text("Register new household")
+                }
+            } else {
+                Text(
+                    text = "No households registered here yet.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Button(
+                    onClick = onStartBaseline,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                ) {
+                    Text("Register new household")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HouseholdOptionRow(
+    household: Household,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(selected = selected, onClick = null)
+            Spacer(Modifier.width(8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(household.householdCode ?: "No code", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = household.status.name,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -519,13 +625,22 @@ private fun ReadyPanel(
 private fun SelectionSidePanel(
     state: BrowserState,
     onStartBaseline: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+    modifier: Modifier = Modifier,
+    households: List<Household>,
+    selectedHouseholdClientId: String?,
+    onSelectHousehold: (String) -> Unit,
+    onAddIndividual: () -> Unit,
+
+    ) {
     if (state.isLeaf) {
         ReadyPanel(
             path = state.path,
             onStartBaseline = onStartBaseline,
-            modifier = modifier
+            modifier = modifier,
+            onSelectHousehold = onSelectHousehold,
+            onAddIndividual = onAddIndividual,
+            households = households,
+            selectedHouseholdClientId = selectedHouseholdClientId,
         )
     } else {
         OutlinedCard(modifier = modifier.fillMaxWidth()) {
