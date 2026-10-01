@@ -103,7 +103,7 @@ fun HomeScreen(
     val children by viewModel.currentChildren.collectAsStateWithLifecycle()
     val households by viewModel.householdsAtSelection.collectAsStateWithLifecycle()
 
-    val state = BrowserState(roots, selectedPath, children)
+    val state = BrowserState(roots, selectedPath, children, households)
 
     // Reset the search text whenever the user moves to a different level.
     var query by rememberSaveable(state.current?.id) { mutableStateOf("") }
@@ -283,8 +283,8 @@ private fun LazyListScope.browserItems(
     onCrumbClick: (Int) -> Unit,
     onLocationSelected: (Location) -> Unit,
     onStartBaseline: () -> Unit,
-    selectedHouseholdClientId: String?,     // new
-    onSelectHousehold: (String) -> Unit,     // new
+    selectedHouseholdClientId: String?,
+    onSelectHousehold: (String) -> Unit,
     onAddIndividual: () -> Unit
 ) {
     item(key = "greeting") {
