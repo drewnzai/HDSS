@@ -86,7 +86,7 @@ class AddIndividualViewModel(
             }
         }
     }
-    
+
     suspend fun abandon() {
         try {
             visitDao.deleteById(visitId)
