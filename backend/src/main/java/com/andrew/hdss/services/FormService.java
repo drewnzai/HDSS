@@ -36,7 +36,7 @@ public class FormService {
                         .build()
         );
 
-        Page<Form> page = formRepository.findByStatus(FormStatus.PUBLISHED, pageable);
+        Page<Form> page = formRepository.findAll(pageable);
 
         BatchResponse<FormDto> response = new BatchResponse<>();
         response.setPage(page.getNumber());
@@ -48,6 +48,30 @@ public class FormService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "forms-published", key = "#resourceRequest.page + '-' + #resourceRequest.size")
+    public BatchResponse<FormDto> getPublishedForms(ResourceRequest resourceRequest) {
+        Pageable pageable = Util.getPageable(
+                PaginationRequest.builder()
+                        .page(resourceRequest.getPage())
+                        .size(resourceRequest.getSize())
+                        .direction(Sort.Direction.ASC)
+                        .sortField("id")
+                        .build()
+        );
+
+        Page<Form> page = formRepository.findByStatus(FormStatus.PUBLISHED, pageable);
+
+        BatchResponse<FormDto> response = new BatchResponse<>();
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalPages(page.getTotalPages());
+        response.setTotalElements(page.getTotalElements());
+        response.setData(page.stream().map(FormDto::from).toList());
+        return response;
+    }
+
+
+    @Transactional(readOnly = true)
     public FormDto getForm(Long id) {
         return FormDto.from(findFormOrThrow(id));
     }
@@ -55,7 +79,8 @@ public class FormService {
     @Transactional
     @Caching(
             evict = {
-                    @CacheEvict(cacheNames = "forms", allEntries = true)
+                    @CacheEvict(cacheNames = "forms", allEntries = true),
+                    @CacheEvict(cacheNames = "forms-published", allEntries = true)
             }
     )
     public FormDto createForm(CreateFormRequest request) {
@@ -79,7 +104,8 @@ public class FormService {
     @Transactional
     @Caching(
             evict = {
-                    @CacheEvict(cacheNames = "forms", allEntries = true)
+                    @CacheEvict(cacheNames = "forms", allEntries = true),
+                    @CacheEvict(cacheNames = "forms-published", allEntries = true)
             }
     )
     public FormDto updateForm(Long id, UpdateFormRequest request) {
@@ -98,7 +124,8 @@ public class FormService {
     @Transactional
     @Caching(
             evict = {
-                    @CacheEvict(cacheNames = "forms", allEntries = true)
+                    @CacheEvict(cacheNames = "forms", allEntries = true),
+                    @CacheEvict(cacheNames = "forms-published", allEntries = true)
             }
     )
     public void deleteForm(Long id) {
@@ -110,7 +137,8 @@ public class FormService {
     @Transactional
     @Caching(
             evict = {
-                    @CacheEvict(cacheNames = "forms", allEntries = true)
+                    @CacheEvict(cacheNames = "forms", allEntries = true),
+                    @CacheEvict(cacheNames = "forms-published", allEntries = true)
             }
     )
     public FormDto publishForm(Long id) {
@@ -128,7 +156,8 @@ public class FormService {
     @Transactional
     @Caching(
             evict = {
-                    @CacheEvict(cacheNames = "forms", allEntries = true)
+                    @CacheEvict(cacheNames = "forms", allEntries = true),
+                    @CacheEvict(cacheNames = "forms-published", allEntries = true)
             }
     )
     public FormDto setActive(Long id, boolean active) {

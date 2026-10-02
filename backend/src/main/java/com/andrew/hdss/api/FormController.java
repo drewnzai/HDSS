@@ -9,8 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/forms")
 @RequiredArgsConstructor
@@ -54,6 +52,12 @@ public class FormController implements FormApi {
     @PutMapping("/{id}/publish")
     public FormDto publishForm(@PathVariable Long id) {
         return formService.publishForm(id);
+    }
+
+    @GetMapping("/status/published")
+    public BatchResponse<FormDto> getPublishedForms(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size) {
+        return formService.getPublishedForms(new ResourceRequest(page, size));
     }
 
     @PutMapping("/{id}/active")

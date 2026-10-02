@@ -43,7 +43,8 @@ public class RedisConfig {
                 .withCacheConfiguration("individuals", individualsCacheConfig())
                 .withCacheConfiguration("memberships", membershipsCacheConfig())
                 .withCacheConfiguration("questions", questionsCacheConfig())
-                .withCacheConfiguration("forms", formsCacheConfig());
+                .withCacheConfiguration("forms", formsCacheConfig())
+                .withCacheConfiguration("forms-published", formsCacheConfig());
     }
 
     @Bean
@@ -110,7 +111,7 @@ public class RedisConfig {
                         .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper(), type)));
     }
 
-    private RedisCacheConfiguration questionsCacheConfig(){
+    private RedisCacheConfiguration questionsCacheConfig() {
         JavaType type = objectMapper().getTypeFactory()
                 .constructCollectionType(List.class, QuestionDto.class);
 
@@ -121,15 +122,15 @@ public class RedisConfig {
                         .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper(), type)));
     }
 
-    private RedisCacheConfiguration formsCacheConfig(){
-            JavaType type = objectMapper().getTypeFactory()
-                    .constructParametricType(BatchResponse.class, FormDto.class);
+    private RedisCacheConfiguration formsCacheConfig() {
+        JavaType type = objectMapper().getTypeFactory()
+                .constructParametricType(BatchResponse.class, FormDto.class);
 
-            return RedisCacheConfiguration.defaultCacheConfig()
-                    .serializeKeysWith(RedisSerializationContext.SerializationPair
-                            .fromSerializer(new StringRedisSerializer()))
-                    .serializeValuesWith(RedisSerializationContext.SerializationPair
-                            .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper(), type)));
+        return RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper(), type)));
     }
 
     private ObjectMapper objectMapper() {
