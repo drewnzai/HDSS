@@ -36,7 +36,7 @@ public class FormService {
                         .build()
         );
 
-        Page<Form> page = formRepository.findAll(pageable);
+        Page<Form> page = formRepository.findByStatus(FormStatus.PUBLISHED, pageable);
 
         BatchResponse<FormDto> response = new BatchResponse<>();
         response.setPage(page.getNumber());
