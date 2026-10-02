@@ -32,12 +32,24 @@ export const formApi = createApi({
         getFormById: builder.query<FormDto, number>({
             query: (id) => `forms/${id}`,
             providesTags: (_result, _error, id) => [{ type: "Form", id: id }]
-        })
+        }),
+
+        publishForm: builder.mutation<FormDto, number>({
+            query: (id) => ({
+                url: `forms/${id}/publish`,
+                method: "PUT",
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "Form", id },
+                { type: "Form", id: "LIST" },
+            ],
+        }),
     }),
 });
 
 export const {
     useGetAllFormsQuery,
     useCreateFormMutation,
-    useGetFormByIdQuery
+    useGetFormByIdQuery,
+    usePublishFormMutation
 } = formApi;

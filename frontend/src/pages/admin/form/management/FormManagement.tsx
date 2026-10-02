@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import DataTable, {
-  type DataTableColumn,
+    type DataTableColumn,
 } from "../../../../components/data/DataTable";
 import DataTablePagination from "../../../../components/data/DataTablePagination";
 import PageContainer from "../../../../components/PageContainer";
 import type { FormDto } from "../../../../models/FormDto";
-import { useGetAllFormsQuery } from "../../../../redux/FormApi";
+import { useGetAllFormsQuery, usePublishFormMutation } from "../../../../redux/FormApi";
 
 import Flash from "../../../../components/flash/Flash";
 import "./form-management.css";
@@ -28,7 +28,26 @@ function FormManagement() {
         size: pageSize,
     });
 
+    const [publishForm, { isLoading: isPublishing }] = usePublishFormMutation();
+    const [publishingId, setPublishingId] = useState<number | null>(null);
+    const [publishError, setPublishError] = useState<string | null>(null);
+
     const forms = data?.data ?? [];
+
+    const handlePublish = async (form: FormDto) => {
+        setPublishError(null);
+        setPublishingId(form.id);
+
+        try {
+            await publishForm(form.id).unwrap();
+        } catch {
+            setPublishError(
+                `Unable to publish "${form.title}". Please try again.`
+            );
+        } finally {
+            setPublishingId(null);
+        }
+    };
 
     const columns: DataTableColumn<FormDto>[] = [
         {
@@ -73,10 +92,28 @@ function FormManagement() {
             header: "Status",
             render: (form) => {
                 if (form.status === "DRAFT") {
+                    const isThisRowPublishing = isPublishing && publishingId === form.id;
+
                     return (
-                        <span className="status-badge status-badge--warning">
-                            Draft
-                        </span>
+                        <div className="form-management__status-cell">
+                            <span className="status-badge status-badge--warning">
+                                Draft
+                            </span>
+
+                            <button
+                                type="button"
+                                className="form-management__publish"
+                                disabled={isPublishing}
+                                onClick={(event) => {
+                                    // Row itself navigates on click — stop
+                                    // that from also firing here.
+                                    event.stopPropagation();
+                                    handlePublish(form);
+                                }}
+                            >
+                                {isThisRowPublishing ? "Publishing…" : "Publish"}
+                            </button>
+                        </div>
                     );
                 }
 
@@ -135,6 +172,12 @@ function FormManagement() {
                 </header>
 
                 <Flash />
+
+                {publishError && (
+                    <div className="form-management__publish-error">
+                        {publishError}
+                    </div>
+                )}
 
                 {error ? (
                     <div className="form-management__state">
