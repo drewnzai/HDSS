@@ -17,7 +17,7 @@ import retrofit2.http.GET
 import retrofit2.http.QueryMap
 
 interface FormApiRepository{
-    @GET("forms")
+    @GET("forms/status/published")
     suspend fun getForms(
         @QueryMap request: Map<String, String>
     ): Response<BatchResponse<FormDto>>
