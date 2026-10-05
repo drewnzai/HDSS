@@ -71,7 +71,6 @@ function Sidebar({
   collapsed,
   mobileOpen,
   onToggleCollapsed,
-  onOpenMobile,
   onCloseMobile,
 }: SidebarProps) {
   const role = useAppSelector(selectRole);
