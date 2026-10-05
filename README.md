@@ -20,6 +20,16 @@ The platform consists of three main applications:
   - [Backend Setup](#backend-setup)
   - [Frontend Setup](#frontend-setup)
   - [Android Setup](#android-setup)
+- [Docker Setup](#docker-setup)
+  - [Docker Prerequisites](#docker-prerequisites)
+  - [Docker Project Files](#docker-project-files)
+  - [Environment Variables (.env)](#environment-variables-env)
+  - [Database Dump](#database-dump)
+  - [Android APK in Docker](#android-apk-in-docker)
+  - [Running the Stack](#running-the-stack)
+  - [Viewing Logs](#viewing-logs)
+  - [Common Docker Commands](#common-docker-commands)
+  - [Port Conflicts](#port-conflicts)
 - [Configuration](#configuration)
 - [Database](#database)
 - [Redis](#redis)
@@ -143,12 +153,24 @@ The repository is organized into three main applications:
 hdss/
 ├── android/                   # Kotlin + Jetpack Compose application
 ├── backend/                   # Java + Spring Boot application
-└── frontend/                  # React + Vite + TypeScript application
+│   ├── downloads/             # hdss.apk served by the download endpoint
+│   ├── Dockerfile
+│   └── .dockerignore
+├── frontend/                  # React + Vite + TypeScript application
+│   ├── nginx.conf             # Serves the production build, handles SPA routing
+│   ├── Dockerfile
+│   └── .dockerignore
+├── database/
+│   └── hdss.sql               # MySQL dump auto-imported on first container start
+├── docker-compose.yml
+└── .env                       # Docker Compose environment values (not committed)
 ```
 
 ## Prerequisites
 
 Before setting up the project, make sure the following are installed.
+
+> As an alternative to installing MySQL, Redis, a JDK, and Node.js directly, the backend, frontend, MySQL, and Redis can all be run as Docker containers instead. See [Docker Setup](#docker-setup).
 
 ### Backend
 
@@ -321,6 +343,167 @@ http://10.0.2.2:8080
 
 The appropriate API URL depends on the Android environment and the application's networking configuration.
 
+## Docker Setup
+
+As an alternative to running the backend and frontend directly with Maven and npm, both can be built and run as Docker containers, alongside MySQL and Redis containers. This is the recommended way to get a complete local stack running quickly without installing MySQL, Redis, a JDK, or Node.js directly on your machine.
+
+> The Android application is not containerized and is still built and run through Android Studio as described above.
+
+### Docker Prerequisites
+
+- Docker Engine
+- Docker Compose (the `docker compose` plugin, not the older standalone `docker-compose` binary)
+
+On Linux, Docker Engine and the Compose plugin are typically installed together via Docker's official apt repository. Refer to the [official Docker documentation](https://docs.docker.com/engine/install/) for your distribution.
+
+After installing, verify both are available:
+
+```bash
+docker --version
+docker compose version
+```
+
+### Docker Project Files
+
+The Docker setup adds the following files to the repository, in addition to the `android/`, `backend/`, and `frontend/` application directories:
+
+| File | Purpose |
+|---|---|
+| `docker-compose.yml` | Defines the `mysql`, `redis`, `backend`, and `frontend` services |
+| `backend/Dockerfile` | Multi-stage build: compiles the Spring Boot app with Maven, runs it on a JRE image |
+| `backend/.dockerignore` | Excludes `target/`, `.git`, and IDE files from the build context |
+| `frontend/Dockerfile` | Multi-stage build: builds the Vite app with Node, serves it with nginx |
+| `frontend/nginx.conf` | Configures nginx to serve the built SPA and handle client-side routing |
+| `frontend/.dockerignore` | Excludes `node_modules/`, `dist/`, and `.git` from the build context |
+| `database/hdss.sql` | A MySQL dump used to seed the `mysql` container on first start |
+| `.env` | Environment values consumed by `docker-compose.yml` (see below) |
+
+### Environment Variables (.env)
+
+`docker-compose.yml` reads sensitive and environment-specific values from a `.env` file in the repository root. This file is not committed to version control — create it yourself before running the stack.
+
+```dotenv
+# MySQL root password — used both by the mysql container itself and by
+# the backend's datasource connection.
+DB_PASSWORD=password
+
+# The origin the frontend is actually served from, matching
+# app.cors.allowed-origins in application.properties.
+# Use http://localhost if the frontend container is published on port 80,
+# or http://localhost:8081 (or whichever host port you mapped it to).
+CORS_ALLOWED_ORIGINS=http://localhost
+
+# SMTP credentials, matching spring.mail.username / spring.mail.password.
+MAIL_USERNAME=
+MAIL_PASSWORD=
+```
+
+> Add `.env` to `.gitignore` if it is not already excluded. Treat its contents the same as any other secret — do not commit real passwords or SMTP credentials.
+
+### Database Dump
+
+The `mysql` service seeds its database from `database/hdss.sql` on first start, using MySQL's own `/docker-entrypoint-initdb.d/` mechanism. This only runs once, the first time the container initializes a fresh, empty data volume — it does **not** re-run on normal restarts of a container whose volume already has data, and it will not overwrite or update existing data in that volume.
+
+To produce or refresh `database/hdss.sql` from an existing local MySQL database:
+
+```bash
+mysqldump -uroot -p<password> --single-transaction --databases hdss > database/hdss.sql
+```
+
+To force a re-import of the dump (for example, after updating it), the existing MySQL data volume must be removed first, since the import only happens against a fresh volume:
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
+> `down -v` deletes the named volumes defined in `docker-compose.yml`, including the MySQL data volume. Only do this if you intend to discard the current state of the containerized database and reseed it from `database/hdss.sql`.
+
+### Android APK in Docker
+
+As described in [Building the APK for Download](#building-the-apk-for-download), the backend serves the Android APK from a `downloads/hdss.apk` path relative to its working directory. The backend's `Dockerfile` copies the `backend/downloads/` directory into the image at the same relative path, so the existing download endpoint continues to work unchanged inside the container.
+
+Build and place `hdss.apk` in `backend/downloads/` before building the backend image, exactly as described in the non-Docker setup above — the Docker image will not contain the APK if that directory is empty or missing when the image is built.
+
+### Running the Stack
+
+From the repository root, with `.env` and `database/hdss.sql` in place:
+
+```bash
+docker compose up -d --build
+```
+
+- `--build` builds (or rebuilds) the `backend` and `frontend` images from their Dockerfiles. Required on first run, and any time backend or frontend source code changes.
+- `-d` runs the stack in detached mode, in the background, rather than blocking the terminal.
+
+Once running:
+
+| Service | Default URL |
+|---|---|
+| Backend API | `http://localhost:8080` |
+| Swagger UI | `http://localhost:8080/swagger-ui/index.html` |
+| Frontend | `http://localhost` (or the host port configured in `docker-compose.yml`) |
+| MySQL | `localhost:3306` |
+| Redis | `localhost:6379` |
+
+The `backend` service waits for `mysql` and `redis` to report healthy before starting, via Docker Compose's `depends_on` health-check conditions. On first start, this includes however long the `hdss.sql` import takes to complete.
+
+### Viewing Logs
+
+```bash
+# All services, interleaved, following new output:
+docker compose logs -f
+
+# One service at a time:
+docker compose logs -f backend
+docker compose logs -f mysql
+docker compose logs -f redis
+docker compose logs -f frontend
+
+# Last 100 lines only, then follow:
+docker compose logs -f --tail=100 backend
+```
+
+`Ctrl+C` stops watching the logs — it does not stop the containers.
+
+### Common Docker Commands
+
+```bash
+docker compose ps               # list containers and their status/ports
+docker compose down             # stop and remove containers; named volumes are kept
+docker compose down -v          # also remove volumes — this deletes MySQL/Redis data
+docker compose restart backend  # restart a single service without rebuilding
+docker compose up -d --build    # rebuild and restart after source changes
+```
+
+### Port Conflicts
+
+The `frontend` service is published on host port `80` by default. If another service is already using port 80 — for example, a system installation of Apache or nginx — `docker compose up` will fail with an error similar to:
+
+```text
+Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint hdss-frontend: failed to bind host port 0.0.0.0:80/tcp: address already in use
+```
+
+Identify what is using the port:
+
+```bash
+sudo ss -tlnp | grep :80
+```
+
+Either stop the conflicting service, or remap the frontend to a different host port in `docker-compose.yml`:
+
+```yaml
+frontend:
+  ports:
+    - "8081:80"
+```
+
+If the port is remapped, update `CORS_ALLOWED_ORIGINS` in `.env` to match (for example, `http://localhost:8081`), then restart:
+
+```bash
+docker compose up -d
+```
+
 ## Configuration
 
 The backend uses Spring Boot's `application.properties` configuration.
@@ -414,6 +597,8 @@ The `application.properties.example` file should contain property names and safe
 
 HDSS uses **MySQL** as its primary relational database.
 
+> If running the stack with Docker, MySQL is provided as a container and seeded automatically from `database/hdss.sql` — see [Database Dump](#database-dump). The steps below apply to a manually installed, non-containerized MySQL instance.
+
 Create a database before starting the backend.
 
 For example:
@@ -454,6 +639,8 @@ Use the value appropriate for the environment. Avoid destructive schema-generati
 ## Redis
 
 **Redis** is used by the backend for application caching.
+
+> If running the stack with Docker, Redis is provided as a container and requires no separate installation — see [Docker Setup](#docker-setup). The steps below apply to a manually installed, non-containerized Redis instance.
 
 Configure Redis using:
 
@@ -708,6 +895,8 @@ In particular, review:
 - Production API endpoints
 - Android signing credentials
 - Environment-specific configuration
+
+If running the stack with Docker, the same principle applies to the `.env` file described in [Environment Variables (.env)](#environment-variables-env) — do not commit it, and do not reuse development values (such as the example `DB_PASSWORD`) in any environment that is reachable outside your own machine.
 
 Production deployments should use HTTPS/TLS and appropriate secret and credential management.
 
