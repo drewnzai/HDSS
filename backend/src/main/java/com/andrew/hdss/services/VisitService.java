@@ -45,7 +45,7 @@ public class VisitService {
         Visit visit = new Visit();
         visit.setClientId(request.clientId());
         visit.setVisitDate(request.visitDate());
-        visit.setConductedBy(conductedBy);
+        visit.setCreatedBy(conductedBy);
         visit.setStatus(VisitStatus.IN_PROGRESS);
 
         if (request.householdId() != null) {

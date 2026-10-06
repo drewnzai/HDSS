@@ -15,13 +15,6 @@ import java.time.LocalDateTime;
 @Setter
 public class Visit extends SyncableEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(unique = true, nullable = false)
-    private String clientId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "household_id")
     private Household household;

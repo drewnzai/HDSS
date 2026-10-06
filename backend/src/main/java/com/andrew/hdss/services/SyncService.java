@@ -152,11 +152,11 @@ public class SyncService {
         household.setLocation(location);
         household.setLatitude(dto.latitude());
         household.setLongitude(dto.longitude());
-        household.setUpdatedAt(Instant.now());
+        household.setUpdatedAt(LocalDateTime.now());
 
         if (isNew) {
             household.setCreatedBy(currentUser);
-            household.setCreatedAt(Instant.now());
+            household.setCreatedAt(LocalDateTime.now());
             household.setStatus(HouseholdStatus.NOT_VIABLE);
         }
 
@@ -179,11 +179,11 @@ public class SyncService {
         individual.setSex(dto.sex());
         individual.setDateOfBirth(dto.dateOfBirth());
         individual.setDobEstimated(dto.dobEstimated());
-        individual.setUpdatedAt(Instant.now());
+        individual.setUpdatedAt(LocalDateTime.now());
 
         if (isNew) {
             individual.setCreatedBy(currentUser);
-            individual.setCreatedAt(Instant.now());
+            individual.setCreatedAt(LocalDateTime.now());
         }
 
         Individual saved = individualRepository.save(individual);
@@ -267,14 +267,14 @@ public class SyncService {
         membership.setRelationshipToHead(dto.relationshipToHead());
         membership.setEndDate(dto.endDate());
         membership.setEndType(dto.endType());
-        membership.setUpdatedAt(Instant.now());
+        membership.setUpdatedAt(LocalDateTime.now());
 
         if (isNew) {
             membership.setClientId(dto.clientId());
             membership.setStartDate(dto.startDate());
             membership.setStartType(dto.startType());
             membership.setCreatedBy(currentUser);
-            membership.setCreatedAt(Instant.now());
+            membership.setCreatedAt(LocalDateTime.now());
         }
 
         Membership saved = membershipRepository.save(membership);
@@ -297,7 +297,7 @@ public class SyncService {
             household.setStatus(HouseholdStatus.NOT_VIABLE);
         }
 
-        household.setUpdatedAt(Instant.now());
+        household.setUpdatedAt(LocalDateTime.now());
         householdRepository.save(household);
     }
 
@@ -327,7 +327,7 @@ public class SyncService {
         if (isNew) {
             visit.setClientId(dto.clientId());
             visit.setVisitDate(dto.visitDate());
-            visit.setConductedBy(currentUser);
+            visit.setCreatedBy(currentUser);
 
             if (dto.householdClientId() != null) {
                 visit.setHousehold(resolveHousehold(dto.householdClientId(), householdsByClientId));
