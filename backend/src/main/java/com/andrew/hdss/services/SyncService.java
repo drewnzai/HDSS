@@ -389,6 +389,7 @@ public class SyncService {
         boolean isNew = answer.getId() == null;
 
         answer.setValue(dto.value());
+        answer.setUpdatedAt(LocalDateTime.now());
 
         if (isNew) {
             FormResponse formResponse = resolveFormResponse(dto.formResponseClientId(), formResponsesByClientId);
@@ -397,6 +398,8 @@ public class SyncService {
                     .orElseThrow(() -> new IllegalArgumentException("Question not found: " + dto.questionId()));
 
             answer.setClientId(dto.clientId());
+            answer.setCreatedBy(authService.getCurrentUser());
+            answer.setCreatedAt(LocalDateTime.now());
             answer.setFormResponse(formResponse);
             answer.setQuestion(question);
         }
