@@ -64,7 +64,7 @@ public class FormResponseService {
         formResponse.setForm(form);
         formResponse.setFormVersion(form.getVersion());
         formResponse.setStatus(FormResponseStatus.IN_PROGRESS);
-        formResponse.setStartedAt(LocalDateTime.now());
+        formResponse.setCreatedAt(LocalDateTime.now());
 
         return FormResponseDto.from(formResponseRepository.save(formResponse));
     }
@@ -113,7 +113,7 @@ public class FormResponseService {
         }
 
         formResponse.setStatus(FormResponseStatus.COMPLETED);
-        formResponse.setCompletedAt(LocalDateTime.now());
+        formResponse.setUpdatedAt(LocalDateTime.now());
 
         return FormResponseDto.from(formResponseRepository.save(formResponse));
     }

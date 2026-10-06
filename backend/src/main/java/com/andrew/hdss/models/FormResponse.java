@@ -3,25 +3,17 @@ package com.andrew.hdss.models;
 import com.andrew.hdss.models.enums.FormResponseStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
+import lombok.Setter;
 
 @Entity
 @Table(name = "form_responses")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FormResponse {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(unique = true, nullable = false)
-    private String clientId;
+public class FormResponse extends SyncableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visit_id", nullable = false)
@@ -37,9 +29,4 @@ public class FormResponse {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private FormResponseStatus status;
-
-    @Column(nullable = false)
-    private LocalDateTime startedAt;
-
-    private LocalDateTime completedAt;
 }

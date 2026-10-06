@@ -353,7 +353,7 @@ public class SyncService {
         boolean isNew = formResponse.getId() == null;
 
         formResponse.setStatus(dto.status());
-        formResponse.setCompletedAt(dto.completedAt());
+        formResponse.setUpdatedAt(dto.completedAt());
 
         if (isNew) {
             Visit visit = resolveVisit(dto.visitClientId(), visitsByClientId);
@@ -371,7 +371,8 @@ public class SyncService {
             // FormResponsePushDto's doc comment for why this is never
             // recomputed from form.getVersion() here.
             formResponse.setFormVersion(dto.formVersion());
-            formResponse.setStartedAt(dto.startedAt());
+            formResponse.setCreatedBy(authService.getCurrentUser());
+            formResponse.setCreatedAt(dto.startedAt());
         }
 
         FormResponse saved = formResponseRepository.save(formResponse);
