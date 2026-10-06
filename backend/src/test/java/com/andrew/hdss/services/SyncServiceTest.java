@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -592,7 +593,7 @@ class SyncServiceTest {
         assertThat(visit.getIndividual())
                 .isSameAs(individual);
 
-        assertThat(visit.getConductedBy())
+        assertThat(visit.getCreatedBy())
                 .isSameAs(currentUser);
     }
 
@@ -796,7 +797,7 @@ class SyncServiceTest {
         existing.setClientId("household-client");
         existing.setCreatedBy(currentUser);
         existing.setCreatedAt(
-                Instant.now().minusSeconds(1000)
+                LocalDateTime.now().minusSeconds(1000)
         );
 
         Location location = new Location();
