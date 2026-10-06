@@ -2,9 +2,8 @@ package com.andrew.hdss.models;
 
 import com.andrew.hdss.models.enums.VisitStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,10 +11,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "visits")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Visit {
+@Getter
+@Setter
+public class Visit extends SyncableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,10 +32,6 @@ public class Visit {
 
     @Column(nullable = false)
     private LocalDateTime visitDate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "conducted_by", nullable = false)
-    private User conductedBy;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
