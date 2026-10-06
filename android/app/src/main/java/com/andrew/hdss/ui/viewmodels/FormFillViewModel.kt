@@ -171,8 +171,6 @@ class FormFillViewModel(
     // For SELECT_HOUSEHOLD_MEMBER — resolves candidates from the current
     // household, filtered by sex per the motherClientId/fatherClientId
     // mappedField naming convention, restricted to adults.
-    // ASSUMPTION: 15 as the adult-age cutoff — never actually specified;
-    // confirm the real minimum age for this survey.
     suspend fun loadHouseholdMembers(question: Question): List<Individual> {
         val householdClientId = context.foreignKeys["householdClientId"]
             ?: context.entityClientIds[MappedEntity.HOUSEHOLD]
