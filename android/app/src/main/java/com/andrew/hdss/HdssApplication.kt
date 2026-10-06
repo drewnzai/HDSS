@@ -3,7 +3,7 @@ package com.andrew.hdss
 import android.app.Application
 import androidx.work.Configuration
 import com.andrew.hdss.container.HdssContainer
-import com.andrew.hdss.worker.DownloadWorkerFactory
+import com.andrew.hdss.worker.HdssWorkerFactory
 
 class HdssApplication: Application(), Configuration.Provider {
     lateinit var container: HdssContainer
@@ -15,6 +15,6 @@ class HdssApplication: Application(), Configuration.Provider {
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
-            .setWorkerFactory(DownloadWorkerFactory(container))
+            .setWorkerFactory(HdssWorkerFactory(container))
             .build()
 }

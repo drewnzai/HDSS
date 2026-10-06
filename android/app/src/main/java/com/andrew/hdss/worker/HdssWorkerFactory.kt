@@ -6,7 +6,7 @@ import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import com.andrew.hdss.container.HdssContainer
 
-class DownloadWorkerFactory(
+class HdssWorkerFactory(
     private val container: HdssContainer
 ) : WorkerFactory() {
 
