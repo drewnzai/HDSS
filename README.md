@@ -27,6 +27,15 @@ The platform consists of three main applications:
   - [Viewing Logs](#viewing-logs)
   - [Common Docker Commands](#common-docker-commands)
   - [Port Conflicts](#port-conflicts)
+- [Observability (Prometheus & Grafana)](#observability-prometheus--grafana)
+  - [Backend Dependencies](#backend-dependencies)
+  - [Backend Configuration](#backend-configuration)
+  - [Security Configuration](#security-configuration)
+  - [Prometheus Configuration](#prometheus-configuration)
+  - [Grafana Configuration](#grafana-configuration)
+  - [Accessing Prometheus and Grafana](#accessing-prometheus-and-grafana)
+  - [Verifying the Setup](#verifying-the-setup)
+  - [Importing a Dashboard](#importing-a-dashboard)
 - [Manual Setup (Without Docker)](#manual-setup-without-docker)
   - [Backend Setup](#backend-setup)
   - [Frontend Setup](#frontend-setup)
@@ -60,6 +69,7 @@ HDSS provides a foundation for:
 - Email-based functionality
 - Cross-Origin Resource Sharing (CORS) configuration
 - API documentation through Swagger / OpenAPI
+- Metrics collection and visualization through Prometheus and Grafana
 - Android-based field data collection
 - Web-based administrative and back-office functionality
 
@@ -145,6 +155,9 @@ The Android application provides a mobile interface for interacting with the HDS
 | Android | Kotlin |
 | Android UI | Jetpack Compose |
 | Email | Spring Mail |
+| Metrics | Micrometer / Spring Boot Actuator |
+| Metrics Collection | Prometheus |
+| Metrics Visualization | Grafana |
 
 ## Project Structure
 
@@ -163,6 +176,13 @@ hdss/
 │   └── .dockerignore
 ├── database/
 │   └── hdss.sql               # MySQL dump auto-imported on first container start
+├── monitoring/
+│   ├── prometheus/
+│   │   └── prometheus.yml     # Tells Prometheus what to scrape
+│   └── grafana/
+│       └── provisioning/
+│           └── datasources/
+│               └── datasource.yml  # Auto-registers Prometheus in Grafana
 ├── docker-compose.yml
 └── .env                       # Docker Compose environment values (not committed)
 ```
@@ -209,7 +229,7 @@ See [Manual Setup (Without Docker)](#manual-setup-without-docker) for details.
 Clone the repository and enter the project directory:
 
 ```bash
-git clone https://github.com/drewnzai/HDSS.git
+git clone <repository-url>
 cd hdss
 ```
 
@@ -249,13 +269,15 @@ The Docker setup adds the following files to the repository, in addition to the 
 
 | File | Purpose |
 |---|---|
-| `docker-compose.yml` | Defines the `mysql`, `redis`, `backend`, and `frontend` services |
+| `docker-compose.yml` | Defines the `mysql`, `redis`, `backend`, `frontend`, `prometheus`, and `grafana` services |
 | `backend/Dockerfile` | Multi-stage build: compiles the Spring Boot app with Maven, runs it on a JRE image |
 | `backend/.dockerignore` | Excludes `target/`, `.git`, and IDE files from the build context |
 | `frontend/Dockerfile` | Multi-stage build: builds the Vite app with Node, serves it with nginx |
 | `frontend/nginx.conf` | Configures nginx to serve the built SPA and handle client-side routing |
 | `frontend/.dockerignore` | Excludes `node_modules/`, `dist/`, and `.git` from the build context |
 | `database/hdss.sql` | A MySQL dump used to seed the `mysql` container on first start |
+| `monitoring/prometheus/prometheus.yml` | Tells Prometheus what to scrape — see [Observability (Prometheus & Grafana)](#observability-prometheus--grafana) |
+| `monitoring/grafana/provisioning/datasources/datasource.yml` | Auto-registers Prometheus as a Grafana data source on first start |
 | `.env` | Environment values consumed by `docker-compose.yml` (see below) |
 
 ### Environment Variables (.env)
@@ -265,7 +287,7 @@ The Docker setup adds the following files to the repository, in addition to the 
 ```dotenv
 # MySQL root password — used both by the mysql container itself and by
 # the backend's datasource connection.
-DB_PASSWORD=
+DB_PASSWORD=password
 
 # The origin the frontend is actually served from, matching
 # app.cors.allowed-origins in application.properties.
@@ -276,9 +298,14 @@ CORS_ALLOWED_ORIGINS=http://localhost
 # SMTP credentials, matching spring.mail.username / spring.mail.password.
 MAIL_USERNAME=
 MAIL_PASSWORD=
+
+# Grafana's initial admin login. Only used by the grafana container —
+# see Observability (Prometheus & Grafana).
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=admin
 ```
 
-> Add `.env` to `.gitignore` if it is not already excluded. Treat its contents the same as any other secret — do not commit real passwords or SMTP credentials.
+> Add `.env` to `.gitignore` if it is not already excluded. Treat its contents the same as any other secret — do not commit real passwords, SMTP credentials, or the Grafana admin password.
 
 ### Database Dump
 
@@ -383,6 +410,119 @@ If the port is remapped, update `CORS_ALLOWED_ORIGINS` in `.env` to match (for e
 ```bash
 docker compose up -d
 ```
+
+## Observability (Prometheus & Grafana)
+
+The Docker stack includes **Prometheus** for metrics collection and **Grafana** for visualization, scraping metrics directly from the Spring Boot backend via Micrometer and Actuator.
+
+> This is only available when running the stack with Docker. It is not part of [Manual Setup (Without Docker)](#manual-setup-without-docker) — nothing stops it from being configured manually, but no instructions for doing so are provided here.
+
+### Backend Dependencies
+
+The backend exposes Prometheus-formatted metrics through Spring Boot Actuator and Micrometer's Prometheus registry:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+```
+
+Both are required. `spring-boot-starter-actuator` alone exposes metrics in Micrometer's own format, not Prometheus's — without `micrometer-registry-prometheus`, the `/actuator/prometheus` endpoint described below does not exist.
+
+### Backend Configuration
+
+Add to `application.properties`:
+
+```properties
+# 9. Observability / Actuator
+management.endpoints.web.exposure.include=health,prometheus
+management.endpoint.health.show-details=when-authorized
+management.prometheus.metrics.export.enabled=true
+management.metrics.tags.application=hdss-backend
+```
+
+`management.metrics.tags.application` attaches an `application="hdss-backend"` label to every metric the backend emits. This is required for the Grafana dashboard described below — without it, dashboards that filter or group by application have nothing to filter on, and every panel shows no data even though metrics are being collected correctly.
+
+> Only `health` and `prometheus` are exposed, not every Actuator endpoint (`management.endpoints.web.exposure.include=*`). Exposing endpoints such as `/env` or `/beans` over HTTP is an information-disclosure risk in any environment reachable outside your own machine.
+
+### Security Configuration
+
+By default, Spring Security blocks unauthenticated access to all endpoints, including Actuator's. Prometheus scrapes `/actuator/prometheus` without authentication, so this path (and `/actuator/health`, for container healthchecks) must be explicitly permitted in the security configuration:
+
+```java
+.authorizeHttpRequests(auth -> auth
+    .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
+    // ...existing rules
+)
+```
+
+Without this, Prometheus's scrape requests return `403`, and the target shows as `DOWN` on Prometheus's own targets page even though the backend is otherwise working correctly.
+
+### Prometheus Configuration
+
+`monitoring/prometheus/prometheus.yml`:
+
+```yaml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "hdss-backend"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["backend:8080"]
+```
+
+`backend:8080` refers to the `backend` service by its Docker Compose service name, not `localhost` — Prometheus runs as its own container on the same Compose network, where service names resolve to each other directly.
+
+### Grafana Configuration
+
+`monitoring/grafana/provisioning/datasources/datasource.yml` auto-registers Prometheus as a Grafana data source on first start, so it does not need to be added manually through Grafana's UI:
+
+```yaml
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+```
+
+### Accessing Prometheus and Grafana
+
+| Service | Default URL |
+|---|---|
+| Prometheus | `http://localhost:9090` |
+| Prometheus targets | `http://localhost:9090/targets` |
+| Grafana | `http://localhost:3000` |
+
+Log in to Grafana with the `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` values from `.env`.
+
+### Verifying the Setup
+
+Check each of the following in order — each one isolates a different layer, so working through them in sequence narrows down where a problem actually is rather than guessing:
+
+1. **The backend's own endpoint.** `curl http://localhost:8080/actuator/prometheus` from the host. A `403` means the Security configuration above is missing; a `404` means the Micrometer Prometheus dependency is missing.
+2. **Prometheus is scraping successfully.** Open `http://localhost:9090/targets`. The `hdss-backend` job should show State: **UP**.
+3. **Grafana can query Prometheus.** In Grafana, open **Explore**, select the Prometheus data source, and query a basic metric such as `jvm_memory_used_bytes`. Real data points confirm the full chain is working.
+
+### Importing a Dashboard
+
+**Dashboards → New → Import**, using dashboard ID **4701** ("JVM (Micrometer)") provides JVM memory, GC, HTTP request, and DB connection pool panels without building them manually.
+
+**Known gotchas**, found when first setting this up:
+
+- **Panels show "N/A" for every value.** This almost always means `management.metrics.tags.application` (above) was added after the dashboard was first imported, or is missing entirely — the dashboard's `$application` variable has nothing to select, because none of the scraped metrics carry an `application` label yet.
+- **`$application` has a value selected, but panels still show no data.** Check the dashboard's second variable (commonly `$instance`). Some imported dashboards define it as `label_values(up{application=~"$application"}, instance)` — but Prometheus's own `up` metric is synthesized by Prometheus itself per scrape target and never carries the `application` tag, since that tag is only attached to metrics the backend actually emits. This makes the `$instance` dropdown permanently empty. Fix by changing that variable's query to `label_values(up, instance)` instead, under dashboard settings → **Variables**.
+- **Panels only update when their query is run manually.** The dashboard's refresh interval (top-right, next to the time range picker) is likely set to **Off**. Set it to an interval such as `10s`.
+- **A variable's dropdown doesn't pick up newly available values on its own.** Check that variable's **Refresh** setting under dashboard settings → **Variables** — if it is set to **Never**, change it to **On Dashboard Load**.
 
 ## Manual Setup (Without Docker)
 

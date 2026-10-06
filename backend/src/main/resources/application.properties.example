@@ -41,3 +41,9 @@ springdoc.swagger-ui.enabled=true
 
 # 8. Security Configuration
 logging.level.org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer=ERROR
+
+# 9. Observability / Actuator
+management.endpoints.web.exposure.include=health,prometheus
+management.endpoint.health.show-details=when-authorized
+management.prometheus.metrics.export.enabled=true
+management.metrics.tags.application=hdss-backend
