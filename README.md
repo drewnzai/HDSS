@@ -15,12 +15,9 @@ The platform consists of three main applications:
 - [Technology Stack](#technology-stack)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-  - [Clone the Repository](#clone-the-repository)
-  - [Backend Setup](#backend-setup)
-  - [Frontend Setup](#frontend-setup)
-  - [Android Setup](#android-setup)
-- [Docker Setup](#docker-setup)
+- [Clone the Repository](#clone-the-repository)
+- [Docker Setup](#docker-setup) — recommended
+  - [Before You Start: Required Files](#before-you-start-required-files)
   - [Docker Prerequisites](#docker-prerequisites)
   - [Docker Project Files](#docker-project-files)
   - [Environment Variables (.env)](#environment-variables-env)
@@ -30,6 +27,10 @@ The platform consists of three main applications:
   - [Viewing Logs](#viewing-logs)
   - [Common Docker Commands](#common-docker-commands)
   - [Port Conflicts](#port-conflicts)
+- [Manual Setup (Without Docker)](#manual-setup-without-docker)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+  - [Android Setup](#android-setup)
 - [Configuration](#configuration)
 - [Database](#database)
 - [Redis](#redis)
@@ -168,186 +169,65 @@ hdss/
 
 ## Prerequisites
 
-Before setting up the project, make sure the following are installed.
+HDSS can be set up using **Docker (recommended)** or by installing each application's dependencies **manually**.
 
-> As an alternative to installing MySQL, Redis, a JDK, and Node.js directly, the backend, frontend, MySQL, and Redis can all be run as Docker containers instead. See [Docker Setup](#docker-setup).
+### Android (Always Required)
 
-### Backend
+The Android application is not containerized and is always built and run through Android Studio, regardless of which setup path is used for the backend and frontend:
+
+- Android Studio
+- Android SDK
+- Android emulator or physical Android device
+
+### Docker (Recommended)
+
+- Docker Engine
+- Docker Compose (the `docker compose` plugin, not the older standalone `docker-compose` binary)
+
+See [Docker Setup](#docker-setup) for installation instructions and the full setup process.
+
+### Manual Setup (Alternative)
+
+If not using Docker, each component is installed and run directly:
+
+**Backend**
 
 - JDK
 - Maven
 - MySQL
 - Redis
 
-### Frontend
+**Frontend**
 
 - Node.js
 - npm
 
-### Android
+See [Manual Setup (Without Docker)](#manual-setup-without-docker) for details.
 
-- Android Studio
-- Android SDK
-- Android emulator or physical Android device
-
-## Getting Started
-
-### Clone the Repository
+## Clone the Repository
 
 Clone the repository and enter the project directory:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/drewnzai/HDSS.git
 cd hdss
 ```
 
-### Backend Setup
-
-Navigate to the backend directory:
-
-```bash
-cd backend
-```
-
-The backend runs on port **8080** by default.
-
-#### Configure Application Properties
-
-A sample configuration file is provided in the repository as:
-
-```text
-application.properties.example
-```
-
-Copy it to the Spring Boot resources directory:
-
-```bash
-cp application.properties.example src/main/resources/application.properties
-```
-
-Then populate the required configuration values.
-
-> Do not commit your local `application.properties` if it contains passwords, secrets, API keys, or other sensitive values.
-
-#### Start the Backend
-
-If the project uses the Maven wrapper:
-
-```bash
-./mvnw spring-boot:run
-```
-
-On Windows:
-
-```powershell
-mvnw.cmd spring-boot:run
-```
-
-Alternatively, if Maven is installed globally:
-
-```bash
-mvn spring-boot:run
-```
-
-The API will be available at:
-
-```text
-http://localhost:8080
-```
-
-### Frontend Setup
-
-From the repository root:
-
-```bash
-cd frontend
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-Vite will display the frontend URL in the terminal. The default Vite development URL is commonly:
-
-```text
-http://localhost:5173
-```
-
-The exact URL depends on the Vite configuration.
-
-### Android Setup
-
-Open the `android` directory in **Android Studio**.
-
-Allow Android Studio to:
-
-1. Sync the Gradle project.
-2. Download the required dependencies.
-3. Configure the required Android SDK components.
-
-Run the application using an Android emulator or a connected physical Android device.
-
-#### Building the APK for Download
-
-The HDSS backend can serve the Android application as a downloadable APK. Before the download endpoint can be used, the APK must first be built and placed in the backend's `downloads` directory.
-
-1. Open the `android` project in **Android Studio**.
-2. Build a **debug APK**. A debug APK is recommended for development and testing.
-3. Create a `downloads` directory at the root of the backend project:
-
-```text
-hdss/
-├── android/
-├── backend/
-│   └── downloads/
-└── frontend/
-```
-
-4. Copy the generated APK into the `backend/downloads/` directory.
-5. Rename the APK to exactly:
-
-```text
-hdss.apk
-```
-
-The resulting structure should be:
-
-```text
-backend/
-├── downloads/
-│   └── hdss.apk
-└── ...
-```
-
-The backend download service uses this file when serving the Android application for download.
-
-> **Note:** The `downloads` directory and `hdss.apk` should be present before using the Android application download endpoint. For development, a debug APK is sufficient. Do not use a debug APK for production distribution.
-
-#### Backend Connection
-
-The Android application must be configured with the correct backend API URL.
-
-When using an Android emulator, `localhost` refers to the emulator itself rather than the development machine. For the standard Android emulator, the host machine can generally be reached using:
-
-```text
-http://10.0.2.2:8080
-```
-
-The appropriate API URL depends on the Android environment and the application's networking configuration.
-
 ## Docker Setup
 
-As an alternative to running the backend and frontend directly with Maven and npm, both can be built and run as Docker containers, alongside MySQL and Redis containers. This is the recommended way to get a complete local stack running quickly without installing MySQL, Redis, a JDK, or Node.js directly on your machine.
+This is the recommended way to run HDSS. The backend and frontend are built and run as Docker containers, alongside MySQL and Redis containers, without installing MySQL, Redis, a JDK, or Node.js directly on your machine. For installing each component manually instead, see [Manual Setup (Without Docker)](#manual-setup-without-docker).
 
 > The Android application is not containerized and is still built and run through Android Studio as described above.
+
+### Before You Start: Required Files
+
+Docker builds and starts the containers, but it does not create the following for you. Make sure each of these exists before running `docker compose up`:
+
+- [ ] **`.env`** in the repository root — see [Environment Variables (.env)](#environment-variables-env)
+- [ ] **`database/hdss.sql`** — a MySQL dump used to seed the database on first start — see [Database Dump](#database-dump)
+- [ ] **`backend/downloads/hdss.apk`** — only required if the Android download endpoint will be used — see [Android APK in Docker](#android-apk-in-docker)
+
+Without `.env`, Docker Compose will fail or fall back to empty values for required settings (database password, CORS origin, mail credentials). Without `database/hdss.sql`, the `mysql` container will start with an empty, unseeded database rather than failing outright — it is easy to miss that the dump was never imported.
 
 ### Docker Prerequisites
 
@@ -385,7 +265,7 @@ The Docker setup adds the following files to the repository, in addition to the 
 ```dotenv
 # MySQL root password — used both by the mysql container itself and by
 # the backend's datasource connection.
-DB_PASSWORD=password
+DB_PASSWORD=
 
 # The origin the frontend is actually served from, matching
 # app.cors.allowed-origins in application.properties.
@@ -503,6 +383,154 @@ If the port is remapped, update `CORS_ALLOWED_ORIGINS` in `.env` to match (for e
 ```bash
 docker compose up -d
 ```
+
+## Manual Setup (Without Docker)
+
+This is the alternative to [Docker Setup](#docker-setup) — use this if you prefer to install and run the backend and frontend directly, rather than as containers. [Clone the repository](#clone-the-repository) first if you have not already.
+
+### Backend Setup
+
+Navigate to the backend directory:
+
+```bash
+cd backend
+```
+
+The backend runs on port **8080** by default.
+
+#### Configure Application Properties
+
+A sample configuration file is provided in the repository as:
+
+```text
+application.properties.example
+```
+
+Copy it to the Spring Boot resources directory:
+
+```bash
+cp application.properties.example src/main/resources/application.properties
+```
+
+Then populate the required configuration values.
+
+> Do not commit your local `application.properties` if it contains passwords, secrets, API keys, or other sensitive values.
+
+#### Start the Backend
+
+If the project uses the Maven wrapper:
+
+```bash
+./mvnw spring-boot:run
+```
+
+On Windows:
+
+```powershell
+mvnw.cmd spring-boot:run
+```
+
+Alternatively, if Maven is installed globally:
+
+```bash
+mvn spring-boot:run
+```
+
+The API will be available at:
+
+```text
+http://localhost:8080
+```
+
+
+### Frontend Setup
+
+From the repository root:
+
+```bash
+cd frontend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Vite will display the frontend URL in the terminal. The default Vite development URL is commonly:
+
+```text
+http://localhost:5173
+```
+
+The exact URL depends on the Vite configuration.
+
+
+### Android Setup
+
+Open the `android` directory in **Android Studio**.
+
+Allow Android Studio to:
+
+1. Sync the Gradle project.
+2. Download the required dependencies.
+3. Configure the required Android SDK components.
+
+Run the application using an Android emulator or a connected physical Android device.
+
+#### Building the APK for Download
+
+The HDSS backend can serve the Android application as a downloadable APK. Before the download endpoint can be used, the APK must first be built and placed in the backend's `downloads` directory.
+
+1. Open the `android` project in **Android Studio**.
+2. Build a **debug APK**. A debug APK is recommended for development and testing.
+3. Create a `downloads` directory at the root of the backend project:
+
+```text
+hdss/
+├── android/
+├── backend/
+│   └── downloads/
+└── frontend/
+```
+
+4. Copy the generated APK into the `backend/downloads/` directory.
+5. Rename the APK to exactly:
+
+```text
+hdss.apk
+```
+
+The resulting structure should be:
+
+```text
+backend/
+├── downloads/
+│   └── hdss.apk
+└── ...
+```
+
+The backend download service uses this file when serving the Android application for download.
+
+> **Note:** The `downloads` directory and `hdss.apk` should be present before using the Android application download endpoint. For development, a debug APK is sufficient. Do not use a debug APK for production distribution.
+
+#### Backend Connection
+
+The Android application must be configured with the correct backend API URL.
+
+When using an Android emulator, `localhost` refers to the emulator itself rather than the development machine. For the standard Android emulator, the host machine can generally be reached using:
+
+```text
+http://10.0.2.2:8080
+```
+
+The appropriate API URL depends on the Android environment and the application's networking configuration.
 
 ## Configuration
 
