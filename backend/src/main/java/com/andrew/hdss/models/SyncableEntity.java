@@ -32,4 +32,9 @@ public abstract class SyncableEntity {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @PreUpdate
+    void markUnsynced() {
+        this.isSynced = false;
+    }
 }
