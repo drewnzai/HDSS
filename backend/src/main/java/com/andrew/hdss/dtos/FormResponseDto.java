@@ -3,7 +3,6 @@ package com.andrew.hdss.dtos;
 import com.andrew.hdss.models.FormResponse;
 import com.andrew.hdss.models.enums.FormResponseStatus;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record FormResponseDto(
@@ -28,8 +27,8 @@ public record FormResponseDto(
                 formResponse.getForm().getTitle(),
                 formResponse.getFormVersion(),
                 formResponse.getStatus(),
-                formResponse.getStartedAt(),
-                formResponse.getCompletedAt()
+                formResponse.getCreatedAt(),
+                formResponse.getUpdatedAt()
         );
     }
 }
