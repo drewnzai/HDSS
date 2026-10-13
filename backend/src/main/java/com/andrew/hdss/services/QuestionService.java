@@ -49,7 +49,7 @@ public class QuestionService {
         Form form = findFormOrThrow(formId);
         formService.assertEditable(form);
 
-        int nextOrderIndex = (int) questionRepository.countByFormId(formId);
+        int nextOrderIndex = questionRepository.findMaxOrderIndexByFormId(formId) + 1;
 
         Question question = new Question();
         question.setForm(form);

@@ -11,5 +11,8 @@ import java.util.Optional;
 @Repository
 public interface HouseholdRepository extends JpaRepository<Household, Long> {
     Optional<Household> findByClientId(String clientId);
+
     List<Household> findByLocationIdInAndUpdatedAtAfter(List<Long> locationIds, Instant since);
+
+    boolean existsByHouseholdCodeAndClientIdNot(String householdCode, String clientId);
 }

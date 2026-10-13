@@ -147,6 +147,17 @@ public class SyncService {
             );
         }
 
+        if (dto.householdCode() == null || dto.householdCode().isBlank()) {
+            throw new IllegalArgumentException("Household code is required");
+        }
+        
+        if (householdRepository.existsByHouseholdCodeAndClientIdNot(
+                dto.householdCode(), dto.clientId())) {
+            throw new IllegalArgumentException(
+                    "Household code '" + dto.householdCode() + "' is already used by another household"
+            );
+        }
+
         household.setClientId(dto.clientId());
         household.setHouseholdCode(dto.householdCode());
         household.setLocation(location);
