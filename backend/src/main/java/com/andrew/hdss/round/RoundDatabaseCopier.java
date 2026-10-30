@@ -275,30 +275,29 @@ public class RoundDatabaseCopier {
             Files.setPosixFilePermissions(
                     file,
                     PosixFilePermissions.fromString("rw-------"));
-        } catch (UnsupportedOperationException e) {
+
+            String content = """
+                    [client]
+                    user="%s"
+                    password="%s"
+                    host="%s"
+                    port=%d
+                    protocol=TCP
+                    """.formatted(
+                    escapeOptionValue(username),
+                    escapeOptionValue(password),
+                    escapeOptionValue(source.host()),
+                    source.port()
+            );
+
+            Files.writeString(file, content, StandardCharsets.UTF_8);
+
+            return file;
+
+        } catch (Exception e) {
             Files.deleteIfExists(file);
-            throw new IOException(
-                    "The filesystem does not support secure credential permissions",
-                    e);
+            throw e;
         }
-
-        String content = """
-                [client]
-                user="%s"
-                password="%s"
-                host="%s"
-                port=%d
-                protocol=TCP
-                """.formatted(
-                escapeOptionValue(username),
-                escapeOptionValue(password),
-                escapeOptionValue(source.host()),
-                source.port()
-        );
-
-        Files.writeString(file, content, StandardCharsets.UTF_8);
-
-        return file;
     }
 
     private String escapeOptionValue(String value) {
