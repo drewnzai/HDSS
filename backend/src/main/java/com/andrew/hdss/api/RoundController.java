@@ -1,12 +1,19 @@
 package com.andrew.hdss.api;
 
-import com.andrew.hdss.round.RoundValidator;
+import com.andrew.hdss.dtos.CreateRoundRequest;
+import com.andrew.hdss.dtos.RoundCreationResult;
+import com.andrew.hdss.dtos.RoundDetailsDto;
+import com.andrew.hdss.dtos.RoundDto;
 import com.andrew.hdss.round.ValidationReport;
+import com.andrew.hdss.services.RoundService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/rounds")
@@ -14,12 +21,40 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Round Creation")
 public class RoundController {
 
-    private final RoundValidator roundValidator;
+    private final RoundService roundService;
 
-    // Dry run. Runs every check against a consistent snapshot of live and
-    // reports. Writes nothing anywhere.
     @PostMapping("/validate")
-    public ValidationReport validate() {
-        return roundValidator.validate();
+    public ResponseEntity<ValidationReport> validate() {
+        return ResponseEntity.ok(roundService.validate());
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createRound(
+            @Valid @RequestBody CreateRoundRequest request
+    ) {
+        RoundCreationResult result =
+                roundService.createRound(request.roundName());
+
+        if (!result.started()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(result.validationReport());
+        }
+
+        return ResponseEntity
+                .accepted()
+                .body(result.round());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<RoundDto>> getRounds() {
+        return ResponseEntity.ok(roundService.getRounds());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RoundDetailsDto> getRound(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(roundService.getRound(id));
     }
 }
