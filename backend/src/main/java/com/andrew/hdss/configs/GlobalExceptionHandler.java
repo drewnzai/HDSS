@@ -2,9 +2,6 @@ package com.andrew.hdss.configs;
 
 import com.andrew.hdss.exceptions.*;
 import com.andrew.hdss.utils.ApiError;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,37 +20,43 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotVerifiedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleUserNotVerified(UserNotVerifiedException exception, HttpServletRequest request){
-        return new ApiError(
+    public ApiError handleUserNotVerified(
+            UserNotVerifiedException exception,
+            HttpServletRequest request
+    ) {
+        return error(
                 "Unverified User",
-                400,
+                HttpStatus.BAD_REQUEST,
                 exception.getMessage(),
-                request.getRequestURI(),
-                Instant.now()
+                request
         );
     }
 
     @ExceptionHandler(UserDeletedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleUserDeleted(UserDeletedException exception, HttpServletRequest request){
-        return new ApiError(
+    public ApiError handleUserDeleted(
+            UserDeletedException exception,
+            HttpServletRequest request
+    ) {
+        return error(
                 "Deleted User",
-                400,
+                HttpStatus.BAD_REQUEST,
                 exception.getMessage(),
-                request.getRequestURI(),
-                Instant.now()
+                request
         );
     }
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleResourceAlreadyExists(ResourceAlreadyExistsException exception, HttpServletRequest request){
-        return new ApiError(
+    public ApiError handleResourceAlreadyExists(
+            ResourceAlreadyExistsException exception,
+            HttpServletRequest request
+    ) {
+        return error(
                 "Duplicate Resource",
-                400,
+                HttpStatus.BAD_REQUEST,
                 exception.getMessage(),
-                request.getRequestURI(),
-                Instant.now()
+                request
         );
     }
 
@@ -62,42 +65,64 @@ public class GlobalExceptionHandler {
             IllegalStateException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleIllegalArguments(Exception exception, HttpServletRequest request){
-        return new ApiError(
+    public ApiError handleIllegalArguments(
+            Exception exception,
+            HttpServletRequest request
+    ) {
+        return error(
                 "Malformed Parameters",
-                400,
+                HttpStatus.BAD_REQUEST,
                 exception.getMessage(),
-                request.getRequestURI(),
-                Instant.now()
+                request
         );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleEmptyRequiredFields(MethodArgumentNotValidException exception, HttpServletRequest request){
-        String message = exception.getBindingResult().getFieldErrors().stream()
+    public ApiError handleEmptyRequiredFields(
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request
+    ) {
+        String message = exception.getBindingResult()
+                .getFieldErrors()
+                .stream()
                 .map(f -> f.getField() + ": " + f.getDefaultMessage())
                 .findFirst()
                 .orElse("Missing Required Parameters");
 
-        return new ApiError(
+        return error(
                 "Validation Error",
-                400,
+                HttpStatus.BAD_REQUEST,
                 message,
-                request.getRequestURI(),
-                Instant.now()
+                request
         );
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiError handleEntityNotFound(EntityNotFoundException exception, HttpServletRequest request){
-        return new ApiError(
-                "Entity not found",
-                404,
+    public ApiError handleEntityNotFound(
+            EntityNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return error(
+                "Entity Not Found",
+                HttpStatus.NOT_FOUND,
                 exception.getMessage(),
-                request.getRequestURI(),
-                Instant.now()
+                request
+        );
+    }
+
+    @ExceptionHandler(RoundNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleRoundNotFound(
+            RoundNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return error(
+                "Round Not Found",
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
         );
     }
 
@@ -106,37 +131,89 @@ public class GlobalExceptionHandler {
             UsernameNotFoundException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleWrongPassword(Exception exception, HttpServletRequest request){
-        return new ApiError(
+    public ApiError handleWrongPassword(
+            Exception exception,
+            HttpServletRequest request
+    ) {
+        return error(
                 "Bad Credentials",
-                400,
+                HttpStatus.BAD_REQUEST,
                 "Wrong username or password",
-                request.getRequestURI(),
-                Instant.now()
+                request
         );
     }
 
     @ExceptionHandler(FormLockedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleEditedFormManipulation(FormLockedException ex, HttpServletRequest req) {
-        return new ApiError(
+    public ApiError handleEditedFormManipulation(
+            FormLockedException exception,
+            HttpServletRequest request
+    ) {
+        return error(
                 "Already Edited Form",
-                500,
-                ex.getMessage(),
-                req.getRequestURI(),
-                Instant.now()
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(RoundCreationInProgressException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleRoundCreationInProgress(
+            RoundCreationInProgressException exception,
+            HttpServletRequest request
+    ) {
+        return error(
+                "Round Creation In Progress",
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(RoundCreationUnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ApiError handleRoundCreationUnavailable(
+            RoundCreationUnavailableException exception,
+            HttpServletRequest request
+    ) {
+        log.error("Round creation could not be started", exception);
+
+        return error(
+                "Round Creation Unavailable",
+                HttpStatus.SERVICE_UNAVAILABLE,
+                exception.getMessage(),
+                request
         );
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handleGeneric(Exception ex, HttpServletRequest req) {
-        log.error("Unexpected error", ex);
-        return new ApiError(
+    public ApiError handleGeneric(
+            Exception exception,
+            HttpServletRequest request
+    ) {
+        log.error("Unexpected error", exception);
+
+        return error(
                 "Internal Server Error",
-                500,
+                HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred",
-                req.getRequestURI(),
+                request
+        );
+    }
+
+    private ApiError error(
+            String title,
+            HttpStatus status,
+            String detail,
+            HttpServletRequest request
+    ) {
+        return new ApiError(
+                title,
+                status.value(),
+                detail,
+                request.getRequestURI(),
                 Instant.now()
         );
     }
