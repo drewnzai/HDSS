@@ -2,7 +2,7 @@ package com.andrew.hdss.api;
 
 import com.andrew.hdss.dtos.MappableFieldDto;
 import com.andrew.hdss.models.enums.MappedEntity;
-import com.andrew.hdss.repositories.MappedFieldService;
+import com.andrew.hdss.services.MappedFieldService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

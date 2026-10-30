@@ -1,4 +1,4 @@
-package com.andrew.hdss.repositories;
+package com.andrew.hdss.services;
 
 import com.andrew.hdss.dtos.MappableFieldDto;
 import com.andrew.hdss.models.enums.MappedEntity;

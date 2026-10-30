@@ -2,7 +2,7 @@ package com.andrew.hdss.round;
 
 import com.andrew.hdss.dtos.MappableFieldDto;
 import com.andrew.hdss.models.enums.MappedEntity;
-import com.andrew.hdss.repositories.MappedFieldService;
+import com.andrew.hdss.services.MappedFieldService;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
