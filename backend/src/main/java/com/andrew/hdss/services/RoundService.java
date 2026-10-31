@@ -30,6 +30,7 @@ public class RoundService {
 
     private final RoundValidator roundValidator;
     private final RoundRepository roundRepository;
+    private final AuthService authService;
     private final RoundDatabaseCopier databaseCopier;
     private final RoundDatabaseNameGenerator databaseNameGenerator;
     private final RoundCreationLock creationLock;
@@ -43,11 +44,13 @@ public class RoundService {
             RoundDatabaseNameGenerator databaseNameGenerator,
             RoundCreationLock creationLock,
             ObjectMapper objectMapper,
-            @Qualifier("roundTaskExecutor") Executor roundTaskExecutor
+            @Qualifier("roundTaskExecutor") Executor roundTaskExecutor,
+            AuthService authService
     ) {
         this.roundValidator = roundValidator;
         this.roundRepository = roundRepository;
         this.databaseCopier = databaseCopier;
+        this.authService = authService;
         this.databaseNameGenerator = databaseNameGenerator;
         this.creationLock = creationLock;
         this.objectMapper = objectMapper;
@@ -86,6 +89,7 @@ public class RoundService {
             round.setValidationPassed(true);
             round.setValidationReport(reportJson);
             round.setStartedAt(LocalDateTime.now());
+            round.setCreatedBy(authService.getCurrentUser());
 
             round = roundRepository.saveAndFlush(round);
 
@@ -133,7 +137,7 @@ public class RoundService {
             String databaseName,
             RoundCreationLock.Lease lease
     ) {
-        try {
+        try (lease) {
             log.info(
                     "Starting database copy for round {} into {}",
                     roundId,
@@ -159,8 +163,6 @@ public class RoundService {
                     errorMessage(e)
             );
 
-        } finally {
-            lease.close();
         }
     }
 

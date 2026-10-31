@@ -1,6 +1,7 @@
 package com.andrew.hdss.dtos;
 
 import com.andrew.hdss.models.Round;
+import com.andrew.hdss.models.User;
 import com.andrew.hdss.models.enums.RoundStatus;
 
 import java.time.LocalDateTime;
@@ -14,10 +15,14 @@ public record RoundDto(
         LocalDateTime startedAt,
         LocalDateTime completedAt,
         String errorMessage,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String createdBy
 ) {
 
     public static RoundDto from(Round round) {
+        User user = round.getCreatedBy();
+        String username = user.getFirstName() + " " + user.getLastName();
+
         return new RoundDto(
                 round.getId(),
                 round.getRoundName(),
@@ -27,7 +32,8 @@ public record RoundDto(
                 round.getStartedAt(),
                 round.getCompletedAt(),
                 round.getErrorMessage(),
-                round.getCreatedAt()
+                round.getCreatedAt(),
+                username
         );
     }
 }

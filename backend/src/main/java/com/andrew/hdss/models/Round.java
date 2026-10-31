@@ -29,7 +29,7 @@ public class Round {
 
     @Column(name = "validation_passed", nullable = false)
     private boolean validationPassed;
-    
+
     @Column(name = "validation_report", columnDefinition = "JSON")
     private String validationReport;
 
@@ -41,6 +41,10 @@ public class Round {
 
     @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
