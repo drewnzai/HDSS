@@ -927,6 +927,10 @@ export default function RoundManagement() {
                     </td>
 
                     <td>
+                        <span>{round.createdBy}</span>
+                    </td>
+
+                    <td>
                       <StatusBadge status={round.status} />
                     </td>
 

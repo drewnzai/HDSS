@@ -52,6 +52,7 @@ export interface RoundDto {
     completedAt: string | null;
     errorMessage: string | null;
     createdAt: string;
+    createdBy: string;
 }
 
 export interface RoundDetailsDto extends RoundDto {
