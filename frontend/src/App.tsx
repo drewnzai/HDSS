@@ -1,33 +1,33 @@
-import { Route, Routes } from "react-router-dom"
-import "./App.css"
-import Layout from "./components/layout/Layout"
-import CreateChoice from "./pages/admin/choice/create/CreateChoice"
-import ChoiceListLookup from "./pages/admin/choice/lookup/ChoiceListLookup"
-import ChoiceManagement from "./pages/admin/choice/management/ChoiceManagement"
-import CreateForm from "./pages/admin/form/create/CreateForm"
-import FormManagement from "./pages/admin/form/management/FormManagement"
-import LocationImport from "./pages/admin/location/import/LocationImport"
-import LocationManagement from "./pages/admin/location/management/LocationManagement"
-import CreateQuestion from "./pages/admin/question/create/CreateQuestion"
-import EditQuestion from "./pages/admin/question/edit/EditQuestion"
-import QuestionManagement from "./pages/admin/question/management/QuestionManagement"
-import CreateUser from "./pages/admin/user/CreateUser"
-import UserManagement from "./pages/admin/user/management/UserManagement"
-import UserDetail from "./pages/admin/user/UserDetail"
-import Home from "./pages/home/Home"
-import Login from "./pages/login/Login"
-import ProtectedRoute from "./routes/ProtectedRoute"
+import { Route, Routes } from "react-router-dom";
+import "./App.css";
+import Layout from "./components/layout/Layout";
+import CreateChoice from "./pages/admin/choice/create/CreateChoice";
+import ChoiceListLookup from "./pages/admin/choice/lookup/ChoiceListLookup";
+import ChoiceManagement from "./pages/admin/choice/management/ChoiceManagement";
+import CreateForm from "./pages/admin/form/create/CreateForm";
+import FormManagement from "./pages/admin/form/management/FormManagement";
+import LocationImport from "./pages/admin/location/import/LocationImport";
+import LocationManagement from "./pages/admin/location/management/LocationManagement";
+import CreateQuestion from "./pages/admin/question/create/CreateQuestion";
+import EditQuestion from "./pages/admin/question/edit/EditQuestion";
+import QuestionManagement from "./pages/admin/question/management/QuestionManagement";
+import CreateUser from "./pages/admin/user/CreateUser";
+import UserManagement from "./pages/admin/user/management/UserManagement";
+import UserDetail from "./pages/admin/user/UserDetail";
+import Home from "./pages/home/Home";
+import Login from "./pages/login/Login";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import RoundManagement from "./pages/admin/round/RoundManagement";
 
 function App() {
-
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
 
       <Route element={<ProtectedRoute />}>
-      <Route element={<Layout/>} >
-        <Route path="/" element={<Home />} />
-      </Route>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+        </Route>
       </Route>
 
       <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
@@ -39,16 +39,32 @@ function App() {
           <Route path="/admin/locations/import" element={<LocationImport />} />
           <Route path="/admin/forms/create" element={<CreateForm />} />
           <Route path="/admin/forms" element={<FormManagement />} />
-          <Route path="/admin/forms/:formId/questions" element={<QuestionManagement />} />
-          < Route path="/admin/forms/:formId/questions/create" element={<CreateQuestion />} />
-          < Route path="/admin/forms/:formId/questions/:questionId/edit" element={<EditQuestion />} />
+          <Route
+            path="/admin/forms/:formId/questions"
+            element={<QuestionManagement />}
+          />
+          <Route
+            path="/admin/forms/:formId/questions/create"
+            element={<CreateQuestion />}
+          />
+          <Route
+            path="/admin/forms/:formId/questions/:questionId/edit"
+            element={<EditQuestion />}
+          />
           <Route path="/admin/choices" element={<ChoiceListLookup />} />
-          <Route path="/admin/choices/:listName" element={<ChoiceManagement />} />
-          <Route path="/admin/choices/:listName/create" element={<CreateChoice />} />
+          <Route
+            path="/admin/choices/:listName"
+            element={<ChoiceManagement />}
+          />
+          <Route
+            path="/admin/choices/:listName/create"
+            element={<CreateChoice />}
+          />
+          <Route path="/admin/rounds" element={<RoundManagement />} />
         </Route>
       </Route>
     </Routes>
-  )
+  );
 }
 
 export default App;
