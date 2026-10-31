@@ -1,7 +1,7 @@
 package com.andrew.hdss.dtos;
 
 import com.andrew.hdss.models.enums.RoundStatus;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import java.time.LocalDateTime;
 

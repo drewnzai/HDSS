@@ -10,13 +10,13 @@ import com.andrew.hdss.models.Round;
 import com.andrew.hdss.models.enums.RoundStatus;
 import com.andrew.hdss.repositories.RoundRepository;
 import com.andrew.hdss.round.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -185,7 +185,7 @@ public class RoundService {
     private String serializeReport(ValidationReport report) {
         try {
             return objectMapper.writeValueAsString(report);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException(
                     "Could not serialize the validation report", e
             );
@@ -231,7 +231,7 @@ public class RoundService {
                 validationReport = objectMapper.readTree(
                         round.getValidationReport()
                 );
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.error(
                         "Could not read validation report for round {}",
                         id,
