@@ -171,8 +171,6 @@ public class SyncService {
             household.setStatus(HouseholdStatus.NOT_VIABLE);
         }
 
-        household.setSynced(true);
-
         Household saved = householdRepository.save(household);
         return new UpsertResult<>(saved, isNew);
     }
@@ -198,8 +196,6 @@ public class SyncService {
             individual.setCreatedBy(currentUser);
             individual.setCreatedAt(LocalDateTime.now());
         }
-
-        individual.setSynced(true);
 
         Individual saved = individualRepository.save(individual);
         return new UpsertResult<>(saved, isNew);
@@ -292,8 +288,6 @@ public class SyncService {
             membership.setCreatedAt(LocalDateTime.now());
         }
 
-        membership.setSynced(true);
-
         Membership saved = membershipRepository.save(membership);
         applyHeadOfHouseholdRules(saved, household);
 
@@ -355,8 +349,6 @@ public class SyncService {
             }
         }
 
-        visit.setSynced(true);
-
         Visit saved = visitRepository.save(visit);
         return new UpsertResult<>(saved, isNew);
     }
@@ -394,8 +386,6 @@ public class SyncService {
             formResponse.setCreatedAt(dto.startedAt());
         }
 
-        formResponse.setSynced(true);
-
         FormResponse saved = formResponseRepository.save(formResponse);
         return new UpsertResult<>(saved, isNew);
     }
@@ -424,8 +414,6 @@ public class SyncService {
             answer.setFormResponse(formResponse);
             answer.setQuestion(question);
         }
-
-        answer.setSynced(true);
 
         Answer saved = answerRepository.save(answer);
         return new UpsertResult<>(saved, isNew);
