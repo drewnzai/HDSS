@@ -68,7 +68,7 @@ const adminNav: NavItem[] = [
   },
   {
     label: "Rounds",
-    to: "/admin/round",
+    to: "/admin/rounds",
     icon: Layers3
   }
 ];
