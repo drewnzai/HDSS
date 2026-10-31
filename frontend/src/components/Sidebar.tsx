@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Home,
+  Layers3,
   LayoutDashboard,
   MapPin,
   NotepadText,
@@ -64,6 +65,11 @@ const adminNav: NavItem[] = [
     label: "Choices",
     to: "/admin/choices",
     icon: SquareCheck
+  },
+  {
+    label: "Rounds",
+    to: "/admin/round",
+    icon: Layers3
   }
 ];
 
