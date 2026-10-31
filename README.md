@@ -168,6 +168,8 @@ hdss/
 ├── android/                   # Kotlin + Jetpack Compose application
 ├── backend/                   # Java + Spring Boot application
 │   ├── downloads/             # hdss.apk served by the download endpoint
+│   ├── run-local.sh            # Loads .env.local and starts Spring Boot
+│   ├── .env.local.example     # Local backend environment template
 │   ├── Dockerfile
 │   └── .dockerignore
 ├── frontend/                  # React + Vite + TypeScript application
@@ -176,6 +178,7 @@ hdss/
 │   └── .dockerignore
 ├── database/
 │   └── hdss.sql               # MySQL dump auto-imported on first container start
+├── round-exports/             # Optional host-side round database exports (keep private)
 ├── monitoring/
 │   ├── prometheus/
 │   │   └── prometheus.yml     # Tells Prometheus what to scrape
@@ -184,7 +187,8 @@ hdss/
 │           └── datasources/
 │               └── datasource.yml  # Auto-registers Prometheus in Grafana
 ├── docker-compose.yml
-└── .env                       # Docker Compose environment values (not committed)
+├── .env                       # Docker Compose environment values (not committed)
+└── .env.example                # Safe template for Docker Compose values
 ```
 
 ## Prerequisites
@@ -270,7 +274,7 @@ The Docker setup adds the following files to the repository, in addition to the 
 | File | Purpose |
 |---|---|
 | `docker-compose.yml` | Defines the `mysql`, `redis`, `backend`, `frontend`, `prometheus`, and `grafana` services |
-| `backend/Dockerfile` | Multi-stage build: compiles the Spring Boot app with Maven, runs it on a JRE image |
+| `backend/Dockerfile` | Multi-stage build: compiles the Spring Boot app with Maven and runs it on a JRE image with Oracle MySQL 8.4 client utilities (`mysql` and `mysqldump`) for round database copying |
 | `backend/.dockerignore` | Excludes `target/`, `.git`, and IDE files from the build context |
 | `frontend/Dockerfile` | Multi-stage build: builds the Vite app with Node, serves it with nginx |
 | `frontend/nginx.conf` | Configures nginx to serve the built SPA and handle client-side routing |
@@ -282,30 +286,35 @@ The Docker setup adds the following files to the repository, in addition to the 
 
 ### Environment Variables (.env)
 
-`docker-compose.yml` reads sensitive and environment-specific values from a `.env` file in the repository root. This file is not committed to version control — create it yourself before running the stack.
+`docker-compose.yml` reads environment-specific values from a `.env` file in the repository root. Docker Compose loads this file automatically. Create it from the committed example:
+
+```bash
+cp .env.example .env
+```
+
+Example root `.env`:
 
 ```dotenv
-# MySQL root password — used both by the mysql container itself and by
-# the backend's datasource connection.
-DB_PASSWORD=password
+# MySQL root password
+DB_PASSWORD=change_me
 
-# The origin the frontend is actually served from, matching
-# app.cors.allowed-origins in application.properties.
-# Use http://localhost if the frontend container is published on port 80,
-# or http://localhost:8081 (or whichever host port you mapped it to).
+# The browser origin from which the frontend is served
 CORS_ALLOWED_ORIGINS=http://localhost
 
-# SMTP credentials, matching spring.mail.username / spring.mail.password.
+# SMTP settings
+MAIL_HOST=
+MAIL_PORT=587
 MAIL_USERNAME=
 MAIL_PASSWORD=
 
-# Grafana's initial admin login. Only used by the grafana container —
-# see Observability (Prometheus & Grafana).
+# Grafana initial admin credentials
 GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin
+GRAFANA_ADMIN_PASSWORD=change_me
 ```
 
-> Add `.env` to `.gitignore` if it is not already excluded. Treat its contents the same as any other secret — do not commit real passwords, SMTP credentials, or the Grafana admin password.
+Use a strong password for every environment that is not strictly local. Do not commit `.env`.
+
+The root `.env` is for Docker Compose. It is **not automatically loaded** when Spring Boot is started directly with Maven. Local backend development uses `backend/.env.local`; see [Backend Setup](#backend-setup).
 
 ### Database Dump
 
@@ -324,7 +333,78 @@ docker compose down -v
 docker compose up -d
 ```
 
-> `down -v` deletes the named volumes defined in `docker-compose.yml`, including the MySQL data volume. Only do this if you intend to discard the current state of the containerized database and reseed it from `database/hdss.sql`.
+> **Warning:** `docker compose down -v` deletes every named volume defined in the Compose file, not just MySQL. This includes MySQL round databases and live data, Redis data, Prometheus data, and Grafana data. It does not delete files exported to the host under `round-exports/`. Only use it when you intentionally want to remove all container-managed data.
+
+### Round Database Snapshots and Exports
+
+HDSS can create a separate MySQL database for a surveillance round. The snapshot workflow copies the live database into a round-specific database on the MySQL server. Round metadata and the copy status are maintained by the backend.
+
+The copy process runs from the backend container and invokes Oracle MySQL's `mysqldump` and `mysql` executables. This is why the backend runtime image installs the Oracle MySQL 8.4 Community Client; installing a client only in the `mysql` service is not sufficient.
+
+#### Snapshot lifecycle
+
+A round is created asynchronously. Its status progresses through:
+
+- `CREATING` — the round record exists and the database copy is running.
+- `COMPLETED` — the snapshot copy finished successfully.
+- `FAILED` — validation or copying failed.
+
+The backend serializes snapshot creation so that only one round-copy operation runs at a time. If copying fails, the incomplete destination database is removed and the round is marked failed.
+
+#### List and inspect round databases
+
+List round databases from the host:
+
+```bash
+docker exec -it hdss-mysql mysql -uroot -p \
+  -e "SHOW DATABASES LIKE 'hdss_round%';"
+```
+
+Inspect a particular snapshot:
+
+```bash
+docker exec -it hdss-mysql mysql -uroot -p
+```
+
+Then, in the MySQL prompt:
+
+```sql
+USE hdss_round_YYYYMMDD_001;
+SHOW TABLES;
+```
+
+Replace the example database name with the actual round database name.
+
+#### Export a round database to the host
+
+Round databases currently live inside the MySQL server. To retain an independent SQL export on the host, create the export directory and run `mysqldump` inside the MySQL container. Shell redirection writes the resulting file to the host:
+
+```bash
+mkdir -p round-exports
+
+docker exec hdss-mysql sh -c \
+  'exec mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --routines --triggers --events --databases hdss_round_YYYYMMDD_001' \
+  | gzip > round-exports/hdss_round_YYYYMMDD_001.sql.gz
+```
+
+This command uses the MySQL container's `MYSQL_ROOT_PASSWORD` environment variable. Replace the database name in both places. Protect `round-exports/` because these files contain surveillance data.
+
+To restore an export into the MySQL server:
+
+```bash
+set -a
+source .env
+set +a
+
+gunzip -c round-exports/hdss_round_YYYYMMDD_001.sql.gz \
+  | docker exec -i hdss-mysql mysql -uroot -p"$DB_PASSWORD"
+```
+
+The export includes database creation/use statements because `--databases` is used. The internal snapshot-copy operation is different: it copies into an already-created destination database and must not include the source database name in the dump stream.
+
+> **Important persistence distinction:** Round databases stored inside MySQL are part of the `mysql_data` Docker volume. `docker compose down` preserves that volume; `docker compose down -v` deletes it. SQL files under the host's `round-exports/` directory are outside Docker volumes and remain on the host when containers and named volumes are removed.
+
+The export procedure above is a manual operation. Creating a round does not, by itself, generate a compressed host-side export or automatically delete the round database after export. An automated export/retention worker would need to be implemented separately if that lifecycle is required.
 
 ### Android APK in Docker
 
@@ -382,6 +462,28 @@ docker compose down -v          # also remove volumes — this deletes MySQL/Red
 docker compose restart backend  # restart a single service without rebuilding
 docker compose up -d --build    # rebuild and restart after source changes
 ```
+
+### Verify the MySQL Client in the Backend Container
+
+The round database copy process starts `mysqldump` and `mysql` through Java's `ProcessBuilder`. These executables must therefore exist **inside the backend container**, not only inside the MySQL database container or on the host.
+
+The backend runtime image is based on Debian/Ubuntu rather than Alpine and installs the **Oracle MySQL 8.4 Community Client**. This avoids the MariaDB compatibility differences encountered when using Alpine's `mariadb-dump` and `mariadb` utilities.
+
+After building the backend image, verify the client binaries:
+
+```bash
+docker exec hdss-backend mysqldump --version
+docker exec hdss-backend mysql --version
+```
+
+Both commands should report MySQL Community client versions. If either command is missing, rebuild the backend image after correcting `backend/Dockerfile`:
+
+```bash
+docker compose build --no-cache backend
+docker compose up -d backend
+```
+
+Keep the dump and import commands consistent with Oracle MySQL client options. In particular, `--set-gtid-purged=OFF` is an Oracle MySQL `mysqldump` option and should not be passed to MariaDB's dump utility.
 
 ### Port Conflicts
 
@@ -530,58 +632,90 @@ This is the alternative to [Docker Setup](#docker-setup) — use this if you pre
 
 ### Backend Setup
 
-Navigate to the backend directory:
+The backend runs on port **8080** by default and requires Java, Maven, MySQL, and Redis.
+
+#### Prerequisites
+
+- JDK 21
+- Maven 3.9 or later
+- MySQL 8.4 (or a compatible MySQL server)
+- Redis 7 or later
+
+Install and start MySQL and Redis locally before starting the backend. Create the application database if it does not already exist:
+
+```sql
+CREATE DATABASE hdss;
+```
+
+#### Configure Local Environment
+
+The backend reads its configuration from Spring Boot's `application.properties`, with environment variables overriding the defaults. For local development, use the provided environment template:
 
 ```bash
 cd backend
+cp .env.local.example .env.local
 ```
 
-The backend runs on port **8080** by default.
+Edit `.env.local` and set the database credentials, Redis connection, mail settings, CORS origin, and other values for your machine.
 
-#### Configure Application Properties
+Example:
 
-A sample configuration file is provided in the repository as:
+```dotenv
+SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/hdss?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+SPRING_DATASOURCE_USERNAME=root
+SPRING_DATASOURCE_PASSWORD=change_me
 
-```text
-application.properties.example
+SPRING_DATA_REDIS_HOST=localhost
+SPRING_DATA_REDIS_PORT=6379
+
+APP_CORS_ALLOWED_ORIGINS=http://localhost:5173
+
+MAIL_HOST=
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+
+JWT_EXPIRATION_TIME=86400000
+JWT_ISSUER=hdss_auth
+JWT_REFRESH_EXPIRATION=2592000000
+
+HDSS_ROUND_DATABASE_PREFIX=hdss_round
+HDSS_ROUND_COPY_TIMEOUT_MINUTES=30
 ```
 
-Copy it to the Spring Boot resources directory:
-
-```bash
-cp application.properties.example src/main/resources/application.properties
-```
-
-Then populate the required configuration values.
-
-> Do not commit your local `application.properties` if it contains passwords, secrets, API keys, or other sensitive values.
+The complete template is in `backend/.env.local.example`. Do not commit `.env.local`.
 
 #### Start the Backend
 
-If the project uses the Maven wrapper:
+The repository includes `run-local.sh`. It loads `.env.local` and starts Spring Boot:
 
 ```bash
-./mvnw spring-boot:run
+chmod +x run-local.sh
+./run-local.sh
 ```
 
-On Windows:
-
-```powershell
-mvnw.cmd spring-boot:run
-```
-
-Alternatively, if Maven is installed globally:
+The script runs:
 
 ```bash
-mvn spring-boot:run
+mvn spring-boot:run -DskipTests
 ```
+
+Alternatively, load the environment manually:
+
+```bash
+set -a
+source .env.local
+set +a
+mvn spring-boot:run -DskipTests
+```
+
+Spring Boot does not automatically load a file named `.env.local`; the script or the manual `source` command is what makes those variables available to the process.
 
 The API will be available at:
 
 ```text
 http://localhost:8080
 ```
-
 
 ### Frontend Setup
 
@@ -676,13 +810,15 @@ The appropriate API URL depends on the Android environment and the application's
 
 The backend uses Spring Boot's `application.properties` configuration.
 
-The repository provides an example configuration file:
+The backend keeps non-secret defaults and environment-variable placeholders in:
 
 ```text
-application.properties.example
+backend/src/main/resources/application.properties
 ```
 
-The example contains the required property names without requiring developers to commit environment-specific credentials.
+For local development, copy `backend/.env.local.example` to `backend/.env.local` and run the backend through `backend/run-local.sh`. Docker Compose supplies its own environment variables from the root `.env` file and the Compose service configuration.
+
+Spring Boot resolves placeholders in the form `${ENVIRONMENT_VARIABLE:default}`. Environment variables override values in `application.properties`.
 
 ### Example Configuration
 
@@ -759,7 +895,7 @@ In particular, keep the following out of version control:
 - Android signing credentials
 - Other environment-specific secrets
 
-The `application.properties.example` file should contain property names and safe example/default values only.
+Commit `.env.example` and `backend/.env.local.example`, but keep the actual `.env` and `backend/.env.local` files out of version control. Example files should contain safe placeholders, never real credentials.
 
 ## Database
 
@@ -916,10 +1052,10 @@ The three applications can be run independently during development.
 
 ### Backend
 
-From `backend/`:
+From `backend/`, configure `.env.local` as described in [Backend Setup](#backend-setup), then run:
 
 ```bash
-./mvnw spring-boot:run
+./run-local.sh
 ```
 
 Backend API:
@@ -1063,6 +1199,7 @@ In particular, review:
 - Production API endpoints
 - Android signing credentials
 - Environment-specific configuration
+- Round database SQL exports (for example, files under `round-exports/`)
 
 If running the stack with Docker, the same principle applies to the `.env` file described in [Environment Variables (.env)](#environment-variables-env) — do not commit it, and do not reuse development values (such as the example `DB_PASSWORD`) in any environment that is reachable outside your own machine.
 
