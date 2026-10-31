@@ -13,7 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 
-import "./RoundManagement.css";
+import "./round-management.css";
 import type {
   Violation,
   CheckFailure,
