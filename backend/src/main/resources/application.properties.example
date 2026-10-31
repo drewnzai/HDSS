@@ -47,3 +47,7 @@ management.endpoints.web.exposure.include=health,prometheus
 management.endpoint.health.show-details=when-authorized
 management.prometheus.metrics.export.enabled=true
 management.metrics.tags.application=hdss-backend
+
+# 10. Round database configuration
+hdss.round.database-prefix=hdss_round
+hdss.round.copy-timeout-minutes=30
