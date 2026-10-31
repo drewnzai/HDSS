@@ -14,16 +14,28 @@ export interface DeltaSummary {
 
     publishedForms: number;
     questionsInPublishedForms: number;
+}
 
-    movable: number;
+export interface Violation {
+    check: string;
+    ref: string;
+    detail: string;
+}
+
+export interface CheckFailure {
+    id: string;
+    description: string;
+    count: number;
+    countIsLowerBound: boolean;
+    samples: Violation[];
 }
 
 export interface ValidationReport {
     passed: boolean;
-    today: string;
+    checkedOn: string;
     checksRun: number;
     delta: DeltaSummary;
-    failures: string[];
+    failures: CheckFailure[];
 }
 
 export interface CreateRoundRequest {
@@ -45,11 +57,3 @@ export interface RoundDto {
 export interface RoundDetailsDto extends RoundDto {
     validationReport: ValidationReport | null;
 }
-
-export const getMovableCount = (delta: DeltaSummary): number =>
-    delta.individuals +
-    delta.households +
-    delta.memberships +
-    delta.visits +
-    delta.formResponses +
-    delta.answers;
