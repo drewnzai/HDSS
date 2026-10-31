@@ -1,53 +1,75 @@
-spring.application.name=
+spring.application.name=hdss
 
-# 1. JWT Settings
-jwt.expiration.time=
-jwt.issuer=
-jwt.refresh-expiration=
-
-# 2. Database Connection Settings
-spring.datasource.url=jdbc:mysql://localhost:3306/<database_name>?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-spring.datasource.username=
-spring.datasource.password=
+# ==================================================
+# Database
+# ==================================================
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/hdss?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:root}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:password}
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
-# 3. JPA / Hibernate Configurations
-spring.jpa.hibernate.ddl-auto=
-spring.jpa.show-sql=
+# ==================================================
+# JPA / Hibernate
+# ==================================================
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
 spring.jpa.open-in-view=false
+spring.jpa.properties.hibernate.format_sql=true
 
-# 4. Mail Configurations
-spring.mail.host=
-spring.mail.port=
-spring.mail.username=
-spring.mail.password=
-spring.mail.properties.mail.smtp.auth=
-spring.mail.properties.mail.smtp.starttls.enable=
+# ==================================================
+# JWT
+# ==================================================
+jwt.expiration.time=${JWT_EXPIRATION_TIME:86400000}
+jwt.issuer=${JWT_ISSUER:hdss_auth}
+jwt.refresh-expiration=${JWT_REFRESH_EXPIRATION:2592000000}
 
-# 5. CORS Configuration
-app.cors.allowed-origins=
+# ==================================================
+# Mail
+# ==================================================
+spring.mail.host=${MAIL_HOST:}
+spring.mail.port=${MAIL_PORT:587}
+spring.mail.username=${MAIL_USERNAME:}
+spring.mail.password=${MAIL_PASSWORD:}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
 
-# 6. Cache Configuration
+# ==================================================
+# CORS
+# ==================================================
+app.cors.allowed-origins=${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+# ==================================================
+# Redis / Cache
+# ==================================================
 spring.cache.type=redis
-spring.data.redis.host=
-spring.data.redis.port=
-spring.data.redis.timeout=
-spring.cache.redis.time-to-live=
+spring.data.redis.host=${SPRING_DATA_REDIS_HOST:localhost}
+spring.data.redis.port=${SPRING_DATA_REDIS_PORT:6379}
+spring.data.redis.timeout=5000ms
+spring.cache.redis.time-to-live=30000
 spring.cache.redis.cache-null-values=false
+spring.data.redis.repositories.enabled=false
 
-# 7. Swagger Configuration
+# ==================================================
+# Swagger / OpenAPI
+# ==================================================
 springdoc.api-docs.enabled=true
 springdoc.swagger-ui.enabled=true
 
-# 8. Security Configuration
+# ==================================================
+# Security
+# ==================================================
 logging.level.org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer=ERROR
 
-# 9. Observability / Actuator
+# ==================================================
+# Actuator / Prometheus
+# ==================================================
 management.endpoints.web.exposure.include=health,prometheus
 management.endpoint.health.show-details=when-authorized
 management.prometheus.metrics.export.enabled=true
 management.metrics.tags.application=hdss-backend
 
-# 10. Round database configuration
-hdss.round.database-prefix=hdss_round
-hdss.round.copy-timeout-minutes=30
+# ==================================================
+# Round creation
+# ==================================================
+hdss.round.database-prefix=${HDSS_ROUND_DATABASE_PREFIX:hdss_round}
+hdss.round.copy-timeout-minutes=${HDSS_ROUND_COPY_TIMEOUT_MINUTES:30}
