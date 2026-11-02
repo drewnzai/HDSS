@@ -1,5 +1,6 @@
 package com.andrew.hdss.api;
 
+import com.andrew.hdss.api.swagger.RoundApi;
 import com.andrew.hdss.dtos.CreateRoundRequest;
 import com.andrew.hdss.dtos.RoundCreationResult;
 import com.andrew.hdss.dtos.RoundDetailsDto;
@@ -18,8 +19,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/rounds")
 @RequiredArgsConstructor
-@Tag(name = "Round Creation")
-public class RoundController {
+@Tag(name = "Round Management")
+public class RoundController implements RoundApi {
 
     private final RoundService roundService;
 
