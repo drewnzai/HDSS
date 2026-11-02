@@ -1,5 +1,6 @@
 package com.andrew.hdss.api;
 
+import com.andrew.hdss.api.swagger.MappedFieldApi;
 import com.andrew.hdss.dtos.MappableFieldDto;
 import com.andrew.hdss.models.enums.MappedEntity;
 import com.andrew.hdss.services.MappedFieldService;
@@ -16,7 +17,7 @@ import java.util.List;
 @RequestMapping("/api/mapped-fields")
 @RequiredArgsConstructor
 @Tag(name = "Mapped Field Metadata")
-public class MappedFieldController {
+public class MappedFieldController implements MappedFieldApi {
 
     private final MappedFieldService mappedFieldService;
 
