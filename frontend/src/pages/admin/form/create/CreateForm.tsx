@@ -52,6 +52,10 @@ const TARGET_OPTIONS: {
     value: "INDIVIDUAL",
     label: "Individual",
   },
+  {
+    value: "MEMBERSHIP",
+    label: "Membership",
+  },
 ];
 
 function CreateForm() {
