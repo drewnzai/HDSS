@@ -6,6 +6,7 @@ import com.andrew.hdss.dtos.VisitPushDto;
 import com.andrew.hdss.dtos.sync.*;
 import com.andrew.hdss.models.*;
 import com.andrew.hdss.models.enums.HouseholdStatus;
+import com.andrew.hdss.models.enums.MembershipEndType;
 import com.andrew.hdss.models.enums.RelationshipToHead;
 import com.andrew.hdss.repositories.*;
 import lombok.AllArgsConstructor;
@@ -247,6 +248,10 @@ public class SyncService {
 
         if (existingByClientId.isPresent()) {
             membership = existingByClientId.get();
+            if (membership.getEndType() == MembershipEndType.DEATH) {
+                assertDeathEndedUnchanged(membership, dto, individual, household);
+                return new UpsertResult<>(membership, false);
+            }
             isNew = false;
         } else if (dto.endDate() == null) {
             Optional<Membership> openAtThisHousehold = membershipRepository
@@ -292,6 +297,26 @@ public class SyncService {
         applyHeadOfHouseholdRules(saved, household);
 
         return new UpsertResult<>(saved, isNew);
+    }
+
+    private void assertDeathEndedUnchanged(
+            Membership stored,
+            MembershipPushDto dto,
+            Individual individual,
+            Household household
+    ) {
+        boolean identical =
+                stored.getIndividual().getId().equals(individual.getId())
+                        && stored.getHousehold().getId().equals(household.getId())
+                        && stored.getRelationshipToHead() == dto.relationshipToHead()
+                        && Objects.equals(stored.getEndDate(), dto.endDate())
+                        && stored.getEndType() == dto.endType();
+
+        if (!identical) {
+            throw new IllegalStateException(
+                    "Membership " + stored.getClientId() + " ended by death and cannot be changed."
+            );
+        }
     }
 
     private void applyHeadOfHouseholdRules(Membership membership, Household household) {
