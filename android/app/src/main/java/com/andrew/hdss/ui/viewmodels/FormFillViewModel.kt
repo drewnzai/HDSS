@@ -207,6 +207,7 @@ class FormFillViewModel(
 
     fun goNext() {
         val state = _uiState.value
+        if (state.isSaving || state.isComplete) return
         val current = state.navigableQuestions.getOrNull(state.currentIndex) ?: return
 
         if (current.required && state.answers[current.id].isNullOrBlank() &&
