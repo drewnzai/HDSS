@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.andrew.hdss.HdssApplication
 import com.andrew.hdss.data.daos.HouseholdDao
 import com.andrew.hdss.data.daos.LocationDao
+import com.andrew.hdss.data.daos.MembershipDao
 import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.Location
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +22,8 @@ import kotlinx.coroutines.flow.update
 
 class HomeViewModel(
     private val locationDao: LocationDao,
-    private val householdDao: HouseholdDao
+    private val householdDao: HouseholdDao,
+    private val membershipDao: MembershipDao
 ) : ViewModel() {
 
     val roots: StateFlow<List<Location>> =
@@ -80,9 +82,11 @@ class HomeViewModel(
                 val application = (this[APPLICATION_KEY] as HdssApplication)
                 val locationDao = application.container.database.locationDao()
                 val householdDao = application.container.database.householdDao()
+                val membershipDao = application.container.database.membershipDao()
                 HomeViewModel(
                     locationDao = locationDao,
-                    householdDao = householdDao
+                    householdDao = householdDao,
+                    membershipDao = membershipDao
                 )
             }
         }
