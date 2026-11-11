@@ -26,14 +26,19 @@ import com.andrew.hdss.data.models.enums.MappedEntity
 import com.andrew.hdss.data.models.enums.QuestionType
 import com.andrew.hdss.data.models.enums.Sex
 import com.andrew.hdss.util.AnswerEntityMapper
+import com.andrew.hdss.util.DeathAnswer
+import com.andrew.hdss.util.DeathInput
+import com.andrew.hdss.util.DeathResult
 import com.andrew.hdss.util.ExprValue
 import com.andrew.hdss.util.ExpressionEvaluator
+import com.andrew.hdss.util.RecordDeathUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Period
 import java.util.UUID
@@ -42,10 +47,8 @@ data class FormFillContext(
     val locationId: Long? = null,
     val entityClientIds: Map<MappedEntity, String> = emptyMap(),
     val foreignKeys: Map<String, String> = emptyMap(),
-    // Values the app generates itself and never asks as questions, keyed
-    // by entity then field, e.g. HOUSEHOLD -> {"householdCode": "EM-0000001"}.
-    // These win over an answer mapped to the same field.
-    val generatedFields: Map<MappedEntity, Map<String, String>> = emptyMap()
+    val generatedFields: Map<MappedEntity, Map<String, String>> = emptyMap(),
+    val presetAnswers: Map<String, String> = emptyMap()
 )
 
 data class FormFillUiState(
@@ -53,12 +56,7 @@ data class FormFillUiState(
     val allQuestions: List<Question> = emptyList(),
     val choicesByListName: Map<String, List<Choice>> = emptyMap(),
     val answers: Map<Long, String> = emptyMap(),
-    // Everything relevant right now, CALCULATE included — used for
-    // persistence and answer->entity mapping at submit time.
     val relevantQuestions: List<Question> = emptyList(),
-    // relevantQuestions minus CALCULATE — used for the stepper. A
-    // CALCULATE question has no UI, so it must never be something the
-    // enumerator "lands on."
     val navigableQuestions: List<Question> = emptyList(),
     val currentIndex: Int = 0,
     val constraintError: String? = null,
@@ -77,7 +75,8 @@ class FormFillViewModel(
     private val answerDao: AnswerDao,
     private val householdDao: HouseholdDao,
     private val individualDao: IndividualDao,
-    private val membershipDao: MembershipDao
+    private val membershipDao: MembershipDao,
+    private val recordDeath: RecordDeathUseCase
 ) : ViewModel() {
 
     private val evaluator = ExpressionEvaluator()
@@ -98,12 +97,17 @@ class FormFillViewModel(
             choiceDao.getAllByListName(name).sortedBy { it.orderIndex }
         }
 
-        val relevant = recomputeRelevant(questions, emptyMap())
+        val seeded = questions
+            .filter { context.presetAnswers.containsKey(it.name) }
+            .associate { it.id to context.presetAnswers.getValue(it.name) }
+        val relevant = recomputeRelevant(questions, seeded)
+
         _uiState.update {
             it.copy(
                 form = form,
                 allQuestions = questions,
                 choicesByListName = choicesByListName,
+                answers = seeded,
                 relevantQuestions = relevant,
                 navigableQuestions = relevant.filterNot { q -> q.type == QuestionType.CALCULATE }
             )
@@ -140,9 +144,6 @@ class FormFillViewModel(
             val isRelevant = q.relevant.isNullOrBlank() || (safeEval(q.relevant, ctx)?.asBoolean() ?: true)
             val calc = q.calculation
 
-            // No result means "nothing to record yet" (an input isn't answered,
-            // or the expression is broken). Remove any stale value instead of
-            // storing "".
             val result = if (isRelevant && !calc.isNullOrBlank()) safeEval(calc, ctx)?.asString() else null
             if (result.isNullOrBlank()) {
                 updated.remove(q.id)
@@ -157,6 +158,15 @@ class FormFillViewModel(
         val state = _uiState.value
         var updatedAnswers = state.answers + (question.id to rawValue)
         updatedAnswers = recomputeCalculations(state.allQuestions, updatedAnswers)
+
+        // Choosing the deceased clears a new head who is now the same person.
+        if (question.name == "deceased_clientId") {
+            val newHeadId = state.allQuestions.firstOrNull { it.name == "new_head_clientId" }?.id
+            if (newHeadId != null && updatedAnswers[newHeadId] == rawValue) {
+                updatedAnswers = updatedAnswers - newHeadId
+            }
+        }
+
         val relevant = recomputeRelevant(state.allQuestions, updatedAnswers)
         _uiState.update {
             it.copy(
@@ -168,29 +178,30 @@ class FormFillViewModel(
         }
     }
 
-    // For SELECT_HOUSEHOLD_MEMBER — resolves candidates from the current
-    // household, filtered by sex per the motherClientId/fatherClientId
-    // mappedField naming convention, restricted to adults.
     suspend fun loadHouseholdMembers(question: Question): List<Individual> {
-        val householdClientId = context.foreignKeys["householdClientId"]
-            ?: context.entityClientIds[MappedEntity.HOUSEHOLD]
-            ?: return emptyList()
-
+        val householdClientId = context.foreignKeys["householdClientId"] ?: return emptyList()
         val memberships = membershipDao.getCurrentMembers(householdClientId).first()
         val individuals = individualDao.getByClientIds(memberships.map { it.individualClientId })
 
-        val sexFilter = when (question.mappedField) {
-            "motherClientId" -> Sex.FEMALE
-            "fatherClientId" -> Sex.MALE
-            else -> null
-        }
+        fun isAdult(i: Individual) =
+            i.dateOfBirth?.let { Period.between(it, LocalDate.now()).years >= 15 } ?: false
 
-        return individuals.filter { individual ->
-            val sexMatches = sexFilter == null || individual.sex == sexFilter
-            val isAdult = individual.dateOfBirth?.let { dob ->
-                Period.between(dob, java.time.LocalDate.now()).years >= 15
-            } ?: false
-            sexMatches && isAdult
+        val state = _uiState.value
+        val deceasedId = state.allQuestions
+            .firstOrNull { it.name == "deceased_clientId" }
+            ?.let { state.answers[it.id] }
+
+        return when (question.name) {
+            "deceased_clientId" -> individuals
+            "new_head_clientId" -> individuals.filter { it.clientId != deceasedId && isAdult(it) }
+            else -> {
+                val sexFilter = when (question.mappedField) {
+                    "motherClientId" -> Sex.FEMALE
+                    "fatherClientId" -> Sex.MALE
+                    else -> null
+                }
+                individuals.filter { (sexFilter == null || it.sex == sexFilter) && isAdult(it) }
+            }
         }
     }
 
@@ -230,6 +241,10 @@ class FormFillViewModel(
     private fun submit() {
         val state = _uiState.value
         val form = state.form ?: return
+        if (form.id == RecordDeathUseCase.DEATH_FORM_ID) {
+            submitDeath(state, form)
+            return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
@@ -262,7 +277,6 @@ class FormFillViewModel(
                 answerDao.insertAll(answerRows)
 
                 val bags = AnswerEntityMapper.buildFieldBags(state.relevantQuestions, state.answers)
-
                 val fieldsByEntity = (bags.keys + context.generatedFields.keys).associateWith { entity ->
                     (bags[entity] ?: emptyMap()) + (context.generatedFields[entity] ?: emptyMap())
                 }
@@ -284,7 +298,9 @@ class FormFillViewModel(
                     val individualClientId = context.entityClientIds[MappedEntity.INDIVIDUAL]
                         ?: context.foreignKeys.getValue("individualClientId")
                     val householdClientId = context.foreignKeys.getValue("householdClientId")
-                    val membership = AnswerEntityMapper.buildMembership(clientId, individualClientId, householdClientId, fields)
+                    val membership = AnswerEntityMapper.buildMembership(
+                        clientId, individualClientId, householdClientId, fields
+                    )
                     membershipDao.insert(membership)
                     AnswerEntityMapper.applyHeadOfHouseholdRulesLocally(membership, householdDao)
                 }
@@ -292,6 +308,49 @@ class FormFillViewModel(
                 _uiState.update { it.copy(isSaving = false, isComplete = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isSaving = false, constraintError = "Failed to save: ${e.message}") }
+            }
+        }
+    }
+
+    private fun submitDeath(state: FormFillUiState, form: Form) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, constraintError = null) }
+
+            val byName = state.relevantQuestions.associate { it.name to state.answers[it.id] }
+            val dateOfDeath = byName["date_of_death"]
+                ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+            val deceasedId = byName["deceased_clientId"]?.takeIf { it.isNotBlank() }
+            val householdId = context.foreignKeys["householdClientId"]
+
+            if (dateOfDeath == null || deceasedId == null || householdId == null) {
+                _uiState.update {
+                    it.copy(isSaving = false, constraintError = "Enter the date of death and choose who died.")
+                }
+                return@launch
+            }
+
+            val input = DeathInput(
+                visitId = visitId,
+                startedAt = startedAt,
+                formVersion = form.version,
+                householdClientId = householdId,
+                deceasedClientId = deceasedId,
+                dateOfDeath = dateOfDeath,
+                wasHead = byName["was_head"] == "yes",
+                otherMembersRemain = byName["other_members_remain"] == "yes",
+                newHeadClientId = byName["new_head_clientId"]?.takeIf { it.isNotBlank() },
+                answers = state.relevantQuestions.mapNotNull { q ->
+                    state.answers[q.id]?.let { DeathAnswer(q.id, it) }
+                }
+            )
+
+            // The suspend call runs outside the state update, then the result is applied.
+            val result = recordDeath(input)
+            _uiState.update {
+                when (result) {
+                    DeathResult.Saved -> it.copy(isSaving = false, isComplete = true)
+                    is DeathResult.Rejected -> it.copy(isSaving = false, constraintError = result.message)
+                }
             }
         }
     }
@@ -312,13 +371,10 @@ class FormFillViewModel(
                     answerDao = db.answerDao(),
                     householdDao = db.householdDao(),
                     individualDao = db.individualDao(),
-                    membershipDao = db.membershipDao()
+                    membershipDao = db.membershipDao(),
+                    recordDeath = RecordDeathUseCase(db)
                 )
             }
         }
     }
-}
-
-private fun MutableStateFlow<FormFillUiState>.update(transform: (FormFillUiState) -> FormFillUiState) {
-    value = transform(value)
 }

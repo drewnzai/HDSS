@@ -140,7 +140,8 @@ fun FormFillScreen(
                     choices = question.choiceListName?.let { uiState.choicesByListName[it] } ?: emptyList(),
                     currentValue = uiState.answers[question.id],
                     onValueChange = { viewModel.updateAnswer(question, it) },
-                    loadHouseholdMembers = { viewModel.loadHouseholdMembers(question) }
+                    loadHouseholdMembers = { viewModel.loadHouseholdMembers(question) },
+                    reloadKey = uiState.answers
                 )
             }
 
@@ -175,6 +176,7 @@ private fun QuestionInput(
     choices: List<Choice>,
     currentValue: String?,
     onValueChange: (String) -> Unit,
+    reloadKey: Any?,
     loadHouseholdMembers: suspend () -> List<Individual>
 ) {
     when (question.type) {
@@ -253,7 +255,9 @@ private fun QuestionInput(
         QuestionType.SELECT_HOUSEHOLD_MEMBER -> HouseholdMemberPicker(
             currentValue = currentValue,
             loadCandidates = loadHouseholdMembers,
-            onValueChange = onValueChange
+            reloadKey = reloadKey,
+            onValueChange = onValueChange,
+
         )
 
         QuestionType.NOTE -> {
@@ -453,11 +457,13 @@ private fun GeopointCapture(
 private fun HouseholdMemberPicker(
     currentValue: String?,
     loadCandidates: suspend () -> List<Individual>,
+    reloadKey: Any?,
     onValueChange: (String) -> Unit
 ) {
     var candidates by remember { mutableStateOf<List<Individual>?>(null) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(reloadKey) {
+        candidates = null
         candidates = loadCandidates()
     }
 
