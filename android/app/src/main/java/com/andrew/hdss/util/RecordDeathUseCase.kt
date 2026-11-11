@@ -136,8 +136,6 @@ class RecordDeathUseCase(
                 )
 
                 DeathResult.Saved
-
-                DeathResult.Saved
             }
         } catch (e: CancellationException) {
             throw e
@@ -148,8 +146,6 @@ class RecordDeathUseCase(
     }
 
     companion object {
-        // Server form id for death-registration. Confirm this is the local id
-        // as well, since the sync DTO refers to forms by server id.
         const val DEATH_FORM_ID = 7L
     }
 }
