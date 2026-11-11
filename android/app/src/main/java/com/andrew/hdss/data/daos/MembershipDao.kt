@@ -6,8 +6,17 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.andrew.hdss.data.models.Membership
+import com.andrew.hdss.data.models.enums.RelationshipToHead
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
+data class MemberRow(
+    val clientId: String,
+    val firstName: String,
+    val lastName: String,
+    val dateOfBirth: LocalDate?,
+    val relationshipToHead: RelationshipToHead
+)
 @Dao
 interface MembershipDao {
 
@@ -31,6 +40,20 @@ interface MembershipDao {
 
     @Query("SELECT * FROM memberships WHERE householdClientId = :householdClientId ORDER BY startDate")
     fun getByHousehold(householdClientId: String): Flow<List<Membership>>
+
+    @Query("""
+    SELECT i.clientId AS clientId,
+           i.firstName AS firstName,
+           i.lastName AS lastName,
+           i.dateOfBirth AS dateOfBirth,
+           m.relationshipToHead AS relationshipToHead
+    FROM memberships m
+    INNER JOIN individuals i ON i.clientId = m.individualClientId
+    WHERE m.householdClientId = :householdClientId
+      AND m.endDate IS NULL
+    ORDER BY CASE WHEN m.relationshipToHead = 'HEAD' THEN 0 ELSE 1 END, i.firstName
+""")
+    fun observeOpenMembers(householdClientId: String): Flow<List<MemberRow>>
 
     @Query("""
         SELECT * FROM memberships
