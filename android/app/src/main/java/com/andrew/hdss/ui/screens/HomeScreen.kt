@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -66,9 +67,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.andrew.hdss.data.daos.MemberRow
 import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.Location
 import com.andrew.hdss.ui.viewmodels.HomeViewModel
+import kotlinx.coroutines.flow.flowOf
 
 
 private const val SEARCH_THRESHOLD = 8
@@ -87,6 +90,13 @@ private data class BrowserState(
     val isLeaf: Boolean get() = path.isNotEmpty() && children.isEmpty()
 }
 
+private data class RecordDeathUi(
+    val members: List<MemberRow>,
+    val selectedDeceasedClientId: String?,
+    val onSelectDeceased: (String) -> Unit,
+    val onRecordDeath: () -> Unit
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -96,7 +106,8 @@ fun HomeScreen(
     onNavigateToPush: () -> Unit,
     onStartBaseline: (locationId: Long) -> Unit,
     onAddIndividual: (householdClientId: String) -> Unit,
-    viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
+    viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
+    onRecordDeath: (householdClientId: String, deceasedClientId: String) -> Unit,
 ) {
     val roots by viewModel.roots.collectAsStateWithLifecycle()
     val selectedPath by viewModel.selectedPath.collectAsStateWithLifecycle()
@@ -110,6 +121,25 @@ fun HomeScreen(
 
     var selectedHouseholdClientId by rememberSaveable(state.current?.id) {
         mutableStateOf<String?>(null)
+    }
+
+    var selectedDeceasedClientId by rememberSaveable(selectedHouseholdClientId) {
+        mutableStateOf<String?>(null)
+    }
+
+    val members by remember(selectedHouseholdClientId) {
+        selectedHouseholdClientId?.let(viewModel::observeOpenMembers) ?: flowOf(emptyList())
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
+
+    val recordDeath: RecordDeathUi? = selectedHouseholdClientId?.let { householdId ->
+        RecordDeathUi(
+            members = members,
+            selectedDeceasedClientId = selectedDeceasedClientId,
+            onSelectDeceased = { selectedDeceasedClientId = it },
+            onRecordDeath = {
+                selectedDeceasedClientId?.let { deceased -> onRecordDeath(householdId, deceased) }
+            }
+        )
     }
 
     val startBaseline: () -> Unit = { state.current?.let { onStartBaseline(it.id) } }
@@ -165,7 +195,8 @@ fun HomeScreen(
                             onStartBaseline = startBaseline,
                             selectedHouseholdClientId = selectedHouseholdClientId,
                             onSelectHousehold = selectHousehold,
-                            onAddIndividual = addIndividual
+                            onAddIndividual = addIndividual,
+                            recordDeath = recordDeath
                         )
                     }
 
@@ -178,7 +209,8 @@ fun HomeScreen(
                         selectedHouseholdClientId = selectedHouseholdClientId,
                         onSelectHousehold = selectHousehold,
                         onAddIndividual = addIndividual,
-                        households = households
+                        households = households,
+                        recordDeath = recordDeath
                     )
                 }
             } else {
@@ -203,7 +235,8 @@ fun HomeScreen(
                         onStartBaseline = startBaseline,
                         selectedHouseholdClientId = selectedHouseholdClientId,
                         onSelectHousehold = selectHousehold,
-                        onAddIndividual = addIndividual
+                        onAddIndividual = addIndividual,
+                        recordDeath = recordDeath
                     )
                 }
             }
@@ -285,7 +318,8 @@ private fun LazyListScope.browserItems(
     onStartBaseline: () -> Unit,
     selectedHouseholdClientId: String?,
     onSelectHousehold: (String) -> Unit,
-    onAddIndividual: () -> Unit
+    onAddIndividual: () -> Unit,
+    recordDeath: RecordDeathUi?
 ) {
     item(key = "greeting") {
         Greeting(firstName = firstName, state = state)
@@ -327,7 +361,8 @@ private fun LazyListScope.browserItems(
                         selectedHouseholdClientId = selectedHouseholdClientId,
                         onSelectHousehold = onSelectHousehold,
                         onAddIndividual = onAddIndividual,
-                        onStartBaseline = onStartBaseline
+                        onStartBaseline = onStartBaseline,
+                        recordDeath = recordDeath
                     )
                 }
             }
@@ -498,7 +533,8 @@ private fun ReadyPanel(
     onSelectHousehold: (String) -> Unit,
     onAddIndividual: () -> Unit,
     onStartBaseline: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    recordDeath: RecordDeathUi? = null
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -553,6 +589,42 @@ private fun ReadyPanel(
                     }
                 }
 
+                recordDeath?.let { death ->
+                    Text(
+                        text = "Members",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+
+                    if (death.members.isEmpty()) {
+                        Text(
+                            text = "No current members in this household.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            death.members.forEach { member ->
+                                MemberOptionRow(
+                                    member = member,
+                                    selected = member.clientId == death.selectedDeceasedClientId,
+                                    onClick = { death.onSelectDeceased(member.clientId) }
+                                )
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = death.onRecordDeath,
+                            enabled = death.selectedDeceasedClientId != null,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("Record death")
+                        }
+                    }
+                }
+
                 Button(
                     onClick = onAddIndividual,
                     enabled = selectedHouseholdClientId != null,
@@ -579,6 +651,49 @@ private fun ReadyPanel(
                 ) {
                     Text("Register new household")
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MemberOptionRow(
+    member: MemberRow,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(selected = selected, onClick = null)
+            Spacer(Modifier.width(8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "${member.firstName} ${member.lastName}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = listOfNotNull(
+                        member.relationshipToHead.name,
+                        member.dateOfBirth?.let { "born $it" }
+                    ).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -630,7 +745,7 @@ private fun SelectionSidePanel(
     selectedHouseholdClientId: String?,
     onSelectHousehold: (String) -> Unit,
     onAddIndividual: () -> Unit,
-
+    recordDeath: RecordDeathUi?
     ) {
     if (state.isLeaf) {
         ReadyPanel(
@@ -641,6 +756,7 @@ private fun SelectionSidePanel(
             onAddIndividual = onAddIndividual,
             households = households,
             selectedHouseholdClientId = selectedHouseholdClientId,
+            recordDeath = recordDeath
         )
     } else {
         OutlinedCard(modifier = modifier.fillMaxWidth()) {
