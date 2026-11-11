@@ -44,6 +44,7 @@ import com.andrew.hdss.ui.screens.DownloadDatabaseScreen
 import com.andrew.hdss.ui.screens.HomeScreen
 import com.andrew.hdss.ui.screens.LoginScreen
 import com.andrew.hdss.ui.screens.PushDataScreen
+import com.andrew.hdss.ui.screens.RecordDeathScreen
 import com.andrew.hdss.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -61,6 +62,14 @@ object Routes {
 
     const val ADD_INDIVIDUAL_ARG = "householdClientId"
     const val ADD_INDIVIDUAL = "add_individual/{$ADD_INDIVIDUAL_ARG}"
+
+    const val RECORD_DEATH_HOUSEHOLD_ARG = "householdClientId"
+    const val RECORD_DEATH_DECEASED_ARG = "deceasedClientId"
+    const val RECORD_DEATH =
+        "record_death/{$RECORD_DEATH_HOUSEHOLD_ARG}/{$RECORD_DEATH_DECEASED_ARG}"
+
+    fun recordDeath(householdClientId: String, deceasedClientId: String) =
+        "record_death/$householdClientId/$deceasedClientId"
 
     fun addIndividual(householdClientId: String) = "add_individual/$householdClientId"
 
@@ -123,7 +132,10 @@ fun NavGraph(
                 },
                 onAddIndividual = { householdClientId ->
                     navController.navigate(Routes.addIndividual(householdClientId))
-                }
+                },
+                onRecordDeath = { householdClientId, deceasedClientId ->
+                    navController.navigate(Routes.recordDeath(householdClientId, deceasedClientId))
+                },
             )
         }
 
@@ -161,6 +173,26 @@ fun NavGraph(
 
             AddIndividualScreen(
                 householdClientId = householdClientId,
+                onComplete = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.RECORD_DEATH,
+            arguments = listOf(
+                navArgument(Routes.RECORD_DEATH_HOUSEHOLD_ARG) { type = NavType.StringType },
+                navArgument(Routes.RECORD_DEATH_DECEASED_ARG) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val householdClientId = backStackEntry.arguments
+                ?.getString(Routes.RECORD_DEATH_HOUSEHOLD_ARG) ?: return@composable
+            val deceasedClientId = backStackEntry.arguments
+                ?.getString(Routes.RECORD_DEATH_DECEASED_ARG) ?: return@composable
+
+            RecordDeathScreen(
+                householdClientId = householdClientId,
+                deceasedClientId = deceasedClientId,
                 onComplete = { navController.popBackStack() },
                 onCancel = { navController.popBackStack() }
             )
