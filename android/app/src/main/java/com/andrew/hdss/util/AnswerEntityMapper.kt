@@ -99,17 +99,24 @@ object AnswerEntityMapper {
         val household = householdDao.getByClientId(membership.householdClientId) ?: return
 
         if (membership.endDate == null) {
+            // Already the active head: nothing changed, so don't mark it unsynced.
+            if (household.headIndividualClientId == membership.individualClientId &&
+                household.status == HouseholdStatus.ACTIVE
+            ) return
+
             householdDao.update(
                 household.copy(
                     headIndividualClientId = membership.individualClientId,
-                    status = HouseholdStatus.ACTIVE
+                    status = HouseholdStatus.ACTIVE,
+                    synced = false
                 )
             )
         } else if (household.headIndividualClientId == membership.individualClientId) {
             householdDao.update(
                 household.copy(
                     headIndividualClientId = null,
-                    status = HouseholdStatus.NOT_VIABLE
+                    status = HouseholdStatus.NOT_VIABLE,
+                    synced = false
                 )
             )
         }
