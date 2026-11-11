@@ -54,6 +54,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -106,8 +107,8 @@ fun HomeScreen(
     onNavigateToPush: () -> Unit,
     onStartBaseline: (locationId: Long) -> Unit,
     onAddIndividual: (householdClientId: String) -> Unit,
-    viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
     onRecordDeath: (householdClientId: String, deceasedClientId: String) -> Unit,
+    viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
     val roots by viewModel.roots.collectAsStateWithLifecycle()
     val selectedPath by viewModel.selectedPath.collectAsStateWithLifecycle()
@@ -130,6 +131,14 @@ fun HomeScreen(
     val members by remember(selectedHouseholdClientId) {
         selectedHouseholdClientId?.let(viewModel::observeOpenMembers) ?: flowOf(emptyList())
     }.collectAsStateWithLifecycle(initialValue = emptyList())
+
+    LaunchedEffect(members) {
+        if (selectedDeceasedClientId != null &&
+            members.none { it.clientId == selectedDeceasedClientId }
+        ) {
+            selectedDeceasedClientId = null
+        }
+    }
 
     val recordDeath: RecordDeathUi? = selectedHouseholdClientId?.let { householdId ->
         RecordDeathUi(
@@ -612,15 +621,16 @@ private fun ReadyPanel(
                             }
                         }
 
-                        OutlinedButton(
-                            onClick = death.onRecordDeath,
-                            enabled = death.selectedDeceasedClientId != null,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Text("Record death")
+                        if (death.selectedDeceasedClientId != null) {
+                            OutlinedButton(
+                                onClick = death.onRecordDeath,
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Text("Record death")
+                            }
                         }
                     }
                 }
