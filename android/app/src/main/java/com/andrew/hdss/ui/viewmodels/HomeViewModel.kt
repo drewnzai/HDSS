@@ -8,10 +8,12 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.andrew.hdss.HdssApplication
 import com.andrew.hdss.data.daos.HouseholdDao
 import com.andrew.hdss.data.daos.LocationDao
+import com.andrew.hdss.data.daos.MemberRow
 import com.andrew.hdss.data.daos.MembershipDao
 import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.Location
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -75,6 +77,9 @@ class HomeViewModel(
     fun clearSelection() {
         _selectedPath.value = emptyList()
     }
+
+    fun observeOpenMembers(householdClientId: String): Flow<List<MemberRow>> =
+        membershipDao.observeOpenMembers(householdClientId)
 
     companion object {
         val Factory = viewModelFactory {
