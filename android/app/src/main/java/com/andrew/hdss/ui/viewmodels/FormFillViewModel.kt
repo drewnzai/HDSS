@@ -26,12 +26,12 @@ import com.andrew.hdss.data.models.enums.MappedEntity
 import com.andrew.hdss.data.models.enums.QuestionType
 import com.andrew.hdss.data.models.enums.Sex
 import com.andrew.hdss.util.AnswerEntityMapper
-import com.andrew.hdss.util.DeathAnswer
-import com.andrew.hdss.util.DeathInput
-import com.andrew.hdss.util.DeathResult
+import com.andrew.hdss.util.usecases.DeathAnswer
+import com.andrew.hdss.util.usecases.DeathInput
+import com.andrew.hdss.util.usecases.DeathResult
 import com.andrew.hdss.util.ExprValue
 import com.andrew.hdss.util.ExpressionEvaluator
-import com.andrew.hdss.util.RecordDeathUseCase
+import com.andrew.hdss.util.usecases.RecordDeathUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

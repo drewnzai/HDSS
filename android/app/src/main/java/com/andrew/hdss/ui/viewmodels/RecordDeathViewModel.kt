@@ -11,7 +11,7 @@ import com.andrew.hdss.data.daos.FormDao
 import com.andrew.hdss.data.daos.VisitDao
 import com.andrew.hdss.data.models.Visit
 import com.andrew.hdss.data.models.enums.VisitStatus
-import com.andrew.hdss.util.RecordDeathUseCase
+import com.andrew.hdss.util.usecases.RecordDeathUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

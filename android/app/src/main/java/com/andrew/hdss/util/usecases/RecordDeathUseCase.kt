@@ -1,4 +1,4 @@
-package com.andrew.hdss.util
+package com.andrew.hdss.util.usecases
 
 import androidx.room.withTransaction
 import com.andrew.hdss.data.AppDatabase
@@ -10,6 +10,7 @@ import com.andrew.hdss.data.models.enums.FormResponseStatus
 import com.andrew.hdss.data.models.enums.MembershipEndType
 import com.andrew.hdss.data.models.enums.RelationshipToHead
 import com.andrew.hdss.data.models.enums.VisitStatus
+import com.andrew.hdss.util.AnswerEntityMapper
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.LocalDateTime
