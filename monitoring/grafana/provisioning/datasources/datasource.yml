@@ -7,3 +7,17 @@ datasources:
     access: proxy
     url: http://prometheus:9090
     isDefault: true
+
+  - name: HDSS MySQL
+    uid: hdss-mysql
+    type: mysql
+    access: proxy
+    url: mysql:3306
+    user: root
+    database: hdss
+    jsonData:
+      maxOpenConns: 5
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+    secureJsonData:
+      password: ${DB_PASSWORD}

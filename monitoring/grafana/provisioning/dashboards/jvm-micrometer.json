@@ -4661,7 +4661,7 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "JVM (Micrometer)",
+    "title": "Backend Dashboard",
     "variables": [
       {
         "kind": "QueryVariable",
