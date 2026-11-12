@@ -19,9 +19,10 @@ import kotlin.coroutines.cancellation.CancellationException
 data class DeathAnswer(val questionId: Long, val value: String)
 
 data class DeathInput(
+    val formId: Long,
+    val formVersion: Int,
     val visitId: String,
     val startedAt: LocalDateTime,
-    val formVersion: Int,
     val householdClientId: String,
     val deceasedClientId: String,
     val dateOfDeath: LocalDate,
@@ -41,7 +42,6 @@ class RecordDeathUseCase(
     private val today: () -> LocalDate = { LocalDate.now() }
 ) {
     suspend operator fun invoke(input: DeathInput): DeathResult {
-        // Checks that don't need the database run before the transaction.
         if (input.dateOfDeath.isAfter(today())) {
             return DeathResult.Rejected("The date of death can't be in the future.")
         }
@@ -57,7 +57,6 @@ class RecordDeathUseCase(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            // The transaction has rolled back, so nothing was partially written.
             DeathResult.Rejected("Couldn't save the death record. Nothing was changed.")
         }
     }
@@ -66,13 +65,11 @@ class RecordDeathUseCase(
         val memberships = db.membershipDao()
         val households = db.householdDao()
 
-        // Re-checked inside the transaction, since the picker may be stale.
         val deceased = openMembership(input.householdClientId, input.deceasedClientId)
             ?: return DeathResult.Rejected(
                 "This person is no longer an open member of the household."
             )
 
-        // The new head only applies when the deceased was head and others remain.
         val newHeadId = if (input.wasHead && input.otherMembersRemain) input.newHeadClientId else null
         val newHead = newHeadId?.let { id ->
             openMembership(input.householdClientId, id)
@@ -81,8 +78,6 @@ class RecordDeathUseCase(
                 )
         }
 
-        // End the deceased first, so the household rule clears the old head
-        // before the new one is set.
         val ended = deceased.copy(
             endDate = input.dateOfDeath,
             endType = MembershipEndType.DEATH,
@@ -100,7 +95,7 @@ class RecordDeathUseCase(
             AnswerEntityMapper.applyHeadOfHouseholdRulesLocally(promoted, households)
         }
 
-        db.visitDao().insert(
+        db.visitDao().update(
             Visit(
                 id = input.visitId,
                 householdClientId = input.householdClientId,
@@ -116,7 +111,7 @@ class RecordDeathUseCase(
             FormResponse(
                 id = formResponseId,
                 visitId = input.visitId,
-                formId = DEATH_FORM_ID,
+                formId = input.formId,
                 formVersion = input.formVersion,
                 status = FormResponseStatus.COMPLETED,
                 startedAt = input.startedAt,
@@ -140,8 +135,6 @@ class RecordDeathUseCase(
         return DeathResult.Saved
     }
 
-    // Reuses getCurrentMembers so the write and the picker share one definition
-    // of "open member of this household".
     private suspend fun openMembership(
         householdClientId: String,
         individualClientId: String
@@ -152,7 +145,6 @@ class RecordDeathUseCase(
             .firstOrNull { it.individualClientId == individualClientId }
 
     companion object {
-        // Server form id for death-registration.
-        const val DEATH_FORM_ID = 7L
+        const val DEATH_FORM_NAME = "death-registration"
     }
 }

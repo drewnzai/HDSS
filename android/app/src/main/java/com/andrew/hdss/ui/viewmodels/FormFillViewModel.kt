@@ -242,7 +242,7 @@ class FormFillViewModel(
     private fun submit() {
         val state = _uiState.value
         val form = state.form ?: return
-        if (form.id == RecordDeathUseCase.DEATH_FORM_ID) {
+        if (form.name == RecordDeathUseCase.DEATH_FORM_NAME) {
             submitDeath(state, form)
             return
         }
@@ -331,6 +331,7 @@ class FormFillViewModel(
             }
 
             val input = DeathInput(
+                formId = form.id,
                 visitId = visitId,
                 startedAt = startedAt,
                 formVersion = form.version,
@@ -345,7 +346,6 @@ class FormFillViewModel(
                 }
             )
 
-            // The suspend call runs outside the state update, then the result is applied.
             val result = recordDeath(input)
             _uiState.update {
                 when (result) {
