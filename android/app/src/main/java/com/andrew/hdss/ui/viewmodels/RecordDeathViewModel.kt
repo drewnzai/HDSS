@@ -30,7 +30,7 @@ class RecordDeathViewModel(private val useCase:RecordDeathUseCase) : ViewModel()
 
     fun submit(input:DeathInput) {
         if (_state.value == DeathUiState.Saving) return
-                _state.value = DeathUiState.Saving
+        _state.value = DeathUiState.Saving
 
         viewModelScope.launch {
             _state.value = when (val result = useCase(input)) {
