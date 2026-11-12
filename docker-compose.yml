@@ -53,6 +53,20 @@ services:
       SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
 
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: hdss-mysqld-exporter
+    restart: unless-stopped
+    command:
+      - "--config.my-cnf=/etc/mysqld-exporter/.my.cnf"
+    volumes:
+      - ./monitoring/mysqld-exporter/.my.cnf:/etc/mysqld-exporter/.my.cnf:ro
+    ports:
+      - "9104:9104"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   prometheus:
     image: prom/prometheus:latest
     container_name: hdss-prometheus
@@ -64,6 +78,7 @@ services:
       - prometheus_data:/prometheus
     depends_on:
       - backend
+      - mysqld-exporter
 
   grafana:
     image: grafana/grafana:latest
