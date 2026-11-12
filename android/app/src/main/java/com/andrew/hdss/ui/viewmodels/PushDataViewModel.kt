@@ -35,8 +35,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.collections.isNotEmpty
-import kotlin.collections.map
 
 // Everything that will be sent for one visit. Lists hold only rows that
 // aren't synced yet.
