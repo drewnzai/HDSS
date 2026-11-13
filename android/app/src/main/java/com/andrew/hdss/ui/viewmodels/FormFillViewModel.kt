@@ -15,6 +15,7 @@ import com.andrew.hdss.data.daos.HouseholdDao
 import com.andrew.hdss.data.daos.IndividualDao
 import com.andrew.hdss.data.daos.MembershipDao
 import com.andrew.hdss.data.daos.QuestionDao
+import com.andrew.hdss.data.daos.VisitDao
 import com.andrew.hdss.data.models.Answer
 import com.andrew.hdss.data.models.Choice
 import com.andrew.hdss.data.models.Form
@@ -43,14 +44,6 @@ import java.time.LocalDateTime
 import java.time.Period
 import java.util.UUID
 
-data class FormFillContext(
-    val locationId: Long? = null,
-    val entityClientIds: Map<MappedEntity, String> = emptyMap(),
-    val foreignKeys: Map<String, String> = emptyMap(),
-    val generatedFields: Map<MappedEntity, Map<String, String>> = emptyMap(),
-    val presetAnswers: Map<String, String> = emptyMap()
-)
-
 data class FormFillUiState(
     val form: Form? = null,
     val allQuestions: List<Question> = emptyList(),
@@ -76,6 +69,7 @@ class FormFillViewModel(
     private val householdDao: HouseholdDao,
     private val individualDao: IndividualDao,
     private val membershipDao: MembershipDao,
+    private val visitDao: VisitDao,
     private val recordDeath: RecordDeathUseCase
 ) : ViewModel() {
 
@@ -276,6 +270,7 @@ class FormFillViewModel(
                         )
                     }
                 answerDao.insertAll(answerRows)
+                visitDao.markCompleted(visitId)
 
                 val bags = AnswerEntityMapper.buildFieldBags(state.relevantQuestions, state.answers)
                 val fieldsByEntity = (bags.keys + context.generatedFields.keys).associateWith { entity ->
@@ -373,6 +368,7 @@ class FormFillViewModel(
                     householdDao = db.householdDao(),
                     individualDao = db.individualDao(),
                     membershipDao = db.membershipDao(),
+                    visitDao = db.visitDao(),
                     recordDeath = RecordDeathUseCase(db)
                 )
             }

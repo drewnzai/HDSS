@@ -32,4 +32,7 @@ interface VisitDao {
 
     @Query("SELECT * FROM visits WHERE status = :status ORDER BY visitDate DESC")
     suspend fun getByStatus(status: VisitStatus): List<Visit>
+
+    @Query("UPDATE visits SET status = 'COMPLETED', synced = 0 WHERE id = :id")
+    suspend fun markCompleted(id: String)
 }
