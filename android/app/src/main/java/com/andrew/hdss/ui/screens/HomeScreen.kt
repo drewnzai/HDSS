@@ -71,6 +71,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.andrew.hdss.data.daos.MemberRow
 import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.Location
+import com.andrew.hdss.ui.components.SelectableRow
+import com.andrew.hdss.ui.labels.displayLabel
 import com.andrew.hdss.ui.viewmodels.HomeViewModel
 import kotlinx.coroutines.flow.flowOf
 
@@ -590,8 +592,9 @@ private fun ReadyPanel(
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     households.forEach { household ->
-                        HouseholdOptionRow(
-                            household = household,
+                        SelectableRow(
+                            title = household.householdCode ?: "No code",
+                            subtitle = household.status.name,
                             selected = household.clientId == selectedHouseholdClientId,
                             onClick = { onSelectHousehold(household.clientId) }
                         )
@@ -613,8 +616,12 @@ private fun ReadyPanel(
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             death.members.forEach { member ->
-                                MemberOptionRow(
-                                    member = member,
+                                SelectableRow(
+                                    title = "${member.firstName} ${member.lastName}",
+                                    subtitle = listOfNotNull(
+                                        member.relationshipToHead.displayLabel(),
+                                        member.dateOfBirth?.let { "born $it" }
+                                    ).joinToString(" · "),
                                     selected = member.clientId == death.selectedDeceasedClientId,
                                     onClick = { death.onSelectDeceased(member.clientId) }
                                 )
@@ -661,86 +668,6 @@ private fun ReadyPanel(
                 ) {
                     Text("Register new household")
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MemberOptionRow(
-    member: MemberRow,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-        } else {
-            MaterialTheme.colorScheme.surface
-        },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 56.dp)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RadioButton(selected = selected, onClick = null)
-            Spacer(Modifier.width(8.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "${member.firstName} ${member.lastName}",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    text = listOfNotNull(
-                        member.relationshipToHead.name,
-                        member.dateOfBirth?.let { "born $it" }
-                    ).joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun HouseholdOptionRow(
-    household: Household,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-        } else {
-            MaterialTheme.colorScheme.surface
-        },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 56.dp)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RadioButton(selected = selected, onClick = null)
-            Spacer(Modifier.width(8.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(household.householdCode ?: "No code", style = MaterialTheme.typography.bodyLarge)
-                Text(
-                    text = household.status.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }

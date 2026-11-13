@@ -59,6 +59,7 @@ import com.andrew.hdss.data.models.Choice
 import com.andrew.hdss.data.models.Individual
 import com.andrew.hdss.data.models.Question
 import com.andrew.hdss.data.models.enums.QuestionType
+import com.andrew.hdss.ui.components.FormDatePicker
 import com.andrew.hdss.ui.viewmodels.FormFillContext
 import com.andrew.hdss.ui.viewmodels.FormFillViewModel
 import com.google.android.gms.location.LocationServices
@@ -275,85 +276,6 @@ private fun QuestionInput(
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FormDatePicker(
-    value: LocalDate?,
-    onValueChange: (LocalDate) -> Unit,
-    maxDate: LocalDate = LocalDate.now()   // today is the cutoff
-) {
-    var showDialog by remember { mutableStateOf(false) }
-    val maxDateMillis = remember(maxDate) { maxDate.toUtcMillis() }
-
-    // A read-only TextField swallows taps, so a clickable modifier on it
-    // never fires. A transparent box laid over it takes the tap instead.
-    Box {
-        OutlinedTextField(
-            value = value?.toString() ?: "",
-            onValueChange = {},
-            readOnly = true,
-            placeholder = { Text("Select a date") },
-            trailingIcon = {
-                Icon(Icons.Outlined.DateRange, contentDescription = null)
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clickable(
-                    onClickLabel = "Choose date",
-                    role = Role.Button
-                ) { showDialog = true }
-        )
-    }
-
-    if (showDialog) {
-        val state = rememberDatePickerState(
-            initialSelectedDateMillis = value
-                ?.takeIf { it.year in 1900..maxDate.year }
-                ?.toUtcMillis(),
-            yearRange = 1900..maxDate.year,
-            selectableDates = object : SelectableDates {
-                override fun isSelectableDate(utcTimeMillis: Long) =
-                    utcTimeMillis <= maxDateMillis
-
-                override fun isSelectableYear(year: Int) =
-                    year <= maxDate.year
-            }
-        )
-
-        DatePickerDialog(
-            onDismissRequest = { showDialog = false },
-            confirmButton = {
-                TextButton(
-                    enabled = state.selectedDateMillis != null,
-                    onClick = {
-                        state.selectedDateMillis?.let { millis ->
-                            onValueChange(
-                                Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneOffset.UTC)
-                                    .toLocalDate()
-                            )
-                        }
-                        showDialog = false
-                    }
-                ) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialog = false }) { Text("Cancel") }
-            }
-        ) {
-            DatePicker(state = state)
-        }
-    }
-}
-
-// The DatePicker represents a calendar day as UTC midnight, so convert with
-// ZoneOffset.UTC in both directions, never the device zone.
-private fun LocalDate.toUtcMillis(): Long =
-    atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
 @SuppressLint("MissingPermission")
 @Composable
