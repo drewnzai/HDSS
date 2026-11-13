@@ -45,6 +45,7 @@ import com.andrew.hdss.ui.screens.HomeScreen
 import com.andrew.hdss.ui.screens.LoginScreen
 import com.andrew.hdss.ui.screens.PushDataScreen
 import com.andrew.hdss.ui.screens.RecordDeathScreen
+import com.andrew.hdss.ui.screens.RecordTransferInScreen
 import com.andrew.hdss.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -67,6 +68,12 @@ object Routes {
     const val RECORD_DEATH_DECEASED_ARG = "deceasedClientId"
     const val RECORD_DEATH =
         "record_death/{$RECORD_DEATH_HOUSEHOLD_ARG}/{$RECORD_DEATH_DECEASED_ARG}"
+
+    const val TRANSFER_IN_ARG = "destinationHouseholdClientId"
+    const val TRANSFER_IN = "transfer_in/{$TRANSFER_IN_ARG}"
+
+    fun transferIn(destinationHouseholdClientId: String) =
+        "transfer_in/$destinationHouseholdClientId"
 
     fun recordDeath(householdClientId: String, deceasedClientId: String) =
         "record_death/$householdClientId/$deceasedClientId"
@@ -136,6 +143,20 @@ fun NavGraph(
                 onRecordDeath = { householdClientId, deceasedClientId ->
                     navController.navigate(Routes.recordDeath(householdClientId, deceasedClientId))
                 },
+            )
+        }
+
+        composable(
+            route = Routes.TRANSFER_IN,
+            arguments = listOf(navArgument(Routes.TRANSFER_IN_ARG) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val destinationHouseholdClientId = backStackEntry.arguments
+                ?.getString(Routes.TRANSFER_IN_ARG) ?: return@composable
+
+            RecordTransferInScreen(
+                destinationHouseholdClientId = destinationHouseholdClientId,
+                onComplete = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
             )
         }
 
