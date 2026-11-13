@@ -254,9 +254,13 @@ private fun VisitCard(
 
                 Spacer(Modifier.height(4.dp))
 
-                bundle.household?.let {
-                    DetailRow("Household", it.householdCode ?: "No code")
+                if (bundle.households.isNotEmpty()) {
+                    DetailRow(
+                        "Households",
+                        bundle.households.joinToString { it.householdCode ?: "No code" }
+                    )
                 }
+
                 if (bundle.individuals.isNotEmpty()) {
                     DetailRow(
                         "Individuals",

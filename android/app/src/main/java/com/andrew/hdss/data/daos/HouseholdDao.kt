@@ -79,7 +79,6 @@ interface HouseholdDao {
     AND NOT EXISTS (
         SELECT 1 FROM memberships m
         WHERE m.householdClientId = h.clientId
-        AND m.relationshipToHead = 'HEAD'
     )
 """)
     suspend fun getIncompleteBaselines(): List<IncompleteBaselineRow>

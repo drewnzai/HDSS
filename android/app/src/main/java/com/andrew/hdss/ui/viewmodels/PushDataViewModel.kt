@@ -40,14 +40,14 @@ import kotlinx.coroutines.launch
 // aren't synced yet.
 data class VisitBundle(
     val visit: Visit,
-    val household: Household?,
+    val households: List<Household>,
     val individuals: List<Individual>,
     val memberships: List<Membership>,
     val formResponses: List<FormResponse>,
     val answers: List<Answer>
 ) {
     val hasPending: Boolean
-        get() = !visit.synced || household != null || individuals.isNotEmpty() ||
+        get() = !visit.synced || households.isNotEmpty() || individuals.isNotEmpty() ||
                 memberships.isNotEmpty() || formResponses.isNotEmpty() || answers.isNotEmpty()
 }
 
@@ -130,20 +130,25 @@ class PushDataViewModel(
         }
     }
     private suspend fun buildBundle(visit: Visit): VisitBundle {
-        val household = visit.householdClientId
-            ?.let { householdDao.getByClientId(it) }
-            ?.takeIf { !it.synced }
+        // The person's memberships show every household they've been in, including
+        // the previous one a transfer leaves. Those households belong to this visit too.
+        val personMemberships = visit.individualClientId
+            ?.let { membershipDao.getByIndividual(it).first() }
+            .orEmpty()
 
-        val allMemberships = buildList {
-            visit.householdClientId?.let { addAll(membershipDao.getByHousehold(it).first()) }
-            visit.individualClientId?.let { addAll(membershipDao.getByIndividual(it).first()) }
-        }.distinctBy { it.clientId }
+        val householdIds = (listOfNotNull(visit.householdClientId) +
+                personMemberships.map { it.householdClientId })
+            .distinct()
 
-        // Individuals come from ALL memberships (synced or not), then get
-        // filtered, so an unsynced person is never missed because their
-        // membership happened to sync first.
+        val allMemberships = (personMemberships +
+                householdIds.flatMap { membershipDao.getByHousehold(it).first() })
+            .distinctBy { it.clientId }
+
+        val households = householdIds.mapNotNull { householdDao.getByClientId(it) }
+
         val individualIds = (allMemberships.map { it.individualClientId } +
-                listOfNotNull(visit.individualClientId)).distinct()
+                listOfNotNull(visit.individualClientId))
+            .distinct()
         val individuals = if (individualIds.isEmpty()) emptyList()
         else individualDao.getByClientIds(individualIds)
 
@@ -153,16 +158,20 @@ class PushDataViewModel(
 
         return VisitBundle(
             visit = visit,
-            household = household,
+            households = households.filter { !it.synced },
             individuals = individuals.filter { !it.synced },
-            memberships = allMemberships.filter { !it.synced },
+            memberships = allMemberships
+                .filter { !it.synced }
+                // Ended memberships go first. The server rejects a new open membership
+                // while the person still has one elsewhere, so the old one must land first.
+                .sortedWith(compareBy<Membership>({ it.endDate == null }, { it.startDate })),
             formResponses = formResponses.filter { !it.synced },
             answers = answers.filter { !it.synced }
         )
     }
 
     private fun VisitBundle.toRequest() = SyncPushRequestDto(
-        households = listOfNotNull(household).toPushDtos(),
+        households = households.toPushDtos(),
         individuals = individuals.toPushDtos(),
         memberships = memberships.toPushDtos(),
         visits = if (visit.synced) emptyList() else listOf(visit).toPushDtos(),
@@ -203,7 +212,7 @@ class PushDataViewModel(
         }
 
         val households = reconcile(
-            "Households", listOfNotNull(bundle.household?.clientId), response.households, true
+            "Households", bundle.households.map { it.clientId }, response.households, true
         )
         val individuals = reconcile(
             "Individuals", bundle.individuals.map { it.clientId }, response.individuals, true

@@ -3,12 +3,15 @@ package com.andrew.hdss.util.usecases
 import androidx.room.withTransaction
 import com.andrew.hdss.data.AppDatabase
 import com.andrew.hdss.data.models.Membership
+import com.andrew.hdss.data.models.Visit
 import com.andrew.hdss.data.models.enums.MembershipEndType
 import com.andrew.hdss.data.models.enums.MembershipStartType
 import com.andrew.hdss.data.models.enums.RelationshipToHead
+import com.andrew.hdss.data.models.enums.VisitStatus
 import com.andrew.hdss.util.AnswerEntityMapper
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -130,6 +133,17 @@ class RecordTransferInUseCase(
         if (opened.relationshipToHead == RelationshipToHead.HEAD) {
             AnswerEntityMapper.applyHeadOfHouseholdRulesLocally(opened, households)
         }
+
+        db.visitDao().insert(
+            Visit(
+                id = UUID.randomUUID().toString(),
+                householdClientId = input.destinationHouseholdClientId,
+                individualClientId = input.personClientId,
+                visitDate = LocalDateTime.now(),
+                status = VisitStatus.COMPLETED,
+                synced = false
+            )
+        )
 
         return TransferInResult.Saved
     }
