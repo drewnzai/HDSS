@@ -108,6 +108,7 @@ fun HomeScreen(
     onNavigateToPush: () -> Unit,
     onStartBaseline: (locationId: Long) -> Unit,
     onAddIndividual: (householdClientId: String) -> Unit,
+    onTransferIn: (destinationHouseholdClientId: String) -> Unit,
     onRecordDeath: (householdClientId: String, deceasedClientId: String) -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
@@ -154,6 +155,7 @@ fun HomeScreen(
 
     val startBaseline: () -> Unit = { state.current?.let { onStartBaseline(it.id) } }
     val addIndividual: () -> Unit = { selectedHouseholdClientId?.let(onAddIndividual) }
+    val transferIn: () -> Unit = { selectedHouseholdClientId?.let(onTransferIn) }
     val selectHousehold: (String) -> Unit = { id ->
         selectedHouseholdClientId = if (selectedHouseholdClientId == id) null else id
     }
@@ -206,6 +208,7 @@ fun HomeScreen(
                             selectedHouseholdClientId = selectedHouseholdClientId,
                             onSelectHousehold = selectHousehold,
                             onAddIndividual = addIndividual,
+                            onTransferIn = transferIn,
                             recordDeath = recordDeath
                         )
                     }
@@ -219,6 +222,7 @@ fun HomeScreen(
                         selectedHouseholdClientId = selectedHouseholdClientId,
                         onSelectHousehold = selectHousehold,
                         onAddIndividual = addIndividual,
+                        onTransferIn = transferIn,
                         households = households,
                         recordDeath = recordDeath
                     )
@@ -246,6 +250,7 @@ fun HomeScreen(
                         selectedHouseholdClientId = selectedHouseholdClientId,
                         onSelectHousehold = selectHousehold,
                         onAddIndividual = addIndividual,
+                        onTransferIn = transferIn,
                         recordDeath = recordDeath
                     )
                 }
@@ -329,6 +334,7 @@ private fun LazyListScope.browserItems(
     selectedHouseholdClientId: String?,
     onSelectHousehold: (String) -> Unit,
     onAddIndividual: () -> Unit,
+    onTransferIn: () -> Unit,
     recordDeath: RecordDeathUi?
 ) {
     item(key = "greeting") {
@@ -372,6 +378,7 @@ private fun LazyListScope.browserItems(
                         onSelectHousehold = onSelectHousehold,
                         onAddIndividual = onAddIndividual,
                         onStartBaseline = onStartBaseline,
+                        onTransferIn = onTransferIn,
                         recordDeath = recordDeath
                     )
                 }
@@ -544,6 +551,7 @@ private fun ReadyPanel(
     onAddIndividual: () -> Unit,
     onStartBaseline: () -> Unit,
     modifier: Modifier = Modifier,
+    onTransferIn: () -> Unit = {},
     recordDeath: RecordDeathUi? = null
 ) {
     Card(
@@ -650,6 +658,14 @@ private fun ReadyPanel(
                 }
 
                 OutlinedButton(
+                    onClick = onTransferIn,
+                    enabled = selectedHouseholdClientId != null,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                ) {
+                    Text("Transfer in")
+                }
+
+                OutlinedButton(
                     onClick = onStartBaseline,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
                 ) {
@@ -681,6 +697,7 @@ private fun SelectionSidePanel(
     selectedHouseholdClientId: String?,
     onSelectHousehold: (String) -> Unit,
     onAddIndividual: () -> Unit,
+    onTransferIn: () -> Unit,
     recordDeath: RecordDeathUi?
     ) {
     if (state.isLeaf) {
@@ -692,6 +709,7 @@ private fun SelectionSidePanel(
             onAddIndividual = onAddIndividual,
             households = households,
             selectedHouseholdClientId = selectedHouseholdClientId,
+            onTransferIn = onTransferIn,
             recordDeath = recordDeath
         )
     } else {
