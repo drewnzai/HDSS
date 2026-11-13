@@ -149,6 +149,9 @@ fun NavGraph(
                 onTransferIn = { householdClientId ->
                     navController.navigate(Routes.transferIn(householdClientId))
                 },
+                onImmigration = { householdClientId ->
+                    navController.navigate(Routes.immigration(householdClientId))
+                },
                 onRecordDeath = { householdClientId, deceasedClientId ->
                     navController.navigate(Routes.recordDeath(householdClientId, deceasedClientId))
                 },
