@@ -21,7 +21,9 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -32,8 +34,6 @@ import androidx.compose.material.icons.outlined.LocationOff
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -44,7 +44,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -70,11 +69,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.andrew.hdss.data.daos.MemberRow
 import com.andrew.hdss.data.models.Household
 import com.andrew.hdss.data.models.Location
+import com.andrew.hdss.ui.components.FormActions
+import com.andrew.hdss.ui.components.FormsSection
 import com.andrew.hdss.ui.components.SelectableRow
 import com.andrew.hdss.ui.labels.displayLabel
 import com.andrew.hdss.ui.viewmodels.HomeViewModel
 import kotlinx.coroutines.flow.flowOf
-
 
 private const val SEARCH_THRESHOLD = 8
 private val TWO_PANE_MIN_WIDTH = 840.dp
@@ -95,8 +95,7 @@ private data class BrowserState(
 private data class RecordDeathUi(
     val members: List<MemberRow>,
     val selectedDeceasedClientId: String?,
-    val onSelectDeceased: (String) -> Unit,
-    val onRecordDeath: () -> Unit
+    val onSelectDeceased: (String) -> Unit
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,7 +107,7 @@ fun HomeScreen(
     onNavigateToPush: () -> Unit,
     onStartBaseline: (locationId: Long) -> Unit,
     onAddIndividual: (householdClientId: String) -> Unit,
-    onTransferIn: (destinationHouseholdClientId: String) -> Unit,
+    onTransferIn: (householdClientId: String) -> Unit,
     onImmigration: (householdClientId: String) -> Unit,
     onRecordDeath: (householdClientId: String, deceasedClientId: String) -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
@@ -120,7 +119,6 @@ fun HomeScreen(
 
     val state = BrowserState(roots, selectedPath, children, households)
 
-    // Reset the search text whenever the user moves to a different level.
     var query by rememberSaveable(state.current?.id) { mutableStateOf("") }
 
     var selectedHouseholdClientId by rememberSaveable(state.current?.id) {
@@ -132,7 +130,8 @@ fun HomeScreen(
     }
 
     val members by remember(selectedHouseholdClientId) {
-        selectedHouseholdClientId?.let(viewModel::observeOpenMembers) ?: flowOf(emptyList())
+        selectedHouseholdClientId?.let(viewModel::observeOpenMembers)
+            ?: flowOf(emptyList<MemberRow>())
     }.collectAsStateWithLifecycle(initialValue = emptyList())
 
     LaunchedEffect(members) {
@@ -143,14 +142,11 @@ fun HomeScreen(
         }
     }
 
-    val recordDeath: RecordDeathUi? = selectedHouseholdClientId?.let { householdId ->
+    val recordDeath: RecordDeathUi? = selectedHouseholdClientId?.let {
         RecordDeathUi(
             members = members,
             selectedDeceasedClientId = selectedDeceasedClientId,
-            onSelectDeceased = { selectedDeceasedClientId = it },
-            onRecordDeath = {
-                selectedDeceasedClientId?.let { deceased -> onRecordDeath(householdId, deceased) }
-            }
+            onSelectDeceased = { selectedDeceasedClientId = it }
         )
     }
 
@@ -158,9 +154,26 @@ fun HomeScreen(
     val addIndividual: () -> Unit = { selectedHouseholdClientId?.let(onAddIndividual) }
     val transferIn: () -> Unit = { selectedHouseholdClientId?.let(onTransferIn) }
     val immigration: () -> Unit = { selectedHouseholdClientId?.let(onImmigration) }
+    val confirmDeath: () -> Unit = {
+        val householdId = selectedHouseholdClientId
+        val deceasedId = selectedDeceasedClientId
+        if (householdId != null && deceasedId != null) {
+            onRecordDeath(householdId, deceasedId)
+        }
+    }
     val selectHousehold: (String) -> Unit = { id ->
         selectedHouseholdClientId = if (selectedHouseholdClientId == id) null else id
     }
+
+    val formActions = FormActions(
+        householdSelected = selectedHouseholdClientId != null,
+        personSelected = selectedDeceasedClientId != null,
+        onRegisterHousehold = startBaseline,
+        onAddIndividual = addIndividual,
+        onTransferIn = transferIn,
+        onImmigration = immigration,
+        onRecordDeath = confirmDeath
+    )
 
     Scaffold(
         topBar = {
@@ -206,28 +219,22 @@ fun HomeScreen(
                             onRootClick = viewModel::clearSelection,
                             onCrumbClick = viewModel::selectPathLocation,
                             onLocationSelected = viewModel::selectLocation,
-                            onStartBaseline = startBaseline,
                             selectedHouseholdClientId = selectedHouseholdClientId,
                             onSelectHousehold = selectHousehold,
-                            onAddIndividual = addIndividual,
-                            onTransferIn = transferIn,
-                            onImmigration = immigration,
+                            formActions = formActions,
                             recordDeath = recordDeath
                         )
                     }
 
                     SelectionSidePanel(
                         state = state,
-                        onStartBaseline = startBaseline,
                         modifier = Modifier
                             .width(SIDE_PANEL_WIDTH)
                             .padding(vertical = 16.dp),
+                        households = households,
                         selectedHouseholdClientId = selectedHouseholdClientId,
                         onSelectHousehold = selectHousehold,
-                        onAddIndividual = addIndividual,
-                        onTransferIn = transferIn,
-                        households = households,
-                        onImmigration = immigration,
+                        formActions = formActions,
                         recordDeath = recordDeath
                     )
                 }
@@ -250,12 +257,9 @@ fun HomeScreen(
                         onRootClick = viewModel::clearSelection,
                         onCrumbClick = viewModel::selectPathLocation,
                         onLocationSelected = viewModel::selectLocation,
-                        onStartBaseline = startBaseline,
                         selectedHouseholdClientId = selectedHouseholdClientId,
                         onSelectHousehold = selectHousehold,
-                        onAddIndividual = addIndividual,
-                        onTransferIn = transferIn,
-                        onImmigration = immigration,
+                        formActions = formActions,
                         recordDeath = recordDeath
                     )
                 }
@@ -299,8 +303,6 @@ private fun HomeTopBar(
                 )
             }
 
-            // Sign out lives in an overflow menu so it can't be hit by
-            // accident while someone is tapping through locations.
             Column {
                 IconButton(onClick = { menuOpen = true }) {
                     Icon(
@@ -335,12 +337,9 @@ private fun LazyListScope.browserItems(
     onRootClick: () -> Unit,
     onCrumbClick: (Int) -> Unit,
     onLocationSelected: (Location) -> Unit,
-    onStartBaseline: () -> Unit,
     selectedHouseholdClientId: String?,
     onSelectHousehold: (String) -> Unit,
-    onAddIndividual: () -> Unit,
-    onTransferIn: () -> Unit,
-    onImmigration: () -> Unit,
+    formActions: FormActions,
     recordDeath: RecordDeathUi?
 ) {
     item(key = "greeting") {
@@ -375,6 +374,7 @@ private fun LazyListScope.browserItems(
 
     when {
         state.isLeaf -> {
+
             if (showInlineReadyPanel) {
                 item(key = "ready") {
                     ReadyPanel(
@@ -382,12 +382,11 @@ private fun LazyListScope.browserItems(
                         households = state.households,
                         selectedHouseholdClientId = selectedHouseholdClientId,
                         onSelectHousehold = onSelectHousehold,
-                        onAddIndividual = onAddIndividual,
-                        onStartBaseline = onStartBaseline,
-                        onTransferIn = onTransferIn,
-                        onImmigration = onImmigration,
                         recordDeath = recordDeath
                     )
+                }
+                item(key = "forms") {
+                    FormsSection(actions = formActions)
                 }
             }
         }
@@ -555,12 +554,8 @@ private fun ReadyPanel(
     households: List<Household>,
     selectedHouseholdClientId: String?,
     onSelectHousehold: (String) -> Unit,
-    onAddIndividual: () -> Unit,
-    onStartBaseline: () -> Unit,
-    modifier: Modifier = Modifier,
-    onTransferIn: () -> Unit = {},
-    onImmigration: () -> Unit = {},
-    recordDeath: RecordDeathUi? = null
+    recordDeath: RecordDeathUi?,
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -642,63 +637,13 @@ private fun ReadyPanel(
                                 )
                             }
                         }
-
-                        if (death.selectedDeceasedClientId != null) {
-                            OutlinedButton(
-                                onClick = death.onRecordDeath,
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                Text("Record death")
-                            }
-                        }
                     }
-                }
-
-                Button(
-                    onClick = onAddIndividual,
-                    enabled = selectedHouseholdClientId != null,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                ) {
-                    Text("Add individual")
-                }
-
-                OutlinedButton(
-                    onClick = onTransferIn,
-                    enabled = selectedHouseholdClientId != null,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                ) {
-                    Text("Transfer in")
-                }
-
-                OutlinedButton(
-                    onClick = onImmigration,
-                    enabled = selectedHouseholdClientId != null,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                ) {
-                    Text("Immigration")
-                }
-
-                OutlinedButton(
-                    onClick = onStartBaseline,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                ) {
-                    Text("Register new household")
                 }
             } else {
                 Text(
                     text = "No households registered here yet.",
                     style = MaterialTheme.typography.bodyMedium
                 )
-
-                Button(
-                    onClick = onStartBaseline,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                ) {
-                    Text("Register new household")
-                }
             }
         }
     }
@@ -707,29 +652,27 @@ private fun ReadyPanel(
 @Composable
 private fun SelectionSidePanel(
     state: BrowserState,
-    onStartBaseline: () -> Unit,
     modifier: Modifier = Modifier,
     households: List<Household>,
     selectedHouseholdClientId: String?,
     onSelectHousehold: (String) -> Unit,
-    onAddIndividual: () -> Unit,
-    onTransferIn: () -> Unit,
-    onImmigration: () -> Unit,
+    formActions: FormActions,
     recordDeath: RecordDeathUi?
-    ) {
+) {
     if (state.isLeaf) {
-        ReadyPanel(
-            path = state.path,
-            onStartBaseline = onStartBaseline,
-            modifier = modifier,
-            onSelectHousehold = onSelectHousehold,
-            onAddIndividual = onAddIndividual,
-            households = households,
-            selectedHouseholdClientId = selectedHouseholdClientId,
-            onTransferIn = onTransferIn,
-            onImmigration = onImmigration,
-            recordDeath = recordDeath
-        )
+        Column(
+            modifier = modifier.verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            ReadyPanel(
+                path = state.path,
+                households = households,
+                selectedHouseholdClientId = selectedHouseholdClientId,
+                onSelectHousehold = onSelectHousehold,
+                recordDeath = recordDeath
+            )
+            FormsSection(actions = formActions)
+        }
     } else {
         OutlinedCard(modifier = modifier.fillMaxWidth()) {
             Column(
