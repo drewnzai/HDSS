@@ -593,7 +593,7 @@ private fun ReadyPanel(
                     households.forEach { household ->
                         SelectableRow(
                             title = household.householdCode ?: "No code",
-                            subtitle = household.status.name,
+                            subtitle = household.status.displayLabel(),
                             selected = household.clientId == selectedHouseholdClientId,
                             onClick = { onSelectHousehold(household.clientId) }
                         )
