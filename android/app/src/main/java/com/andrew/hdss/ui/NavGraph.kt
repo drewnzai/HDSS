@@ -42,6 +42,7 @@ import com.andrew.hdss.ui.screens.AddIndividualScreen
 import com.andrew.hdss.ui.screens.BaselineFlowScreen
 import com.andrew.hdss.ui.screens.DownloadDatabaseScreen
 import com.andrew.hdss.ui.screens.HomeScreen
+import com.andrew.hdss.ui.screens.ImmigrationScreen
 import com.andrew.hdss.ui.screens.LoginScreen
 import com.andrew.hdss.ui.screens.PushDataScreen
 import com.andrew.hdss.ui.screens.RecordDeathScreen
@@ -71,6 +72,11 @@ object Routes {
 
     const val TRANSFER_IN_ARG = "destinationHouseholdClientId"
     const val TRANSFER_IN = "transfer_in/{$TRANSFER_IN_ARG}"
+
+    const val IMMIGRATION_ARG = "householdClientId"
+    const val IMMIGRATION = "immigration/{$IMMIGRATION_ARG}"
+
+    fun immigration(householdClientId: String) = "immigration/$householdClientId"
 
     fun transferIn(destinationHouseholdClientId: String) =
         "transfer_in/$destinationHouseholdClientId"
@@ -158,6 +164,20 @@ fun NavGraph(
 
             RecordTransferInScreen(
                 destinationHouseholdClientId = destinationHouseholdClientId,
+                onComplete = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.IMMIGRATION,
+            arguments = listOf(navArgument(Routes.IMMIGRATION_ARG) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val householdClientId = backStackEntry.arguments
+                ?.getString(Routes.IMMIGRATION_ARG) ?: return@composable
+
+            ImmigrationScreen(
+                householdClientId = householdClientId,
                 onComplete = { navController.popBackStack() },
                 onCancel = { navController.popBackStack() }
             )

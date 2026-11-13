@@ -6,7 +6,9 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.room.withTransaction
 import com.andrew.hdss.HdssApplication
+import com.andrew.hdss.data.AppDatabase
 import com.andrew.hdss.data.daos.AnswerDao
 import com.andrew.hdss.data.daos.ChoiceDao
 import com.andrew.hdss.data.daos.FormDao
@@ -25,6 +27,7 @@ import com.andrew.hdss.data.models.Question
 import com.andrew.hdss.data.models.enums.FormResponseStatus
 import com.andrew.hdss.data.models.enums.MappedEntity
 import com.andrew.hdss.data.models.enums.QuestionType
+import com.andrew.hdss.data.models.enums.RelationshipToHead
 import com.andrew.hdss.data.models.enums.Sex
 import com.andrew.hdss.util.AnswerEntityMapper
 import com.andrew.hdss.util.ExprValue
@@ -62,6 +65,7 @@ class FormFillViewModel(
     private val visitId: String,
     private val context: FormFillContext,
     private val formDao: FormDao,
+    private val database: AppDatabase,
     private val questionDao: QuestionDao,
     private val choiceDao: ChoiceDao,
     private val formResponseDao: FormResponseDao,
@@ -242,66 +246,85 @@ class FormFillViewModel(
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
+            _uiState.update { it.copy(isSaving = true, constraintError = null) }
             try {
-                val formResponseId = UUID.randomUUID().toString()
-                formResponseDao.insert(
-                    FormResponse(
-                        id = formResponseId,
-                        visitId = visitId,
-                        formId = form.id,
-                        formVersion = form.version,
-                        status = FormResponseStatus.COMPLETED,
-                        startedAt = startedAt,
-                        completedAt = LocalDateTime.now(),
-                        synced = false
-                    )
-                )
+                // Returns a rejection message, or null once everything is written.
+                // One transaction, so a failure part way through leaves nothing behind.
+                val rejection: String? = database.withTransaction {
+                    val bags = AnswerEntityMapper.buildFieldBags(state.relevantQuestions, state.answers)
+                    val fieldsByEntity = (bags.keys + context.generatedFields.keys).associateWith { entity ->
+                        (bags[entity] ?: emptyMap()) + (context.generatedFields[entity] ?: emptyMap())
+                    }
 
-                val answerRows = state.relevantQuestions
-                    .filter { state.answers.containsKey(it.id) }
-                    .map { q ->
-                        Answer(
-                            id = UUID.randomUUID().toString(),
-                            formResponseId = formResponseId,
-                            questionId = q.id,
-                            value = state.answers.getValue(q.id),
+                    // A household has at most one head. Checked before anything is written.
+                    val householdId = context.foreignKeys["householdClientId"]
+                    val makesHead = fieldsByEntity[MappedEntity.MEMBERSHIP]
+                        ?.get("relationshipToHead") == RelationshipToHead.HEAD.name
+                    if (makesHead && householdId != null &&
+                        householdDao.getByClientId(householdId)?.headIndividualClientId != null
+                    ) {
+                        return@withTransaction "This household already has a head. Choose a different relationship."
+                    }
+
+                    val formResponseId = UUID.randomUUID().toString()
+                    formResponseDao.insert(
+                        FormResponse(
+                            id = formResponseId,
+                            visitId = visitId,
+                            formId = form.id,
+                            formVersion = form.version,
+                            status = FormResponseStatus.COMPLETED,
+                            startedAt = startedAt,
+                            completedAt = LocalDateTime.now(),
                             synced = false
                         )
-                    }
-                answerDao.insertAll(answerRows)
-                visitDao.markCompleted(visitId)
-
-                val bags = AnswerEntityMapper.buildFieldBags(state.relevantQuestions, state.answers)
-                val fieldsByEntity = (bags.keys + context.generatedFields.keys).associateWith { entity ->
-                    (bags[entity] ?: emptyMap()) + (context.generatedFields[entity] ?: emptyMap())
-                }
-
-                fieldsByEntity[MappedEntity.HOUSEHOLD]?.let { fields ->
-                    val clientId = context.entityClientIds.getValue(MappedEntity.HOUSEHOLD)
-                    val locationId = context.locationId
-                        ?: throw IllegalStateException("locationId is required to build a Household")
-                    householdDao.insert(AnswerEntityMapper.buildHousehold(clientId, locationId, fields))
-                }
-
-                fieldsByEntity[MappedEntity.INDIVIDUAL]?.let { fields ->
-                    val clientId = context.entityClientIds.getValue(MappedEntity.INDIVIDUAL)
-                    individualDao.insert(AnswerEntityMapper.buildIndividual(clientId, fields))
-                }
-
-                fieldsByEntity[MappedEntity.MEMBERSHIP]?.let { fields ->
-                    val clientId = context.entityClientIds.getValue(MappedEntity.MEMBERSHIP)
-                    val individualClientId = context.entityClientIds[MappedEntity.INDIVIDUAL]
-                        ?: context.foreignKeys.getValue("individualClientId")
-                    val householdClientId = context.foreignKeys.getValue("householdClientId")
-                    val membership = AnswerEntityMapper.buildMembership(
-                        clientId, individualClientId, householdClientId, fields
                     )
-                    membershipDao.insert(membership)
-                    AnswerEntityMapper.applyHeadOfHouseholdRulesLocally(membership, householdDao)
+                    answerDao.insertAll(
+                        state.relevantQuestions
+                            .filter { state.answers.containsKey(it.id) }
+                            .map { q ->
+                                Answer(
+                                    id = UUID.randomUUID().toString(),
+                                    formResponseId = formResponseId,
+                                    questionId = q.id,
+                                    value = state.answers.getValue(q.id),
+                                    synced = false
+                                )
+                            }
+                    )
+                    visitDao.markCompleted(visitId)
+
+                    fieldsByEntity[MappedEntity.HOUSEHOLD]?.let { fields ->
+                        val clientId = context.entityClientIds.getValue(MappedEntity.HOUSEHOLD)
+                        val locationId = context.locationId
+                            ?: throw IllegalStateException("locationId is required to build a Household")
+                        householdDao.insert(AnswerEntityMapper.buildHousehold(clientId, locationId, fields))
+                    }
+
+                    fieldsByEntity[MappedEntity.INDIVIDUAL]?.let { fields ->
+                        val clientId = context.entityClientIds.getValue(MappedEntity.INDIVIDUAL)
+                        individualDao.insert(AnswerEntityMapper.buildIndividual(clientId, fields))
+                    }
+
+                    fieldsByEntity[MappedEntity.MEMBERSHIP]?.let { fields ->
+                        val clientId = context.entityClientIds.getValue(MappedEntity.MEMBERSHIP)
+                        val individualClientId = context.entityClientIds[MappedEntity.INDIVIDUAL]
+                            ?: context.foreignKeys.getValue("individualClientId")
+                        val householdClientId = context.foreignKeys.getValue("householdClientId")
+                        val membership = AnswerEntityMapper.buildMembership(
+                            clientId, individualClientId, householdClientId, fields
+                        )
+                        membershipDao.insert(membership)
+                        AnswerEntityMapper.applyHeadOfHouseholdRulesLocally(membership, householdDao)
+                    }
+
+                    null
                 }
 
-                _uiState.update { it.copy(isSaving = false, isComplete = true) }
+                _uiState.update {
+                    if (rejection == null) it.copy(isSaving = false, isComplete = true)
+                    else it.copy(isSaving = false, constraintError = rejection)
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isSaving = false, constraintError = "Failed to save: ${e.message}") }
             }
@@ -361,6 +384,7 @@ class FormFillViewModel(
                     visitId = visitId,
                     context = context,
                     formDao = db.formDao(),
+                    database = db,
                     questionDao = db.questionDao(),
                     choiceDao = db.choiceDao(),
                     formResponseDao = db.formResponseDao(),
