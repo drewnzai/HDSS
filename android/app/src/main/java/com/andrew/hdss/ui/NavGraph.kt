@@ -40,12 +40,12 @@ import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.network.AuthResult
 import com.andrew.hdss.ui.screens.AddIndividualScreen
 import com.andrew.hdss.ui.screens.BaselineFlowScreen
+import com.andrew.hdss.ui.screens.DeathScreen
 import com.andrew.hdss.ui.screens.DownloadDatabaseScreen
 import com.andrew.hdss.ui.screens.HomeScreen
 import com.andrew.hdss.ui.screens.ImmigrationScreen
 import com.andrew.hdss.ui.screens.LoginScreen
 import com.andrew.hdss.ui.screens.PushDataScreen
-import com.andrew.hdss.ui.screens.RecordDeathScreen
 import com.andrew.hdss.ui.screens.RecordTransferInScreen
 import com.andrew.hdss.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.flow.first
@@ -237,7 +237,7 @@ fun NavGraph(
             val deceasedClientId = backStackEntry.arguments
                 ?.getString(Routes.RECORD_DEATH_DECEASED_ARG) ?: return@composable
 
-            RecordDeathScreen(
+            DeathScreen(
                 householdClientId = householdClientId,
                 deceasedClientId = deceasedClientId,
                 onComplete = { navController.popBackStack() },
