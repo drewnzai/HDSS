@@ -109,6 +109,7 @@ fun HomeScreen(
     onAddIndividual: (householdClientId: String) -> Unit,
     onTransferIn: (householdClientId: String) -> Unit,
     onImmigration: (householdClientId: String) -> Unit,
+    onRecordEmigration: (householdClientId: String, emigrantClientId: String) -> Unit,
     onRecordDeath: (householdClientId: String, deceasedClientId: String) -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
@@ -154,6 +155,13 @@ fun HomeScreen(
     val addIndividual: () -> Unit = { selectedHouseholdClientId?.let(onAddIndividual) }
     val transferIn: () -> Unit = { selectedHouseholdClientId?.let(onTransferIn) }
     val immigration: () -> Unit = { selectedHouseholdClientId?.let(onImmigration) }
+    val confirmEmigration: () -> Unit = {
+        val householdId = selectedHouseholdClientId
+        val emigrantId = selectedDeceasedClientId
+        if (householdId != null && emigrantId != null) {
+            onRecordEmigration(householdId, emigrantId)
+        }
+    }
     val confirmDeath: () -> Unit = {
         val householdId = selectedHouseholdClientId
         val deceasedId = selectedDeceasedClientId
@@ -172,6 +180,7 @@ fun HomeScreen(
         onAddIndividual = addIndividual,
         onTransferIn = transferIn,
         onImmigration = immigration,
+        onEmigration = confirmEmigration,
         onRecordDeath = confirmDeath
     )
 

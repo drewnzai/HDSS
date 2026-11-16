@@ -23,6 +23,7 @@ internal data class FormActions(
     val onAddIndividual: () -> Unit,
     val onTransferIn: () -> Unit,
     val onImmigration: () -> Unit,
+    val onEmigration: () -> Unit,
     val onRecordDeath: () -> Unit
 )
 
@@ -78,13 +79,18 @@ internal fun FormsSection(
             FormGroup(
                 title = "Selected person",
                 hint = if (actions.personSelected) null
-                else "Select a person in the household to record a death."
+                else "Select a person in the household to record a death or emigration."
             ) {
                 FormButton(
                     label = "Record death",
                     onClick = actions.onRecordDeath,
                     enabled = actions.personSelected,
                     destructive = true
+                )
+                FormButton(
+                    label = "Record emigration",
+                    onClick = actions.onEmigration,
+                    enabled = actions.personSelected
                 )
             }
         }
