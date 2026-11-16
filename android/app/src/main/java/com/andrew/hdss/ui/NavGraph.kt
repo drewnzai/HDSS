@@ -42,6 +42,7 @@ import com.andrew.hdss.ui.screens.AddIndividualScreen
 import com.andrew.hdss.ui.screens.BaselineFlowScreen
 import com.andrew.hdss.ui.screens.DeathScreen
 import com.andrew.hdss.ui.screens.DownloadDatabaseScreen
+import com.andrew.hdss.ui.screens.EmigrationScreen
 import com.andrew.hdss.ui.screens.HomeScreen
 import com.andrew.hdss.ui.screens.ImmigrationScreen
 import com.andrew.hdss.ui.screens.LoginScreen
@@ -75,6 +76,13 @@ object Routes {
 
     const val IMMIGRATION_ARG = "householdClientId"
     const val IMMIGRATION = "immigration/{$IMMIGRATION_ARG}"
+
+    const val EMIGRATION_HOUSEHOLD_ARG = "householdClientId"
+    const val EMIGRATION_EMIGRANT_ARG = "emigrantClientId"
+    const val EMIGRATION = "emigration/{$EMIGRATION_HOUSEHOLD_ARG}/{$EMIGRATION_EMIGRANT_ARG}"
+
+    fun emigration(householdClientId: String, emigrantClientId: String) =
+        "emigration/$householdClientId/$emigrantClientId"
 
     fun immigration(householdClientId: String) = "immigration/$householdClientId"
 
@@ -181,6 +189,26 @@ fun NavGraph(
 
             ImmigrationScreen(
                 householdClientId = householdClientId,
+                onComplete = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.EMIGRATION,
+            arguments = listOf(
+                navArgument(Routes.EMIGRATION_HOUSEHOLD_ARG) { type = NavType.StringType },
+                navArgument(Routes.EMIGRATION_EMIGRANT_ARG) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val householdClientId = backStackEntry.arguments
+                ?.getString(Routes.EMIGRATION_HOUSEHOLD_ARG) ?: return@composable
+            val emigrantClientId = backStackEntry.arguments
+                ?.getString(Routes.EMIGRATION_EMIGRANT_ARG) ?: return@composable
+
+            EmigrationScreen(
+                householdClientId = householdClientId,
+                emigrantClientId = emigrantClientId,
                 onComplete = { navController.popBackStack() },
                 onCancel = { navController.popBackStack() }
             )
