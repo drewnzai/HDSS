@@ -23,12 +23,6 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-        buildConfigField(
-            "String",
-            "BASE_URL",
-            "\"https://unmicrobial-nonmethodically-ellis.ngrok-free.dev/api/\""
-        )
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
