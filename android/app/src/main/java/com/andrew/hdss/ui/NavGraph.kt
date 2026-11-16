@@ -38,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.network.AuthResult
+import com.andrew.hdss.network.ServerSettings
 import com.andrew.hdss.ui.screens.AddIndividualScreen
 import com.andrew.hdss.ui.screens.BaselineFlowScreen
 import com.andrew.hdss.ui.screens.DeathScreen
@@ -100,6 +101,7 @@ object Routes {
 @Composable
 fun NavGraph(
     tokenDataStore: TokenDataStore,
+    serverSettings: ServerSettings,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController()
 ) {
@@ -115,6 +117,7 @@ fun NavGraph(
             SplashScreen(
                 authViewModel = authViewModel,
                 tokenDataStore = tokenDataStore,
+                serverSettings = serverSettings,
                 onResult = { loggedIn ->
                     navController.navigate(if (loggedIn) Routes.HOME else Routes.LOGIN) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
@@ -141,6 +144,7 @@ fun NavGraph(
                     scope.launch {
                         authViewModel.reset()
                         tokenDataStore.clear()
+                        serverSettings.clear()
                         navController.navigate(Routes.LOGIN) {
                             popUpTo(Routes.HOME) { inclusive = true }
                         }
@@ -285,6 +289,7 @@ private enum class PermissionPhase {
 private fun SplashScreen(
     tokenDataStore: TokenDataStore,
     authViewModel: AuthViewModel,
+    serverSettings: ServerSettings,
     onResult: (loggedIn: Boolean) -> Unit
 ) {
     val context = LocalContext.current
@@ -330,6 +335,13 @@ private fun SplashScreen(
 
     LaunchedEffect(phase) {
         if (phase != PermissionPhase.RESOLVED) return@LaunchedEffect
+
+        serverSettings.awaitLoaded()
+        if (!serverSettings.hasAddress) {
+            tokenDataStore.clear()
+            onResult(false)
+            return@LaunchedEffect
+        }
 
         val accessToken = tokenDataStore.accessToken.first()
         val expiresAt = tokenDataStore.expiresAt.first()

@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavGraph(
                         tokenDataStore = container.tokenDataStore,
+                        serverSettings = container.serverSettings,
                         modifier = Modifier
                             .padding(innerPadding)
                     )
