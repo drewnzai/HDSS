@@ -15,4 +15,7 @@ interface ChoiceDao {
 
     @Query("SELECT * FROM choices WHERE listName = :listName")
     suspend fun getAllByListName(listName: String): List<Choice>
+
+    @Query("DELETE FROM choices")
+    suspend fun deleteAll()
 }

@@ -12,6 +12,7 @@ import kotlinx.serialization.json.Json
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
+import kotlin.coroutines.cancellation.CancellationException
 
 interface ChoiceApiRepository{
     @GET("choices/list/{listName}")
@@ -71,8 +72,16 @@ class ChoiceApiService(
 
         val choices = choiceDtos.toEntities()
 
-        database.withTransaction{
-            choiceDao.insertAll(choices)
+        try {
+            database.withTransaction {
+                choiceDao.deleteAll()
+                choiceDao.insertAll(choices)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e("ChoiceApiService", "Saving ${choices.size} choices failed", e)
+            return SyncResult.Error(e)
         }
 
         return SyncResult.Success(choices.size)
