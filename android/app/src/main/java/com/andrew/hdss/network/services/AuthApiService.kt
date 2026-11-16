@@ -12,6 +12,9 @@ import kotlinx.serialization.json.Json
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 interface AuthApiRepository{
     @POST("auth/login")
@@ -66,11 +69,25 @@ class AuthApiService(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
+    private fun fallbackError(
+        code: Int,
+        path: String,
+        message: String
+    ): ErrorResponse = ErrorResponse(
+        title = "HTTP $code",
+        status = code,
+        detail = message,
+        path = path,
+        timestamp = Clock.System.now()
+    )
+
     private suspend fun handleAuthResponse(response: Response<LoginResponse>): AuthResult {
         if (response.isSuccessful) {
             val loginResponse = response.body()
-            return if (loginResponse != null) {
+                ?: return AuthResult.Error(IllegalStateException("Server returned an empty response"))
 
+            try {
                 tokenDataStore.saveSession(
                     accessToken = loginResponse.authenticationToken,
                     refreshToken = loginResponse.refreshToken,
@@ -79,31 +96,31 @@ class AuthApiService(
                     role = loginResponse.role,
                     expiresAt = loginResponse.expiresAt
                 )
-
-                AuthResult.Success(loginResponse)
-            } else {
-                AuthResult.Error(
-                    IllegalStateException("Server returned an empty response")
-                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("AuthApiService", "Saving the session failed", e)
+                return AuthResult.Error(IllegalStateException("Signed in, but the session couldn't be saved on this device."))
             }
+            return AuthResult.Success(loginResponse)
         }
 
-        val errorResponse = response.errorBody()
-            ?.string()
-            ?.let { errorBody ->
-                try {
-                    json.decodeFromString<ErrorResponse>(errorBody)
-                } catch (e: Exception) {
-                    null
+        val rawBody = response.errorBody()?.string()
+        Log.w("AuthApiService", "Auth rejected: HTTP ${response.code()} body=$rawBody")
+
+        val parsed = rawBody?.let {
+            runCatching { json.decodeFromString<ErrorResponse>(it) }.getOrNull()
+        }
+
+        return AuthResult.Failure(
+            parsed ?: fallbackError(
+                code = response.code(),
+                path = response.raw().request.url.encodedPath,
+                message = when (response.code()) {
+                    401, 403 -> "Incorrect username or password."
+                    else -> "The server returned an error (HTTP ${response.code()})."
                 }
-            }
-
-        return if (errorResponse != null) {
-            AuthResult.Failure(errorResponse)
-        } else {
-            AuthResult.Error(
-                IllegalStateException("Unknown server error: HTTP ${response.code()}")
             )
-        }
+        )
     }
 }
