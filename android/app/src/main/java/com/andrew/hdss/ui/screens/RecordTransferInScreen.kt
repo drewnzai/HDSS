@@ -270,14 +270,3 @@ private fun TransferDetailsStep(
         }
     }
 }
-
-private fun relationshipLabel(relationship: RelationshipToHead): String = when (relationship) {
-    RelationshipToHead.HEAD -> "Head"
-    RelationshipToHead.SPOUSE -> "Spouse"
-    RelationshipToHead.CHILD -> "Child"
-    RelationshipToHead.PARENT -> "Parent"
-    RelationshipToHead.SIBLING -> "Sibling"
-    RelationshipToHead.OTHER_RELATIVE -> "Other relative"
-    RelationshipToHead.NON_RELATIVE -> "Non-relative"
-    else -> relationship.name
-}
