@@ -31,6 +31,7 @@ data class EndMembershipInput(
     val wasHead: Boolean,
     val otherMembersRemain: Boolean,
     val newHeadClientId: String?,
+    val informantClientId: String?,
     val answers: List<FormAnswer>
 )
 
@@ -47,6 +48,11 @@ class EndMembershipUseCase(
         if (input.endDate.isAfter(today())) {
             return EndMembershipResult.Rejected("The date can't be in the future.")
         }
+
+        if (input.informantClientId != null && input.informantClientId == input.leavingClientId) {
+            return EndMembershipResult.Rejected("The person reporting can't be the person who left.")
+        }
+
         if (input.newHeadClientId != null && input.newHeadClientId == input.leavingClientId) {
             return EndMembershipResult.Rejected("The new head can't be the person who left.")
         }
@@ -75,6 +81,13 @@ class EndMembershipUseCase(
             return EndMembershipResult.Rejected(
                 "The date can't be before ${leaving.startDate}, when they joined this household."
             )
+        }
+
+        input.informantClientId?.let { id ->
+            openMembership(input.householdClientId, id)
+                ?: return EndMembershipResult.Rejected(
+                    "The person reporting must be a current member of this household."
+                )
         }
 
         // Head status comes from the stored membership. If the answer disagrees, the

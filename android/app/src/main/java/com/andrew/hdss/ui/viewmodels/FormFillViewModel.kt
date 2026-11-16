@@ -159,11 +159,15 @@ class FormFillViewModel(
         var updatedAnswers = state.answers + (question.id to rawValue)
         updatedAnswers = recomputeCalculations(state.allQuestions, updatedAnswers)
 
-        // Choosing who left clears a new head who is now that same person.
         if (question.name in MembershipEndForms.leavingQuestionNames) {
-            val newHeadId = state.allQuestions.firstOrNull { it.name == "new_head_clientId" }?.id
-            if (newHeadId != null && updatedAnswers[newHeadId] == rawValue) {
-                updatedAnswers = updatedAnswers - newHeadId
+            val dependentIds = state.allQuestions
+                .filter {
+                    it.name == "new_head_clientId" ||
+                            it.name in MembershipEndForms.informantQuestionNames
+                }
+                .map { it.id }
+            dependentIds.forEach { id ->
+                if (updatedAnswers[id] == rawValue) updatedAnswers = updatedAnswers - id
             }
         }
 
@@ -194,6 +198,8 @@ class FormFillViewModel(
         return when (question.name) {
             in MembershipEndForms.leavingQuestionNames -> individuals
             "new_head_clientId" -> individuals.filter { it.clientId != leavingId && isAdult(it) }
+            in MembershipEndForms.informantQuestionNames ->
+                individuals.filter { it.clientId != leavingId }
             else -> {
                 val sexFilter = when (question.mappedField) {
                     "motherClientId" -> Sex.FEMALE
@@ -341,11 +347,15 @@ class FormFillViewModel(
             val endDate = byName[spec.dateQuestion]
                 ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
             val leavingId = byName[spec.leavingQuestion]?.takeIf { it.isNotBlank() }
+            val informantId = spec.informantQuestion
+                ?.let { byName[it]?.takeIf { value -> value.isNotBlank() } }
             val householdId = context.foreignKeys["householdClientId"]
 
-            if (endDate == null || leavingId == null || householdId == null) {
+            if (endDate == null || leavingId == null || householdId == null ||
+                (spec.informantQuestion != null && informantId == null)
+            ) {
                 _uiState.update {
-                    it.copy(isSaving = false, constraintError = "Enter the date and choose the person.")
+                    it.copy(isSaving = false, constraintError = "Complete the required questions.")
                 }
                 return@launch
             }
@@ -358,6 +368,7 @@ class FormFillViewModel(
                     startedAt = startedAt,
                     householdClientId = householdId,
                     leavingClientId = leavingId,
+                    informantClientId = informantId,
                     endDate = endDate,
                     endType = spec.endType,
                     wasHead = byName["was_head"] == "yes",
