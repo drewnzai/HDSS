@@ -32,10 +32,12 @@ import com.andrew.hdss.data.models.enums.Sex
 import com.andrew.hdss.util.AnswerEntityMapper
 import com.andrew.hdss.util.ExprValue
 import com.andrew.hdss.util.ExpressionEvaluator
-import com.andrew.hdss.util.usecases.DeathAnswer
-import com.andrew.hdss.util.usecases.DeathInput
-import com.andrew.hdss.util.usecases.DeathResult
-import com.andrew.hdss.util.usecases.RecordDeathUseCase
+import com.andrew.hdss.util.usecases.EndMembershipInput
+import com.andrew.hdss.util.usecases.EndMembershipResult
+import com.andrew.hdss.util.usecases.EndMembershipUseCase
+import com.andrew.hdss.util.usecases.FormAnswer
+import com.andrew.hdss.util.usecases.MembershipEndForms
+import com.andrew.hdss.util.usecases.MembershipEndSpec
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -74,7 +76,7 @@ class FormFillViewModel(
     private val individualDao: IndividualDao,
     private val membershipDao: MembershipDao,
     private val visitDao: VisitDao,
-    private val recordDeath: RecordDeathUseCase
+    private val endMembership: EndMembershipUseCase
 ) : ViewModel() {
 
     private val evaluator = ExpressionEvaluator()
@@ -157,8 +159,8 @@ class FormFillViewModel(
         var updatedAnswers = state.answers + (question.id to rawValue)
         updatedAnswers = recomputeCalculations(state.allQuestions, updatedAnswers)
 
-        // Choosing the deceased clears a new head who is now the same person.
-        if (question.name == "deceased_clientId") {
+        // Choosing who left clears a new head who is now that same person.
+        if (question.name in MembershipEndForms.leavingQuestionNames) {
             val newHeadId = state.allQuestions.firstOrNull { it.name == "new_head_clientId" }?.id
             if (newHeadId != null && updatedAnswers[newHeadId] == rawValue) {
                 updatedAnswers = updatedAnswers - newHeadId
@@ -185,13 +187,13 @@ class FormFillViewModel(
             i.dateOfBirth?.let { Period.between(it, LocalDate.now()).years >= 15 } ?: false
 
         val state = _uiState.value
-        val deceasedId = state.allQuestions
-            .firstOrNull { it.name == "deceased_clientId" }
+        val leavingId = state.allQuestions
+            .firstOrNull { it.name in MembershipEndForms.leavingQuestionNames }
             ?.let { state.answers[it.id] }
 
         return when (question.name) {
-            "deceased_clientId" -> individuals
-            "new_head_clientId" -> individuals.filter { it.clientId != deceasedId && isAdult(it) }
+            in MembershipEndForms.leavingQuestionNames -> individuals
+            "new_head_clientId" -> individuals.filter { it.clientId != leavingId && isAdult(it) }
             else -> {
                 val sexFilter = when (question.mappedField) {
                     "motherClientId" -> Sex.FEMALE
@@ -240,8 +242,8 @@ class FormFillViewModel(
     private fun submit() {
         val state = _uiState.value
         val form = state.form ?: return
-        if (form.name == RecordDeathUseCase.DEATH_FORM_NAME) {
-            submitDeath(state, form)
+        MembershipEndForms.forForm(form.name)?.let { spec ->
+            submitMembershipEnd(state, form, spec)
             return
         }
 
@@ -331,44 +333,46 @@ class FormFillViewModel(
         }
     }
 
-    private fun submitDeath(state: FormFillUiState, form: Form) {
+    private fun submitMembershipEnd(state: FormFillUiState, form: Form, spec: MembershipEndSpec) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, constraintError = null) }
 
             val byName = state.relevantQuestions.associate { it.name to state.answers[it.id] }
-            val dateOfDeath = byName["date_of_death"]
+            val endDate = byName[spec.dateQuestion]
                 ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-            val deceasedId = byName["deceased_clientId"]?.takeIf { it.isNotBlank() }
+            val leavingId = byName[spec.leavingQuestion]?.takeIf { it.isNotBlank() }
             val householdId = context.foreignKeys["householdClientId"]
 
-            if (dateOfDeath == null || deceasedId == null || householdId == null) {
+            if (endDate == null || leavingId == null || householdId == null) {
                 _uiState.update {
-                    it.copy(isSaving = false, constraintError = "Enter the date of death and choose who died.")
+                    it.copy(isSaving = false, constraintError = "Enter the date and choose the person.")
                 }
                 return@launch
             }
 
-            val input = DeathInput(
-                formId = form.id,
-                visitId = visitId,
-                startedAt = startedAt,
-                formVersion = form.version,
-                householdClientId = householdId,
-                deceasedClientId = deceasedId,
-                dateOfDeath = dateOfDeath,
-                wasHead = byName["was_head"] == "yes",
-                otherMembersRemain = byName["other_members_remain"] == "yes",
-                newHeadClientId = byName["new_head_clientId"]?.takeIf { it.isNotBlank() },
-                answers = state.relevantQuestions.mapNotNull { q ->
-                    state.answers[q.id]?.let { DeathAnswer(q.id, it) }
-                }
+            val result = endMembership(
+                EndMembershipInput(
+                    formId = form.id,
+                    formVersion = form.version,
+                    visitId = visitId,
+                    startedAt = startedAt,
+                    householdClientId = householdId,
+                    leavingClientId = leavingId,
+                    endDate = endDate,
+                    endType = spec.endType,
+                    wasHead = byName["was_head"] == "yes",
+                    otherMembersRemain = byName["other_members_remain"] == "yes",
+                    newHeadClientId = byName["new_head_clientId"]?.takeIf { it.isNotBlank() },
+                    answers = state.relevantQuestions.mapNotNull { q ->
+                        state.answers[q.id]?.let { FormAnswer(q.id, it) }
+                    }
+                )
             )
 
-            val result = recordDeath(input)
             _uiState.update {
                 when (result) {
-                    DeathResult.Saved -> it.copy(isSaving = false, isComplete = true)
-                    is DeathResult.Rejected -> it.copy(isSaving = false, constraintError = result.message)
+                    EndMembershipResult.Saved -> it.copy(isSaving = false, isComplete = true)
+                    is EndMembershipResult.Rejected -> it.copy(isSaving = false, constraintError = result.message)
                 }
             }
         }
@@ -393,7 +397,7 @@ class FormFillViewModel(
                     individualDao = db.individualDao(),
                     membershipDao = db.membershipDao(),
                     visitDao = db.visitDao(),
-                    recordDeath = RecordDeathUseCase(db)
+                    endMembership = EndMembershipUseCase(db)
                 )
             }
         }
