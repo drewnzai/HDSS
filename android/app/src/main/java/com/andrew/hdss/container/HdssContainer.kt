@@ -1,11 +1,13 @@
 package com.andrew.hdss.container
 
 import android.content.Context
-import com.andrew.hdss.BuildConfig
 import com.andrew.hdss.data.AppDatabase
 import com.andrew.hdss.datastore.TokenDataStore
 import com.andrew.hdss.network.AuthInterceptor
+import com.andrew.hdss.network.BaseUrlInterceptor
+import com.andrew.hdss.network.ServerSettings
 import com.andrew.hdss.network.TokenAuthenticator
+import com.andrew.hdss.network.serverDataStore
 import com.andrew.hdss.network.services.AuthApiRepository
 import com.andrew.hdss.network.services.AuthApiService
 import com.andrew.hdss.network.services.ChoiceApiRepository
@@ -25,32 +27,51 @@ import com.andrew.hdss.network.services.QuestionApiService
 import com.andrew.hdss.network.services.SyncApiRepository
 import com.andrew.hdss.network.services.SyncPushService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 
-class HdssContainer(private val context: Context) {
-    private val baseUrl: String = BuildConfig.BASE_URL
+class HdssContainer(context: Context) {
+    private val appContext = context.applicationContext
 
     private val json: Json = Json {
         ignoreUnknownKeys = true
         isLenient = true
     }
 
+    // Lives as long as the app. Used only to read the stored address at startup.
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    val serverSettings: ServerSettings by lazy {
+        ServerSettings(
+            dataStore = appContext.serverDataStore,
+            scope = appScope
+        )
+    }
+
     val tokenDataStore: TokenDataStore by lazy {
-        TokenDataStore(context)
+        TokenDataStore(appContext)
     }
 
-    val database: AppDatabase by lazy{
-        AppDatabase.getInstance(context)
+    val database: AppDatabase by lazy {
+        AppDatabase.getInstance(appContext)
     }
 
-    // Auth endpoints only — no authenticator, or a failed refresh would
-    // recursively trigger itself trying to refresh its own 401.
+    // Auth endpoints only.
+    private val authOkHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .addInterceptor(BaseUrlInterceptor(serverSettings))
+            .build()
+    }
+
     private val authRetrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(baseUrl)
+            .baseUrl(ServerSettings.PLACEHOLDER_BASE_URL)
+            .client(authOkHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
     }
@@ -67,10 +88,11 @@ class HdssContainer(private val context: Context) {
         )
     }
 
-    // Everything else — attaches the access token to outgoing requests,
-    // and refreshes automatically on a 401.
+    // Everything else. Routes to the entered address, attaches the access
+    // token, and refreshes automatically on a 401.
     private val apiOkHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
+            .addInterceptor(BaseUrlInterceptor(serverSettings))
             .addInterceptor(AuthInterceptor(tokenDataStore))
             .authenticator(TokenAuthenticator(tokenDataStore, authApiService))
             .build()
@@ -78,13 +100,13 @@ class HdssContainer(private val context: Context) {
 
     val apiRetrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(baseUrl)
+            .baseUrl(ServerSettings.PLACEHOLDER_BASE_URL)
             .client(apiOkHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
     }
 
-    private val locationApiRepository: LocationApiRepository by lazy{
+    private val locationApiRepository: LocationApiRepository by lazy {
         apiRetrofit.create(LocationApiRepository::class.java)
     }
 
