@@ -26,10 +26,8 @@ class ServerSettings(
     private val loaded = CompletableDeferred<Unit>()
     private val _address = MutableStateFlow<HttpUrl?>(null)
 
-    // Observed by the login screen to prefill the last address used.
     val address: StateFlow<HttpUrl?> = _address.asStateFlow()
 
-    // Read on every request by BaseUrlInterceptor, so it must not suspend.
     val currentBaseUrl: HttpUrl? get() = _address.value
 
     val hasAddress: Boolean get() = _address.value != null
@@ -50,14 +48,27 @@ class ServerSettings(
     }
 
     companion object {
-        // Retrofit requires a base URL. BaseUrlInterceptor replaces it on every request.
         const val PLACEHOLDER_BASE_URL = "http://localhost/"
 
+        // Accepts "example.com", "https://example.com", or "https://example.com/api/".
+        // Always returns a base URL ending in /api/.
         fun parse(raw: String): HttpUrl? {
             val trimmed = raw.trim()
             if (trimmed.isEmpty()) return null
-            val withSlash = if (trimmed.endsWith("/")) trimmed else "$trimmed/"
-            return withSlash.toHttpUrlOrNull()
+
+            val withScheme = if ("://" in trimmed) trimmed else "https://$trimmed"
+            val base = withScheme.toHttpUrlOrNull() ?: return null
+
+            val path = base.encodedPath.trimEnd('/')
+            val withApi = if (path.endsWith("/api")) {
+                base
+            } else {
+                base.newBuilder().encodedPath("$path/api").build()
+            }
+
+            return withApi.newBuilder()
+                .encodedPath(withApi.encodedPath.trimEnd('/') + "/")
+                .build()
         }
     }
 }
