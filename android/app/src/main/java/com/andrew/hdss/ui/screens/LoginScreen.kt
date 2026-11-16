@@ -50,12 +50,20 @@ fun LoginScreen(
     serverViewModel: ServerSettingsViewModel = viewModel(factory = ServerSettingsViewModel.Factory)
 ) {
     val uiState by authViewModel.uiState.collectAsStateWithLifecycle()
+    val savedAddress by serverViewModel.savedAddress.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var serverAddress by rememberSaveable { mutableStateOf("") }
     var serverError by remember { mutableStateOf<String?>(null) }
     var savingAddress by remember { mutableStateOf(false) }
+
+    // Fills the field with the last address used.
+    LaunchedEffect(savedAddress) {
+        if (serverAddress.isBlank()) {
+            savedAddress?.let { serverAddress = it }
+        }
+    }
 
     LaunchedEffect(uiState) {
         if (uiState.isLoginSuccessful) {
@@ -150,7 +158,6 @@ fun LoginScreen(
                         serverError = serverViewModel.useAddress(serverAddress)
                         savingAddress = false
 
-                        // Credentials are sent only once the address is accepted.
                         if (serverError == null) {
                             authViewModel.login()
                         }

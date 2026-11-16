@@ -8,6 +8,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
@@ -21,16 +24,19 @@ class ServerSettings(
 ) {
     private val key = stringPreferencesKey("base_url")
     private val loaded = CompletableDeferred<Unit>()
+    private val _address = MutableStateFlow<HttpUrl?>(null)
 
-    @Volatile
-    var currentBaseUrl: HttpUrl? = null
-        private set
+    // Observed by the login screen to prefill the last address used.
+    val address: StateFlow<HttpUrl?> = _address.asStateFlow()
 
-    val hasAddress: Boolean get() = currentBaseUrl != null
+    // Read on every request by BaseUrlInterceptor, so it must not suspend.
+    val currentBaseUrl: HttpUrl? get() = _address.value
+
+    val hasAddress: Boolean get() = _address.value != null
 
     init {
         scope.launch {
-            dataStore.data.first()[key]?.toHttpUrlOrNull()?.let { currentBaseUrl = it }
+            dataStore.data.first()[key]?.toHttpUrlOrNull()?.let { _address.value = it }
             loaded.complete(Unit)
         }
     }
@@ -40,16 +46,11 @@ class ServerSettings(
     suspend fun set(url: HttpUrl) {
         loaded.await()
         dataStore.edit { it[key] = url.toString() }
-        currentBaseUrl = url
-    }
-
-    suspend fun clear() {
-        loaded.await()
-        dataStore.edit { it.remove(key) }
-        currentBaseUrl = null
+        _address.value = url
     }
 
     companion object {
+        // Retrofit requires a base URL. BaseUrlInterceptor replaces it on every request.
         const val PLACEHOLDER_BASE_URL = "http://localhost/"
 
         fun parse(raw: String): HttpUrl? {

@@ -144,7 +144,6 @@ fun NavGraph(
                     scope.launch {
                         authViewModel.reset()
                         tokenDataStore.clear()
-                        serverSettings.clear()
                         navController.navigate(Routes.LOGIN) {
                             popUpTo(Routes.HOME) { inclusive = true }
                         }
