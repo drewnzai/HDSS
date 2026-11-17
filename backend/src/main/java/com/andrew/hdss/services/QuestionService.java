@@ -80,6 +80,7 @@ public class QuestionService {
         Question question = findQuestionInForm(formId, questionId);
         formService.assertEditable(question.getForm());
 
+        question.setName(request.name());
         question.setLabel(request.label());
         question.setHint(request.hint());
         question.setType(request.type());

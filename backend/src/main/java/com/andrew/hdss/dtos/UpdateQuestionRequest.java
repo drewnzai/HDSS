@@ -4,6 +4,7 @@ import com.andrew.hdss.models.enums.MappedEntity;
 import com.andrew.hdss.models.enums.QuestionType;
 
 public record UpdateQuestionRequest(
+        String name,
         String label,
         String hint,
         QuestionType type,
@@ -15,4 +16,5 @@ public record UpdateQuestionRequest(
         String choiceListName,
         MappedEntity mappedEntity,
         String mappedField
-) {}
+) {
+}
