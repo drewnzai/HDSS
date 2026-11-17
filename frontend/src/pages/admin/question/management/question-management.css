@@ -77,6 +77,12 @@
     border-collapse: collapse;
 }
 
+.question-management__table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .question-management__table th {
     padding: 0.7rem 0.85rem;
 
@@ -504,11 +510,7 @@
     .question-management__header-actions>* {
         flex: 1;
     }
-
-    .question-management__table-section {
-        overflow-x: auto;
-    }
-
+    
     .question-management__table {
         min-width: 900px;
     }
