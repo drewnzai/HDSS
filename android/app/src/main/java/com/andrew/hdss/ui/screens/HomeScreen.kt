@@ -1,58 +1,34 @@
 package com.andrew.hdss.ui.screens
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.LocationOff
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,41 +38,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.andrew.hdss.data.daos.MemberRow
-import com.andrew.hdss.data.models.Household
-import com.andrew.hdss.data.models.Location
-import com.andrew.hdss.ui.components.FormActions
-import com.andrew.hdss.ui.components.FormsSection
-import com.andrew.hdss.ui.components.SelectableRow
-import com.andrew.hdss.ui.labels.displayLabel
+import com.andrew.hdss.ui.home.ContextBar
+import com.andrew.hdss.ui.home.CoreFlow
+import com.andrew.hdss.ui.home.FormSection
+import com.andrew.hdss.ui.home.FormsPane
+import com.andrew.hdss.ui.home.HomeFormItem
+import com.andrew.hdss.ui.home.HomeFormSelection
+import com.andrew.hdss.ui.home.HouseholdAndMembersPane
+import com.andrew.hdss.ui.home.PhoneHomeLayout
+import com.andrew.hdss.ui.home.PlacesPane
+import com.andrew.hdss.ui.home.WideHomeLayout
+import com.andrew.hdss.ui.home.coreFormItems
+import com.andrew.hdss.ui.home.extraFormItems
 import com.andrew.hdss.ui.viewmodels.HomeViewModel
-import kotlinx.coroutines.flow.flowOf
 
-private const val SEARCH_THRESHOLD = 8
 private val TWO_PANE_MIN_WIDTH = 840.dp
-private val SINGLE_COLUMN_MAX_WIDTH = 640.dp
-private val SIDE_PANEL_WIDTH = 360.dp
-
-private data class BrowserState(
-    val roots: List<Location>,
-    val path: List<Location>,
-    val children: List<Location>,
-    val households: List<Household> = emptyList()
-) {
-    val current: Location? get() = path.lastOrNull()
-    val level: List<Location> get() = if (path.isEmpty()) roots else children
-    val isLeaf: Boolean get() = path.isNotEmpty() && children.isEmpty()
-}
-
-private data class RecordDeathUi(
-    val members: List<MemberRow>,
-    val selectedDeceasedClientId: String?,
-    val onSelectDeceased: (String) -> Unit
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,170 +68,140 @@ fun HomeScreen(
     onAddIndividual: (householdClientId: String) -> Unit,
     onTransferIn: (householdClientId: String) -> Unit,
     onImmigration: (householdClientId: String) -> Unit,
-    onRecordEmigration: (householdClientId: String, emigrantClientId: String) -> Unit,
     onRecordDeath: (householdClientId: String, deceasedClientId: String) -> Unit,
+    onRecordEmigration: (householdClientId: String, emigrantClientId: String) -> Unit,
+    onExtraForm: (formId: Long, householdClientId: String?, personClientId: String?) -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
     val roots by viewModel.roots.collectAsStateWithLifecycle()
     val selectedPath by viewModel.selectedPath.collectAsStateWithLifecycle()
     val children by viewModel.currentChildren.collectAsStateWithLifecycle()
     val households by viewModel.householdsAtSelection.collectAsStateWithLifecycle()
+    val selection by viewModel.selection.collectAsStateWithLifecycle()
+    val members by viewModel.members.collectAsStateWithLifecycle()
+    val forms by viewModel.forms.collectAsStateWithLifecycle()
 
-    val state = BrowserState(roots, selectedPath, children, households)
+    var query by rememberSaveable(selectedPath.lastOrNull()?.id) { mutableStateOf("") }
 
-    var query by rememberSaveable(state.current?.id) { mutableStateOf("") }
+    val isLeaf = selectedPath.isNotEmpty() && children.isEmpty()
+    val level = if (selectedPath.isEmpty()) roots else children
 
-    var selectedHouseholdClientId by rememberSaveable(state.current?.id) {
-        mutableStateOf<String?>(null)
+    val householdCode = households
+        .firstOrNull { it.clientId == selection.householdClientId }
+        ?.householdCode
+    val personName = members
+        .firstOrNull { it.clientId == selection.personClientId }
+        ?.let { "${it.firstName} ${it.lastName}" }
+
+    val contextParts = buildList {
+        addAll(selectedPath.map { it.name })
+        householdCode?.let { add(it) }
+        personName?.let { add(it) }
     }
 
-    var selectedDeceasedClientId by rememberSaveable(selectedHouseholdClientId) {
-        mutableStateOf<String?>(null)
-    }
+    val formSelection = HomeFormSelection(
+        hasLeaf = isLeaf,
+        householdSelected = selection.householdClientId != null,
+        personSelected = selection.personClientId != null
+    )
+    val formItems = coreFormItems(forms, formSelection) + extraFormItems(forms, formSelection)
+    val extraCount = formItems.count { it.section == FormSection.EXTRA }
 
-    val members by remember(selectedHouseholdClientId) {
-        selectedHouseholdClientId?.let(viewModel::observeOpenMembers)
-            ?: flowOf(emptyList<MemberRow>())
-    }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val onFormClick: (HomeFormItem) -> Unit = { item ->
+        val household = selection.householdClientId
+        val person = selection.personClientId
 
-    LaunchedEffect(members) {
-        if (selectedDeceasedClientId != null &&
-            members.none { it.clientId == selectedDeceasedClientId }
-        ) {
-            selectedDeceasedClientId = null
+        if (item.section == FormSection.EXTRA) {
+            item.formId?.let { onExtraForm(it, household, person) }
+        } else {
+            when (CoreFlow.valueOf(item.key)) {
+                CoreFlow.REGISTER_HOUSEHOLD -> selectedPath.lastOrNull()?.let { onStartBaseline(it.id) }
+                CoreFlow.ADD_INDIVIDUAL -> household?.let(onAddIndividual)
+                CoreFlow.TRANSFER_IN -> household?.let(onTransferIn)
+                CoreFlow.IMMIGRATION -> household?.let(onImmigration)
+                CoreFlow.DEATH -> if (household != null && person != null) {
+                    onRecordDeath(household, person)
+                }
+                CoreFlow.EMIGRATION -> if (household != null && person != null) {
+                    onRecordEmigration(household, person)
+                }
+            }
         }
     }
 
-    val recordDeath: RecordDeathUi? = selectedHouseholdClientId?.let {
-        RecordDeathUi(
-            members = members,
-            selectedDeceasedClientId = selectedDeceasedClientId,
-            onSelectDeceased = { selectedDeceasedClientId = it }
+    val topBar: @Composable () -> Unit = {
+        HomeTopBar(
+            onNavigateToDownload = onNavigateToDownload,
+            onNavigateToPush = onNavigateToPush,
+            onLogout = onLogout
         )
     }
 
-    val startBaseline: () -> Unit = { state.current?.let { onStartBaseline(it.id) } }
-    val addIndividual: () -> Unit = { selectedHouseholdClientId?.let(onAddIndividual) }
-    val transferIn: () -> Unit = { selectedHouseholdClientId?.let(onTransferIn) }
-    val immigration: () -> Unit = { selectedHouseholdClientId?.let(onImmigration) }
-    val confirmEmigration: () -> Unit = {
-        val householdId = selectedHouseholdClientId
-        val emigrantId = selectedDeceasedClientId
-        if (householdId != null && emigrantId != null) {
-            onRecordEmigration(householdId, emigrantId)
-        }
-    }
-    val confirmDeath: () -> Unit = {
-        val householdId = selectedHouseholdClientId
-        val deceasedId = selectedDeceasedClientId
-        if (householdId != null && deceasedId != null) {
-            onRecordDeath(householdId, deceasedId)
-        }
-    }
-    val selectHousehold: (String) -> Unit = { id ->
-        selectedHouseholdClientId = if (selectedHouseholdClientId == id) null else id
+    val places: @Composable () -> Unit = {
+        PlacesPane(
+            firstName = firstName,
+            path = selectedPath,
+            level = level,
+            isLeaf = isLeaf,
+            query = query,
+            onQueryChange = { query = it },
+            onRootClick = viewModel::clearSelection,
+            onCrumbClick = viewModel::selectPathLocation,
+            onLocationSelected = viewModel::selectLocation
+        )
     }
 
-    val formActions = FormActions(
-        householdSelected = selectedHouseholdClientId != null,
-        personSelected = selectedDeceasedClientId != null,
-        onRegisterHousehold = startBaseline,
-        onAddIndividual = addIndividual,
-        onTransferIn = transferIn,
-        onImmigration = immigration,
-        onEmigration = confirmEmigration,
-        onRecordDeath = confirmDeath
-    )
+    val householdsPane: @Composable () -> Unit = {
+        HouseholdAndMembersPane(
+            isLeaf = isLeaf,
+            households = households,
+            selectedHouseholdId = selection.householdClientId,
+            onSelectHousehold = viewModel::selectHousehold,
+            members = members,
+            selectedPersonId = selection.personClientId,
+            onSelectPerson = viewModel::selectPerson
+        )
+    }
 
-    Scaffold(
-        topBar = {
-            HomeTopBar(
-                onNavigateToDownload = onNavigateToDownload,
-                onNavigateToPush = onNavigateToPush,
-                onLogout = onLogout
-            )
-        }
-    ) { innerPadding ->
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            if (roots.isEmpty()) {
-                EmptyLocationState(
-                    onDownload = onNavigateToDownload,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(24.dp)
-                )
-            } else if (maxWidth >= TWO_PANE_MIN_WIDTH) {
-                Row(
+    val formsPane: @Composable () -> Unit = {
+        FormsPane(
+            items = formItems,
+            selection = formSelection,
+            extraCount = extraCount,
+            onFormClick = onFormClick
+        )
+    }
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        when {
+            roots.isEmpty() -> Scaffold(topBar = topBar) { padding ->
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                        .padding(padding)
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        contentPadding = PaddingValues(vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        browserItems(
-                            state = state,
-                            firstName = firstName,
-                            query = query,
-                            onQueryChange = { query = it },
-                            showInlineReadyPanel = false,
-                            onRootClick = viewModel::clearSelection,
-                            onCrumbClick = viewModel::selectPathLocation,
-                            onLocationSelected = viewModel::selectLocation,
-                            selectedHouseholdClientId = selectedHouseholdClientId,
-                            onSelectHousehold = selectHousehold,
-                            formActions = formActions,
-                            recordDeath = recordDeath
-                        )
-                    }
-
-                    SelectionSidePanel(
-                        state = state,
-                        modifier = Modifier
-                            .width(SIDE_PANEL_WIDTH)
-                            .padding(vertical = 16.dp),
-                        households = households,
-                        selectedHouseholdClientId = selectedHouseholdClientId,
-                        onSelectHousehold = selectHousehold,
-                        formActions = formActions,
-                        recordDeath = recordDeath
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .widthIn(max = SINGLE_COLUMN_MAX_WIDTH)
-                        .fillMaxWidth()
-                        .align(Alignment.TopCenter),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    browserItems(
-                        state = state,
-                        firstName = firstName,
-                        query = query,
-                        onQueryChange = { query = it },
-                        showInlineReadyPanel = true,
-                        onRootClick = viewModel::clearSelection,
-                        onCrumbClick = viewModel::selectPathLocation,
-                        onLocationSelected = viewModel::selectLocation,
-                        selectedHouseholdClientId = selectedHouseholdClientId,
-                        onSelectHousehold = selectHousehold,
-                        formActions = formActions,
-                        recordDeath = recordDeath
-                    )
+                    EmptyLocationState(onDownload = onNavigateToDownload)
                 }
             }
+
+            maxWidth >= TWO_PANE_MIN_WIDTH -> WideHomeLayout(
+                topBar = topBar,
+                contextBar = { ContextBar(contextParts) },
+                places = places,
+                households = householdsPane,
+                forms = formsPane
+            )
+
+            else -> PhoneHomeLayout(
+                topBar = topBar,
+                contextBar = { ContextBar(contextParts) },
+                hasLocationLeaf = isLeaf,
+                places = places,
+                household = householdsPane,
+                forms = formsPane
+            )
         }
     }
 }
@@ -299,25 +228,17 @@ private fun HomeTopBar(
         ),
         actions = {
             IconButton(onClick = onNavigateToDownload) {
-                Icon(
-                    imageVector = Icons.Outlined.CloudDownload,
-                    contentDescription = "Download database"
-                )
+                Icon(Icons.Outlined.CloudDownload, contentDescription = "Download database")
             }
 
             IconButton(onClick = onNavigateToPush) {
-                Icon(
-                    imageVector = Icons.Outlined.CloudUpload,
-                    contentDescription = "Push data"
-                )
+                Icon(Icons.Outlined.CloudUpload, contentDescription = "Push data")
             }
 
+            // Sign out sits in the overflow menu so it can't be tapped by accident.
             Column {
                 IconButton(onClick = { menuOpen = true }) {
-                    Icon(
-                        imageVector = Icons.Outlined.MoreVert,
-                        contentDescription = "More options"
-                    )
+                    Icon(Icons.Outlined.MoreVert, contentDescription = "More options")
                 }
                 DropdownMenu(
                     expanded = menuOpen,
@@ -336,382 +257,6 @@ private fun HomeTopBar(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.browserItems(
-    state: BrowserState,
-    firstName: String,
-    query: String,
-    onQueryChange: (String) -> Unit,
-    showInlineReadyPanel: Boolean,
-    onRootClick: () -> Unit,
-    onCrumbClick: (Int) -> Unit,
-    onLocationSelected: (Location) -> Unit,
-    selectedHouseholdClientId: String?,
-    onSelectHousehold: (String) -> Unit,
-    formActions: FormActions,
-    recordDeath: RecordDeathUi?
-) {
-    item(key = "greeting") {
-        Greeting(firstName = firstName, state = state)
-    }
-
-    stickyHeader(key = "breadcrumbs") {
-        Surface(color = MaterialTheme.colorScheme.background) {
-            LocationBreadcrumbs(
-                path = state.path,
-                onRootClick = onRootClick,
-                onCrumbClick = onCrumbClick
-            )
-        }
-    }
-
-    val level = state.level
-    val visible = if (query.isBlank()) {
-        level
-    } else {
-        level.filter {
-            it.name.contains(query, ignoreCase = true) ||
-                    it.code?.contains(query, ignoreCase = true) == true
-        }
-    }
-
-    if (!state.isLeaf && level.size > SEARCH_THRESHOLD) {
-        item(key = "search") {
-            SearchField(query = query, onQueryChange = onQueryChange)
-        }
-    }
-
-    when {
-        state.isLeaf -> {
-
-            if (showInlineReadyPanel) {
-                item(key = "ready") {
-                    ReadyPanel(
-                        path = state.path,
-                        households = state.households,
-                        selectedHouseholdClientId = selectedHouseholdClientId,
-                        onSelectHousehold = onSelectHousehold,
-                        recordDeath = recordDeath
-                    )
-                }
-                item(key = "forms") {
-                    FormsSection(actions = formActions)
-                }
-            }
-        }
-
-        visible.isEmpty() -> item(key = "no-matches") {
-            Text(
-                text = "No locations match \"$query\".",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp),
-                textAlign = TextAlign.Center
-            )
-        }
-
-        else -> items(items = visible, key = { it.id }) { location ->
-            LocationRow(
-                location = location,
-                onClick = { onLocationSelected(location) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun Greeting(firstName: String, state: BrowserState) {
-    Column(modifier = Modifier.padding(top = 4.dp)) {
-        Text(
-            text = if (firstName.isNotBlank()) "Hello, $firstName" else "Hello",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = when {
-                state.path.isEmpty() -> "Choose the area you're working in today."
-                state.isLeaf -> "Location confirmed."
-                else -> "Keep narrowing down to the lowest level."
-            },
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun LocationBreadcrumbs(
-    path: List<Location>,
-    onRootClick: () -> Unit,
-    onCrumbClick: (Int) -> Unit
-) {
-    LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        item {
-            FilterChip(
-                selected = path.isEmpty(),
-                onClick = onRootClick,
-                label = { Text("All areas") }
-            )
-        }
-
-        itemsIndexed(path) { index, location ->
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            FilterChip(
-                selected = index == path.lastIndex,
-                onClick = { onCrumbClick(index) },
-                label = {
-                    Text(
-                        text = location.name,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun SearchField(
-    query: String,
-    onQueryChange: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        shape = RoundedCornerShape(28.dp),
-        placeholder = { Text("Search this level") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
-        },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = "Clear search"
-                    )
-                }
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun LocationRow(
-    location: Location,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = location.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                location.code?.let { code ->
-                    Text(
-                        text = code,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun ReadyPanel(
-    path: List<Location>,
-    households: List<Household>,
-    selectedHouseholdClientId: String?,
-    onSelectHousehold: (String) -> Unit,
-    recordDeath: RecordDeathUi?,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.CheckCircle,
-                    contentDescription = null
-                )
-                Text(
-                    text = "Ready to begin",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-
-            Text(
-                text = path.last().name,
-                style = MaterialTheme.typography.headlineSmall
-            )
-
-            Text(
-                text = path.joinToString(" › ") { it.name },
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            if (households.isNotEmpty()) {
-                Text(
-                    text = "Existing households",
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    households.forEach { household ->
-                        SelectableRow(
-                            title = household.householdCode ?: "No code",
-                            subtitle = household.status.displayLabel(),
-                            selected = household.clientId == selectedHouseholdClientId,
-                            onClick = { onSelectHousehold(household.clientId) }
-                        )
-                    }
-                }
-
-                recordDeath?.let { death ->
-                    Text(
-                        text = "Members",
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-
-                    if (death.members.isEmpty()) {
-                        Text(
-                            text = "No current members in this household.",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            death.members.forEach { member ->
-                                SelectableRow(
-                                    title = "${member.firstName} ${member.lastName}",
-                                    subtitle = listOfNotNull(
-                                        member.relationshipToHead.displayLabel(),
-                                        member.dateOfBirth?.let { "born $it" }
-                                    ).joinToString(" · "),
-                                    selected = member.clientId == death.selectedDeceasedClientId,
-                                    onClick = { death.onSelectDeceased(member.clientId) }
-                                )
-                            }
-                        }
-                    }
-                }
-            } else {
-                Text(
-                    text = "No households registered here yet.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SelectionSidePanel(
-    state: BrowserState,
-    modifier: Modifier = Modifier,
-    households: List<Household>,
-    selectedHouseholdClientId: String?,
-    onSelectHousehold: (String) -> Unit,
-    formActions: FormActions,
-    recordDeath: RecordDeathUi?
-) {
-    if (state.isLeaf) {
-        Column(
-            modifier = modifier.verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ReadyPanel(
-                path = state.path,
-                households = households,
-                selectedHouseholdClientId = selectedHouseholdClientId,
-                onSelectHousehold = onSelectHousehold,
-                recordDeath = recordDeath
-            )
-            FormsSection(actions = formActions)
-        }
-    } else {
-        OutlinedCard(modifier = modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "No location confirmed yet",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "Drill down to the lowest level to start a baseline.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    }
-}
-
 @Composable
 private fun EmptyLocationState(
     onDownload: () -> Unit,
@@ -728,21 +273,17 @@ private fun EmptyLocationState(
             modifier = Modifier.size(56.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
-
         Text(
             text = "No locations yet",
             style = MaterialTheme.typography.titleLarge
         )
-
         Text(
             text = "Download the database to load the areas you'll be working in.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
-
         Spacer(modifier = Modifier.height(4.dp))
-
         FilledTonalButton(
             onClick = onDownload,
             modifier = Modifier.heightIn(min = 48.dp)

@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.andrew.hdss.data.models.Form
 import com.andrew.hdss.data.models.relations.FormWithQuestions
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FormDao {
@@ -32,4 +33,7 @@ interface FormDao {
     @Transaction
     @Query("SELECT * FROM forms WHERE id = :formId")
     suspend fun getFormWithQuestions(formId: Long): FormWithQuestions?
+
+    @Query("SELECT * FROM forms ORDER BY title, name")
+    fun observeAll(): Flow<List<Form>>
 }
