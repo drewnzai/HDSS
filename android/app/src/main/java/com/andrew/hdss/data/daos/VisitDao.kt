@@ -18,6 +18,9 @@ interface VisitDao {
     @Query("DELETE FROM visits WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    @Query("DELETE FROM visits WHERE id = :visitId AND status = 'IN_PROGRESS'")
+    suspend fun deleteIfInProgress(visitId: String)
+
     @Update
     suspend fun update(visit: Visit)
 
