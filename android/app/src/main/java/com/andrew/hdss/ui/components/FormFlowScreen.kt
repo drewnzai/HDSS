@@ -65,7 +65,7 @@ fun FormFlowScreen(
                 formId = formId,
                 visitId = viewModel.visitId,
                 context = viewModel.formContext(),
-                title = title,
+                title = title.ifBlank {state.title},
                 onComplete = viewModel::onFormComplete,
                 onCancel = cancel
             )
