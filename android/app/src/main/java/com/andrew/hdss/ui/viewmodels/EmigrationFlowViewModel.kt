@@ -14,7 +14,7 @@ class EmigrationFlowViewModel(
     formDao: FormDao,
     visitDao: VisitDao
 ) : FormFlowViewModel(
-    formName = MembershipEndForms.EMIGRATION.formName,
+    formSelector = FormSelector.ByName("emigration-registration"),
     formDao = formDao,
     visitDao = visitDao,
     visitHouseholdClientId = householdClientId

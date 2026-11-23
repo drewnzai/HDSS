@@ -16,7 +16,7 @@ class ImmigrationViewModel(
     formDao: FormDao,
     visitDao: VisitDao
 ) : FormFlowViewModel(
-    formName = FORM_NAME,
+    formSelector = FormSelector.ByName("immigration-registration"),
     formDao = formDao,
     visitDao = visitDao,
     visitHouseholdClientId = householdClientId
@@ -37,7 +37,6 @@ class ImmigrationViewModel(
     )
 
     companion object {
-        const val FORM_NAME = "immigration-registration"
 
         fun factory(householdClientId: String) = viewModelFactory {
             initializer {

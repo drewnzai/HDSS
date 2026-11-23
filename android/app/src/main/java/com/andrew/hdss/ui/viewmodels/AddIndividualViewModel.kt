@@ -14,7 +14,7 @@ class AddIndividualViewModel(
     formDao: FormDao,
     visitDao: VisitDao
 ) : FormFlowViewModel(
-    formName = "individual-registration",
+    formSelector = FormSelector.ByName("individual-registration"),
     formDao = formDao,
     visitDao = visitDao,
     visitHouseholdClientId = householdClientId

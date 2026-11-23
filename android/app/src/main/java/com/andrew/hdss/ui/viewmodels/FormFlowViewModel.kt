@@ -16,6 +16,11 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.util.UUID
 
+sealed interface FormSelector {
+    data class ByName(val name: String) : FormSelector
+    data class ById(val id: Long) : FormSelector
+}
+
 enum class FormFlowStep { LOADING, FORM, DONE, ERROR }
 
 data class FormFillContext(
@@ -29,20 +34,18 @@ data class FormFillContext(
 data class FormFlowUiState(
     val step: FormFlowStep = FormFlowStep.LOADING,
     val formId: Long? = null,
+    val title: String = "",
     val errorMessage: String? = null
 )
 
-// Shared lifecycle for single-form flows. Subclasses supply the form name,
-// the visit's household or individual, and the form context.
 abstract class FormFlowViewModel(
-    private val formName: String,
+    private val formSelector: FormSelector,
     private val formDao: FormDao,
     private val visitDao: VisitDao,
     private val visitHouseholdClientId: String?,
     private val visitIndividualClientId: String? = null
 ) : ViewModel() {
 
-    // Declared before init, so it's set when init runs.
     val visitId: String = UUID.randomUUID().toString()
 
     private val _uiState = MutableStateFlow(FormFlowUiState())
@@ -51,8 +54,14 @@ abstract class FormFlowViewModel(
     init {
         viewModelScope.launch {
             try {
-                val form = formDao.getAll().firstOrNull { it.name == formName }
-                    ?: throw IllegalStateException("Form '$formName' not found — has it been downloaded?")
+                val form = when (val selector = formSelector) {
+                    is FormSelector.ByName ->
+                        formDao.getAll().firstOrNull { it.name == selector.name }
+                    is FormSelector.ById ->
+                        formDao.getById(selector.id)
+                } ?: throw IllegalStateException(
+                    "$formSelector not found — has it been downloaded?"
+                )
 
                 visitDao.insert(
                     Visit(
@@ -64,7 +73,13 @@ abstract class FormFlowViewModel(
                         synced = false
                     )
                 )
-                _uiState.update { it.copy(step = FormFlowStep.FORM, formId = form.id) }
+                _uiState.update {
+                    it.copy(
+                        step = FormFlowStep.FORM,
+                        formId = form.id,
+                        title = form.title.ifBlank { form.name }
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(step = FormFlowStep.ERROR, errorMessage = e.message) }
             }
@@ -73,17 +88,15 @@ abstract class FormFlowViewModel(
 
     abstract fun formContext(): FormFillContext
 
-    // The form's submit path completes the visit, so this only moves the flow on.
     fun onFormComplete() {
         _uiState.update { it.copy(step = FormFlowStep.DONE) }
     }
 
-    // Returns false if the unfinished visit couldn't be removed.
     suspend fun abandon(): Boolean = try {
-        visitDao.deleteById(visitId)
+        visitDao.deleteIfInProgress(visitId)
         true
     } catch (e: Exception) {
-        Log.e("FormFlowViewModel", "Failed to clean up abandoned visit for $formName", e)
+        Log.e("FormFlowViewModel", "Failed to clean up abandoned visit for $formSelector", e)
         false
     }
 }

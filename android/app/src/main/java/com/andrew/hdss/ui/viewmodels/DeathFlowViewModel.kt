@@ -15,7 +15,7 @@ class DeathFlowViewModel(
     formDao: FormDao,
     visitDao: VisitDao
 ) : FormFlowViewModel(
-    formName = MembershipEndForms.DEATH.formName,
+    formSelector = FormSelector.ByName("death-registration"),
     formDao = formDao,
     visitDao = visitDao,
     visitHouseholdClientId = householdClientId
