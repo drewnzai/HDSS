@@ -44,6 +44,7 @@ import com.andrew.hdss.ui.screens.BaselineFlowScreen
 import com.andrew.hdss.ui.screens.DeathScreen
 import com.andrew.hdss.ui.screens.DownloadDatabaseScreen
 import com.andrew.hdss.ui.screens.EmigrationScreen
+import com.andrew.hdss.ui.screens.ExtraFormScreen
 import com.andrew.hdss.ui.screens.HomeScreen
 import com.andrew.hdss.ui.screens.ImmigrationScreen
 import com.andrew.hdss.ui.screens.LoginScreen
@@ -81,6 +82,15 @@ object Routes {
     const val EMIGRATION_HOUSEHOLD_ARG = "householdClientId"
     const val EMIGRATION_EMIGRANT_ARG = "emigrantClientId"
     const val EMIGRATION = "emigration/{$EMIGRATION_HOUSEHOLD_ARG}/{$EMIGRATION_EMIGRANT_ARG}"
+
+    const val EXTRA_FORM_ARG_FORM = "formId"
+    const val EXTRA_FORM_ARG_HOUSEHOLD = "householdClientId"
+    const val EXTRA_FORM_ARG_PERSON = "personClientId"
+    const val EXTRA_FORM = "extra/{$EXTRA_FORM_ARG_FORM}/{$EXTRA_FORM_ARG_HOUSEHOLD}/{$EXTRA_FORM_ARG_PERSON}"
+    const val NO_PERSON = "_"
+
+    fun extraForm(formId: Long, householdClientId: String, personClientId: String?) =
+        "extra/$formId/$householdClientId/${personClientId ?: NO_PERSON}"
 
     fun emigration(householdClientId: String, emigrantClientId: String) =
         "emigration/$householdClientId/$emigrantClientId"
@@ -137,6 +147,29 @@ fun NavGraph(
             )
         }
 
+        composable(
+            route = Routes.EXTRA_FORM,
+            arguments = listOf(
+                navArgument(Routes.EXTRA_FORM_ARG_FORM) { type = NavType.LongType },
+                navArgument(Routes.EXTRA_FORM_ARG_HOUSEHOLD) { type = NavType.StringType },
+                navArgument(Routes.EXTRA_FORM_ARG_PERSON) { type = NavType.StringType }
+            )
+        ) { entry ->
+            val args = entry.arguments ?: return@composable
+            val formId = args.getLong(Routes.EXTRA_FORM_ARG_FORM)
+            val householdClientId = args.getString(Routes.EXTRA_FORM_ARG_HOUSEHOLD) ?: return@composable
+            val personClientId = args.getString(Routes.EXTRA_FORM_ARG_PERSON)
+                ?.takeIf { it != Routes.NO_PERSON }
+
+            ExtraFormScreen(
+                formId = formId,
+                householdClientId = householdClientId,
+                personClientId = personClientId,
+                onComplete = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
+        }
+
         composable(Routes.HOME) {
             HomeScreen(
                 firstName = firstName ?: "",
@@ -169,6 +202,9 @@ fun NavGraph(
                 onRecordDeath = { householdClientId, deceasedClientId ->
                     navController.navigate(Routes.recordDeath(householdClientId, deceasedClientId))
                 },
+                onExtraForm = { formId, householdClientId, personClientId ->
+                    navController.navigate(Routes.extraForm(formId, householdClientId, personClientId))
+                }
             )
         }
 

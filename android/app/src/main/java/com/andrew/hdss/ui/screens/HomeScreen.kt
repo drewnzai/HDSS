@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.andrew.hdss.ui.home.ContextBar
 import com.andrew.hdss.ui.home.CoreFlow
+import com.andrew.hdss.ui.home.FormScope
 import com.andrew.hdss.ui.home.FormSection
 import com.andrew.hdss.ui.home.FormsPane
 import com.andrew.hdss.ui.home.HomeFormItem
@@ -70,7 +71,7 @@ fun HomeScreen(
     onImmigration: (householdClientId: String) -> Unit,
     onRecordDeath: (householdClientId: String, deceasedClientId: String) -> Unit,
     onRecordEmigration: (householdClientId: String, emigrantClientId: String) -> Unit,
-    onExtraForm: (formId: Long, householdClientId: String?, personClientId: String?) -> Unit,
+    onExtraForm: (formId: Long, householdClientId: String, personClientId: String?) -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
     val roots by viewModel.roots.collectAsStateWithLifecycle()
@@ -112,7 +113,11 @@ fun HomeScreen(
         val person = selection.personClientId
 
         if (item.section == FormSection.EXTRA) {
-            item.formId?.let { onExtraForm(it, household, person) }
+            val formId = item.formId
+            if (formId != null && household != null) {
+                val personForForm = if (item.scope == FormScope.PERSON) person else null
+                onExtraForm(formId, household, personForForm)
+            }
         } else {
             when (CoreFlow.valueOf(item.key)) {
                 CoreFlow.REGISTER_HOUSEHOLD -> selectedPath.lastOrNull()?.let { onStartBaseline(it.id) }
