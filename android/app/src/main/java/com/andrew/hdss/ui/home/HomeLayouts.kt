@@ -72,7 +72,12 @@ fun PhoneHomeLayout(
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
             when (tab) {
                 HomeTab.PLACES -> places()
                 HomeTab.HOUSEHOLD -> household()
