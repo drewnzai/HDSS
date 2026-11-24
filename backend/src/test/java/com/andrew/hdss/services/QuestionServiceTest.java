@@ -7,10 +7,7 @@ import com.andrew.hdss.dtos.UpdateQuestionRequest;
 import com.andrew.hdss.exceptions.EntityNotFoundException;
 import com.andrew.hdss.models.Form;
 import com.andrew.hdss.models.Question;
-import com.andrew.hdss.models.enums.FormCategory;
-import com.andrew.hdss.models.enums.FormStatus;
-import com.andrew.hdss.models.enums.FormTarget;
-import com.andrew.hdss.models.enums.MappedEntity;
+import com.andrew.hdss.models.enums.*;
 import com.andrew.hdss.repositories.FormRepository;
 import com.andrew.hdss.repositories.QuestionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -282,10 +279,11 @@ class QuestionServiceTest {
                 "Updated Label",
                 "Updated hint",
                 null,
+                QuestionType.TEXT,
                 false,
-                "",
                 "age >= 18",
                 "Age must be 18 or older",
+                null,
                 null,
                 null,
                 MappedEntity.NONE,
@@ -346,6 +344,7 @@ class QuestionServiceTest {
                 "Updated Label",
                 null,
                 null,
+                QuestionType.TEXT,
                 false,
                 null,
                 null,
