@@ -36,6 +36,7 @@ The platform consists of three main applications:
   - [Accessing Prometheus and Grafana](#accessing-prometheus-and-grafana)
   - [Verifying the Setup](#verifying-the-setup)
   - [Importing a Dashboard](#importing-a-dashboard)
+  - [MySQL Metrics (mysqld_exporter)](#mysql-metrics-mysqld_exporter)
 - [Manual Setup (Without Docker)](#manual-setup-without-docker)
   - [Backend Setup](#backend-setup)
   - [Frontend Setup](#frontend-setup)
@@ -158,6 +159,7 @@ The Android application provides a mobile interface for interacting with the HDS
 | Metrics | Micrometer / Spring Boot Actuator |
 | Metrics Collection | Prometheus |
 | Metrics Visualization | Grafana |
+| Database Metrics | mysqld_exporter |
 
 ## Project Structure
 
@@ -171,6 +173,7 @@ hdss/
 │   ├── run-local.sh            # Loads .env.local and starts Spring Boot
 │   ├── .env.local.example     # Local backend environment template
 │   ├── Dockerfile
+│   ├── mysql-key.asc          # MySQL repository signing key for the image build
 │   └── .dockerignore
 ├── frontend/                  # React + Vite + TypeScript application
 │   ├── nginx.conf             # Serves the production build, handles SPA routing
@@ -181,11 +184,16 @@ hdss/
 ├── round-exports/             # Optional host-side round database exports (keep private)
 ├── monitoring/
 │   ├── prometheus/
-│   │   └── prometheus.yml     # Tells Prometheus what to scrape
+│   │   └── prometheus.yml     # Tells Prometheus what to scrape (backend and MySQL exporter)
+│   ├── mysqld-exporter/
+│   │   └── .my.cnf            # MySQL credentials for the exporter (not committed)
 │   └── grafana/
 │       └── provisioning/
-│           └── datasources/
-│               └── datasource.yml  # Auto-registers Prometheus in Grafana
+│           ├── datasources/
+│           │   └── datasource.yml  # Registers Prometheus and the HDSS MySQL data source
+│           └── dashboards/
+│               ├── dashboards.yml  # Dashboard provider config
+│               └── jvm-micrometer.json  # Provisioned dashboards
 ├── docker-compose.yml
 ├── .env                       # Docker Compose environment values (not committed)
 └── .env.example                # Safe template for Docker Compose values
@@ -239,7 +247,7 @@ cd hdss
 
 ## Docker Setup
 
-This is the recommended way to run HDSS. The backend and frontend are built and run as Docker containers, alongside MySQL and Redis containers, without installing MySQL, Redis, a JDK, or Node.js directly on your machine. For installing each component manually instead, see [Manual Setup (Without Docker)](#manual-setup-without-docker).
+This is the recommended way to run HDSS. The backend and frontend are built and run as Docker containers, alongside MySQL, Redis, and the Prometheus, Grafana, and MySQL exporter containers, without installing MySQL, Redis, a JDK, or Node.js directly on your machine. For installing each component manually instead, see [Manual Setup (Without Docker)](#manual-setup-without-docker).
 
 > The Android application is not containerized and is still built and run through Android Studio as described above.
 
@@ -250,6 +258,8 @@ Docker builds and starts the containers, but it does not create the following fo
 - [ ] **`.env`** in the repository root — see [Environment Variables (.env)](#environment-variables-env)
 - [ ] **`database/hdss.sql`** — a MySQL dump used to seed the database on first start — see [Database Dump](#database-dump)
 - [ ] **`backend/downloads/hdss.apk`** — only required if the Android download endpoint will be used — see [Android APK in Docker](#android-apk-in-docker)
+- [ ] **`backend/mysql-key.asc`** — the MySQL repository signing key, required to build the backend image — see [Docker Project Files](#docker-project-files)
+- [ ] **`monitoring/mysqld-exporter/.my.cnf`** — MySQL credentials for the metrics exporter, not committed — see [MySQL Metrics (mysqld_exporter)](#mysql-metrics-mysqld_exporter)
 
 Without `.env`, Docker Compose will fail or fall back to empty values for required settings (database password, CORS origin, mail credentials). Without `database/hdss.sql`, the `mysql` container will start with an empty, unseeded database rather than failing outright — it is easy to miss that the dump was never imported.
 
@@ -273,15 +283,19 @@ The Docker setup adds the following files to the repository, in addition to the 
 
 | File | Purpose |
 |---|---|
-| `docker-compose.yml` | Defines the `mysql`, `redis`, `backend`, `frontend`, `prometheus`, and `grafana` services |
-| `backend/Dockerfile` | Multi-stage build: compiles the Spring Boot app with Maven and runs it on a JRE image with Oracle MySQL 8.4 client utilities (`mysql` and `mysqldump`) for round database copying |
+| `docker-compose.yml` | Defines the `mysql`, `redis`, `backend`, `frontend`, `prometheus`, `grafana`, and `mysqld-exporter` services |
+| `backend/Dockerfile` | Multi-stage build: compiles the Spring Boot app with Maven and runs it on a JRE image with Oracle MySQL 8.4 client utilities (`mysql` and `mysqldump`) for round database copying. The client is installed from MySQL's apt repository, and the build verifies the signing key against a pinned fingerprint |
+| `backend/mysql-key.asc` | MySQL repository signing key, committed so the backend build does not depend on a keyserver |
 | `backend/.dockerignore` | Excludes `target/`, `.git`, and IDE files from the build context |
 | `frontend/Dockerfile` | Multi-stage build: builds the Vite app with Node, serves it with nginx |
 | `frontend/nginx.conf` | Configures nginx to serve the built SPA and handle client-side routing |
 | `frontend/.dockerignore` | Excludes `node_modules/`, `dist/`, and `.git` from the build context |
 | `database/hdss.sql` | A MySQL dump used to seed the `mysql` container on first start |
 | `monitoring/prometheus/prometheus.yml` | Tells Prometheus what to scrape — see [Observability (Prometheus & Grafana)](#observability-prometheus--grafana) |
-| `monitoring/grafana/provisioning/datasources/datasource.yml` | Auto-registers Prometheus as a Grafana data source on first start |
+| `monitoring/grafana/provisioning/datasources/datasource.yml` | Auto-registers the Prometheus and HDSS MySQL data sources in Grafana on first start |
+| `monitoring/grafana/provisioning/dashboards/dashboards.yml` | Tells Grafana to load dashboard JSON files from the provisioning folder into the **HDSS** folder |
+| `monitoring/grafana/provisioning/dashboards/*.json` | Dashboards loaded automatically on startup, for example `jvm-micrometer.json` |
+| `monitoring/mysqld-exporter/.my.cnf` | MySQL credentials for `mysqld-exporter`. Not committed; see [MySQL Metrics (mysqld_exporter)](#mysql-metrics-mysqld_exporter) |
 | `.env` | Environment values consumed by `docker-compose.yml` (see below) |
 
 ### Environment Variables (.env)
@@ -311,6 +325,8 @@ MAIL_PASSWORD=
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=change_me
 ```
+
+`DB_PASSWORD` is passed to the `mysql`, `backend`, and `grafana` services. Grafana uses it for the HDSS MySQL data source. `mysqld-exporter` does not read `.env` and gets its credentials from `monitoring/mysqld-exporter/.my.cnf` instead, so update that file too if the password changes.
 
 Use a strong password for every environment that is not strictly local. Do not commit `.env`.
 
@@ -432,6 +448,9 @@ Once running:
 | Frontend | `http://localhost` (or the host port configured in `docker-compose.yml`) |
 | MySQL | `localhost:3306` |
 | Redis | `localhost:6379` |
+| Prometheus | `http://localhost:9090` |
+| Grafana | `http://localhost:3000` |
+| MySQL exporter metrics | `http://localhost:9104/metrics` |
 
 The `backend` service waits for `mysql` and `redis` to report healthy before starting, via Docker Compose's `depends_on` health-check conditions. On first start, this includes however long the `hdss.sql` import takes to complete.
 
@@ -468,6 +487,8 @@ docker compose up -d --build    # rebuild and restart after source changes
 The round database copy process starts `mysqldump` and `mysql` through Java's `ProcessBuilder`. These executables must therefore exist **inside the backend container**, not only inside the MySQL database container or on the host.
 
 The backend runtime image is based on Debian/Ubuntu rather than Alpine and installs the **Oracle MySQL 8.4 Community Client**. This avoids the MariaDB compatibility differences encountered when using Alpine's `mariadb-dump` and `mariadb` utilities.
+
+The client is installed from MySQL's apt repository (`repo.mysql.com`) at build time, so that host must be reachable during `docker compose build`. The build checks the signing key in `backend/mysql-key.asc` against a fingerprint pinned in `backend/Dockerfile` and fails if they differ. If MySQL rotates its signing key, download the new key, verify its fingerprint against MySQL's documentation, and update both files.
 
 After building the backend image, verify the client binaries:
 
@@ -515,7 +536,7 @@ docker compose up -d
 
 ## Observability (Prometheus & Grafana)
 
-The Docker stack includes **Prometheus** for metrics collection and **Grafana** for visualization, scraping metrics directly from the Spring Boot backend via Micrometer and Actuator.
+The Docker stack includes **Prometheus** for metrics collection and **Grafana** for visualization, scraping metrics from the Spring Boot backend via Micrometer and Actuator, and from the MySQL database through `mysqld-exporter`. Grafana also connects to MySQL directly, so panels can run SQL queries as well as PromQL.
 
 > This is only available when running the stack with Docker. It is not part of [Manual Setup (Without Docker)](#manual-setup-without-docker) — nothing stops it from being configured manually, but no instructions for doing so are provided here.
 
@@ -578,24 +599,107 @@ scrape_configs:
     metrics_path: "/actuator/prometheus"
     static_configs:
       - targets: ["backend:8080"]
+
+  - job_name: "hdss-mysql"
+    static_configs:
+      - targets: ["mysqld-exporter:9104"]
 ```
 
-`backend:8080` refers to the `backend` service by its Docker Compose service name, not `localhost` — Prometheus runs as its own container on the same Compose network, where service names resolve to each other directly.
+`backend:8080` and `mysqld-exporter:9104` refer to Docker Compose service names, not `localhost`. Prometheus runs as its own container on the same Compose network, where service names resolve to each other directly.
 
 ### Grafana Configuration
 
-`monitoring/grafana/provisioning/datasources/datasource.yml` auto-registers Prometheus as a Grafana data source on first start, so it does not need to be added manually through Grafana's UI:
+`monitoring/grafana/provisioning/datasources/datasource.yml` registers the data sources on first start, so they do not need to be added manually through Grafana's UI:
 
 ```yaml
 apiVersion: 1
 
 datasources:
   - name: Prometheus
+    uid: prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
     isDefault: true
+
+  - name: HDSS MySQL
+    uid: hdss-mysql
+    type: mysql
+    access: proxy
+    url: mysql:3306
+    user: root
+    database: hdss
+    jsonData:
+      maxOpenConns: 5
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+    secureJsonData:
+      password: ${DB_PASSWORD}
 ```
+
+The `uid` values are fixed so dashboard JSON can reference them reliably. Grafana expands `${DB_PASSWORD}` from its environment, which is why the `grafana` service in `docker-compose.yml` receives `DB_PASSWORD`.
+
+Dashboards are loaded from `monitoring/grafana/provisioning/dashboards/` through `dashboards.yml`. See [Keeping the Dashboard](#keeping-the-dashboard).
+
+The MySQL data source uses the root account in this setup. For anything beyond local development, create a read-only MySQL user for Grafana and use it here instead.
+
+### MySQL Metrics (mysqld_exporter)
+
+The `mysqld-exporter` service exposes MySQL server metrics on port `9104` for Prometheus to scrape. Recent versions of the exporter (0.21.0 and later) read credentials only from a `.my.cnf` file. The `DATA_SOURCE_NAME` environment variable is no longer read.
+
+**1. Create the credentials file**
+
+Create `monitoring/mysqld-exporter/.my.cnf`:
+
+```ini
+[client]
+user=root
+password=your-root-password
+host=mysql
+port=3306
+```
+
+If the password contains `#`, `;`, or spaces, wrap it in double quotes. Add the file to `.gitignore` so it is never committed:
+
+```gitignore
+monitoring/mysqld-exporter/.my.cnf
+```
+
+The password is duplicated here because this file cannot read environment variables. Update it whenever `DB_PASSWORD` changes.
+
+**2. Run the service**
+
+The `mysqld-exporter` service in `docker-compose.yml` mounts the file read-only and points the exporter at it:
+
+```yaml
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: hdss-mysqld-exporter
+    restart: unless-stopped
+    command:
+      - "--config.my-cnf=/etc/mysqld-exporter/.my.cnf"
+    volumes:
+      - ./monitoring/mysqld-exporter/.my.cnf:/etc/mysqld-exporter/.my.cnf:ro
+    ports:
+      - "9104:9104"
+    depends_on:
+      mysql:
+        condition: service_healthy
+```
+
+If the exporter logs `permission denied` when reading the file, the file's permissions are blocking the container user. `chmod 644` fixes that, but it makes the password readable by other users on the host.
+
+**Using a dedicated user (optional)**
+
+Using root keeps setup simple, but it gives the exporter full control of the database. To limit that, create a user that only has the privileges the exporter needs:
+
+```sql
+CREATE USER 'exporter'@'%' IDENTIFIED BY 'choose-a-password' WITH MAX_USER_CONNECTIONS 3;
+GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
+FLUSH PRIVILEGES;
+```
+
+Then set `user=exporter` and that password in `.my.cnf`.
 
 ### Accessing Prometheus and Grafana
 
@@ -604,6 +708,7 @@ datasources:
 | Prometheus | `http://localhost:9090` |
 | Prometheus targets | `http://localhost:9090/targets` |
 | Grafana | `http://localhost:3000` |
+| MySQL exporter metrics | `http://localhost:9104/metrics` |
 
 Log in to Grafana with the `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` values from `.env`.
 
@@ -614,6 +719,8 @@ Check each of the following in order — each one isolates a different layer, so
 1. **The backend's own endpoint.** `curl http://localhost:8080/actuator/prometheus` from the host. A `403` means the Security configuration above is missing; a `404` means the Micrometer Prometheus dependency is missing.
 2. **Prometheus is scraping successfully.** Open `http://localhost:9090/targets`. The `hdss-backend` job should show State: **UP**.
 3. **Grafana can query Prometheus.** In Grafana, open **Explore**, select the Prometheus data source, and query a basic metric such as `jvm_memory_used_bytes`. Real data points confirm the full chain is working.
+4. **The MySQL exporter is connected.** Run `curl -s http://localhost:9104/metrics | grep '^mysql_up'`. The output should be `mysql_up 1`. The `hdss-mysql` job should also show State: **UP** on the targets page. If `mysql_up 0` appears, check `docker compose logs mysqld-exporter` for an authentication error, which usually means `.my.cnf` has the wrong password.
+5. **The MySQL data source works.** In Grafana, go to **Connections → Data sources → HDSS MySQL** and click **Save & test**.
 
 ### Importing a Dashboard
 
@@ -623,8 +730,26 @@ Check each of the following in order — each one isolates a different layer, so
 
 - **Panels show "N/A" for every value.** This almost always means `management.metrics.tags.application` (above) was added after the dashboard was first imported, or is missing entirely — the dashboard's `$application` variable has nothing to select, because none of the scraped metrics carry an `application` label yet.
 - **`$application` has a value selected, but panels still show no data.** Check the dashboard's second variable (commonly `$instance`). Some imported dashboards define it as `label_values(up{application=~"$application"}, instance)` — but Prometheus's own `up` metric is synthesized by Prometheus itself per scrape target and never carries the `application` tag, since that tag is only attached to metrics the backend actually emits. This makes the `$instance` dropdown permanently empty. Fix by changing that variable's query to `label_values(up, instance)` instead, under dashboard settings → **Variables**.
+- **Panels show a red icon with `Datasource $DS_PROMETHEUS was not found`.** The dashboard JSON still contains the `${DS_PROMETHEUS}` placeholder from a grafana.com export. Replace every occurrence with `prometheus`, which is the UID set in the provisioned data source. The panel's datasource reference should read `{"type": "prometheus", "uid": "prometheus"}`.
 - **Panels only update when their query is run manually.** The dashboard's refresh interval (top-right, next to the time range picker) is likely set to **Off**. Set it to an interval such as `10s`.
 - **A variable's dropdown doesn't pick up newly available values on its own.** Check that variable's **Refresh** setting under dashboard settings → **Variables** — if it is set to **Never**, change it to **On Dashboard Load**.
+
+### Keeping the Dashboard
+
+A dashboard imported through the Grafana UI is stored in the `grafana_data` volume. It survives `docker compose restart`, but it is lost with `docker compose down -v`. To keep it in version control and restore it automatically, export it into the provisioning folder:
+
+1. Open the dashboard and choose **Share/Export → Export as JSON**.
+2. Leave **Export the dashboard to use in another instance** turned **off**. Turning it on replaces the data source UID with `${DS_PROMETHEUS}`, which the provisioned setup cannot resolve.
+3. Save the file as `monitoring/grafana/provisioning/dashboards/jvm-micrometer.json`.
+4. Delete the UI-imported copy so only one dashboard with that UID exists, then restart Grafana:
+
+```bash
+docker compose up -d --force-recreate grafana
+```
+
+The dashboard then appears under the **HDSS** folder. Provisioned dashboards are read-only in the UI (`allowUiUpdates: false`), so the JSON file is the source of truth. To change the dashboard, edit the file or export a new copy over it, then restart Grafana.
+
+Commit `monitoring/grafana/provisioning/dashboards/` to git so the dashboard can be restored even if the `grafana_data` volume is lost.
 
 ## Manual Setup (Without Docker)
 
@@ -1200,6 +1325,8 @@ In particular, review:
 - Android signing credentials
 - Environment-specific configuration
 - Round database SQL exports (for example, files under `round-exports/`)
+- `monitoring/mysqld-exporter/.my.cnf`, which contains a database password
+- Credentials used by Grafana's MySQL data source and by `mysqld-exporter`, which currently use the root account in development
 
 If running the stack with Docker, the same principle applies to the `.env` file described in [Environment Variables (.env)](#environment-variables-env) — do not commit it, and do not reuse development values (such as the example `DB_PASSWORD`) in any environment that is reachable outside your own machine.
 
