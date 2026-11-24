@@ -18,6 +18,7 @@ import Home from "./pages/home/Home";
 import Login from "./pages/login/Login";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoundManagement from "./pages/admin/round/RoundManagement";
+import ChoiceEdit from "./pages/admin/choice/edit/ChoiceEdit";
 
 function App() {
   return (
@@ -59,6 +60,10 @@ function App() {
           <Route
             path="/admin/choices/:listName/create"
             element={<CreateChoice />}
+          />
+          <Route
+            path="/admin/choices/:listName/:choiceId/edit"
+            element={<ChoiceEdit />}
           />
           <Route path="/admin/rounds" element={<RoundManagement />} />
         </Route>
